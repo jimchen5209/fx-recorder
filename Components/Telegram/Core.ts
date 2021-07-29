@@ -16,17 +16,24 @@ export class Telegram {
 
         if (this.config.telegram.token === '') throw ERR_MISSING_TOKEN;
 
-        this.bot = new TelegramBot(core.config.telegram.token);
+        this.bot = new TelegramBot(core.config.telegram.token, { baseApiUrl: this.config.telegram.baseApiUrl });
+
+        this.bot.onText(/\/ping(?:@\w+)?/, msg => this.bot.sendMessage(msg.chat.id, 'pong', { reply_to_message_id: msg.message_id }));
     }
 
-    public sendAudio(chatID: string, fileData: Buffer, filename: string, caption: string) {
-        this.bot.sendDocument(
-            chatID,
-            fileData,
-            { caption },
-            { filename }
-        ).catch(err => {
-            this.logger.error(err, null);
-        })
+    public async sendAudio(chatID: string, file: string, caption: string) {
+        try {
+            await this.bot.sendAudio(
+                chatID,
+                file,
+                { caption }
+            );
+            this.logger.info(`File sent to ${chatID}: ${file}`);
+        } catch (err) {
+            this.logger.error(`File ${file} send failed:${err.message}`, err);
+            if (this.config.debug) console.log(err);
+        }
+
+        return file;
     }
 }

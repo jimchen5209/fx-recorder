@@ -4,6 +4,7 @@ import { Config } from '../../Core/Config';
 import { Core } from '../..';
 import { DiscordVoice } from './Components/Voice';
 import { DiscordText } from './Components/Text';
+import { mkdirSync ,existsSync, rmdirSync } from 'fs';
 
 const ERR_MISSING_TOKEN = Error('Discord token missing');
 
@@ -25,15 +26,19 @@ export class Discord {
             { defaultCommandOptions: { caseInsensitive: true } }
         );
 
-        this.bot.on('ready', async () => {
+        this.bot.once('ready', async () => {
             this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
+
+            if (existsSync('temp')) rmdirSync('temp', { recursive: true });
+            mkdirSync('temp');
+
             this.config.discord.channels.forEach(channel => {
                 this.audios[channel.id] = new DiscordVoice(core, this.bot, this.logger, channel);
             });
         });
 
-        // tslint:disable-next-line:no-unused-expression
-        new DiscordText(core, this, this.bot, this.logger);
+        // eslint-disable-next-line no-unused-expressions, @typescript-eslint/no-unused-expressions
+        new DiscordText(this.bot, this.logger);
 
         this.bot.connect();
     }

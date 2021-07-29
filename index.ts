@@ -15,16 +15,17 @@ export class Core {
             this.mainLogger.error('Error occurred when connecting to telegram:', error);
         }
         try {
-            // tslint:disable-next-line:no-unused-expression
+            // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
             new Discord(this);
         } catch (error) {
             this.mainLogger.error('Error occurred when connecting to discord:', error);
         }
+
         setInterval(() => {
-            global.gc();
+            Object.entries(process.memoryUsage()).forEach(item => { if (this.config.debug) console.log(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`); });
         }, 30 * 1000);
     }
 }
 
-// tslint:disable-next-line:no-unused-expression
+// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 new Core();

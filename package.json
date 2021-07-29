@@ -1,31 +1,38 @@
 {
   "name": "fx-record-ts-bot",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "repository": "",
+  "author": "Jim Chen <jimchen5209@gmail.com>",
+  "license": "AGPL-3.0-only",
   "scripts": {
-    "start": "node --expose_gc dist",
-    "installMixer": "cd Libs/LicsonMixer/mixer && node-gyp configure build",
+    "start": "node dist",
+    "install": "cd Libs/LicsonMixer/mixer && node-gyp configure build",
     "lint": "tslint --project . --fix",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --sourceMap false"
   },
-  "author": "Jim Chen <jimchen5209@gmail.com>",
-  "license": "AGPL-3.0-only",
   "description": "",
   "dependencies": {
-    "eris": "github:abalabahaha/eris#dev",
+    "dayjs": "^1.10.5",
+    "eris": "^0.15.1",
     "logging-ts": "git+https://github.com/jimchen5209/Logging-TS.git",
-    "moment": "^2.27.0",
-    "moment-timezone": "^0.5.28",
-    "nan": "^2.14.1",
-    "node-gyp": "^6.1.0",
-    "node-opus": "^0.3.3",
-    "node-telegram-bot-api": "^0.40.0"
+    "node-telegram-bot-api": "^0.53.0",
+    "opusscript": "^0.0.8"
   },
   "devDependencies": {
-    "@types/moment-timezone": "^0.5.30",
-    "@types/node-telegram-bot-api": "^0.40.3",
-    "tslint": "^6.1.3",
-    "typescript": "^3.9.7"
+    "@types/node-telegram-bot-api": "^0.51.1",
+    "@types/ws": "^7.4.5",
+    "@typescript-eslint/eslint-plugin": "^4.28.0",
+    "@typescript-eslint/parser": "^4.28.0",
+    "eslint": "^7.29.0",
+    "typescript": "^4.3.4"
+  },
+  "optionalDependencies": {
+    "@discordjs/opus": "0.5",
+    "bufferutil": "^4.0.3",
+    "erlpack": "github:abalabahaha/erlpack",
+    "node-addon-api": "^4.0.0",
+    "sodium-native": "^3.2.1"
   }
 }
