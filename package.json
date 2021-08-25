@@ -32,7 +32,7 @@
     "@discordjs/opus": "0.5",
     "bufferutil": "^4.0.3",
     "erlpack": "github:abalabahaha/erlpack",
-    "node-addon-api": "^4.0.0",
+    "node-addon-api": "^4.1.0",
     "sodium-native": "^3.2.1"
   }
 }
