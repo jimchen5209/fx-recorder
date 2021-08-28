@@ -30,8 +30,10 @@ export class Telegram {
             );
             this.logger.info(`File sent to ${chatID}: ${file}`);
         } catch (err) {
-            this.logger.error(`File ${file} send failed:${err.message}`, err);
-            if (this.config.debug) console.log(err);
+            if (err instanceof Error) {
+                this.logger.error(`File ${file} send failed:${err.message}`, err);
+                if (this.config.debug) console.log(err);
+            }
         }
 
         return file;

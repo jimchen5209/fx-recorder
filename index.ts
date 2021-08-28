@@ -14,13 +14,17 @@ export class Core {
         try {
             this.telegram = new Telegram(this);
         } catch (error) {
-            this.mainLogger.error('Error occurred when connecting to telegram:', error);
+            if (error instanceof Error) {
+                this.mainLogger.error('Error occurred when connecting to telegram:', error);
+            }
         }
         try {
             // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
             new Discord(this);
         } catch (error) {
-            this.mainLogger.error('Error occurred when connecting to discord:', error);
+            if (error instanceof Error) {
+                this.mainLogger.error('Error occurred when connecting to discord:', error);
+            }
         }
 
         setInterval(() => {
