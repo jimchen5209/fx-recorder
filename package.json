@@ -19,7 +19,7 @@
     "logging-ts": "git+https://github.com/jimchen5209/Logging-TS.git",
     "node-telegram-bot-api": "0.54.0",
     "opusscript": "^0.0.8",
-    "status-client": "https://github.com/jimchen5209/StatusClient_JS#dev"
+    "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.51.1",
