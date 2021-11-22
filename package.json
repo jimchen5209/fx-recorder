@@ -15,7 +15,7 @@
   "description": "",
   "dependencies": {
     "dayjs": "^1.10.5",
-    "eris": "^0.15.1",
+    "eris": "^0.16.1",
     "logging-ts": "git+https://github.com/jimchen5209/Logging-TS.git",
     "node-telegram-bot-api": "0.54.0",
     "opusscript": "^0.0.8",
