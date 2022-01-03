@@ -106,10 +106,10 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.9.tgz#97edc9037ea0c38585320b28964dde3b39e4660d"
   integrity sha512-qcUXuemtEu+E5wZSJHNxUXeCZhAfXKQ41D+duX+VYPde7xyEVZci+/oXKJL13tnRs9lR2pr4fod59GT6/X1/yQ==
 
-"@types/node-telegram-bot-api@^0.51.1":
-  version "0.51.4"
-  resolved "https://registry.yarnpkg.com/@types/node-telegram-bot-api/-/node-telegram-bot-api-0.51.4.tgz#9eec24da79ff549cdd29387b67ac4ba5ee4aee62"
-  integrity sha512-l9MTmTxRBbrcnvnYoQpSo17m7qmEUv6ToDGldb2OwROQp5L56D4U2jcBT46hJFhuTQ4AnUxVfabLmWZqtsFHXw==
+"@types/node-telegram-bot-api@^0.53.4":
+  version "0.53.4"
+  resolved "https://registry.yarnpkg.com/@types/node-telegram-bot-api/-/node-telegram-bot-api-0.53.4.tgz#342d28e569770c3343ab91a8a65015c59a6166ac"
+  integrity sha512-JyFTKehL3n77S/NBUJM2d9VkWQsRqC9rfEAu7rgdL43l5WYe6QNjRw1ZocMuRDOdNN+rh61Marz4+b0OWOXHFQ==
   dependencies:
     "@types/node" "*"
     "@types/request" "*"

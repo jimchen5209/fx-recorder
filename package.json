@@ -22,7 +22,7 @@
     "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
   },
   "devDependencies": {
-    "@types/node-telegram-bot-api": "^0.51.1",
+    "@types/node-telegram-bot-api": "^0.53.4",
     "@types/ws": "^7.4.5",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
