@@ -22,7 +22,7 @@ export class Discord {
 
         this.bot = new CommandClient(
             this.config.discord.token,
-            { restMode: true },
+            { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] },
             { defaultCommandOptions: { caseInsensitive: true } }
         );
 

@@ -245,7 +245,7 @@ export class DiscordVoice extends EventEmitter {
             this.bot.leaveVoiceChannel(channelID);
         });
         connection.once('disconnect', err => {
-            this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
+            if (err) this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
             this.stopSession(channelID, connection);
             setTimeout(() => {
                 this.startAudioSession(channelID);
