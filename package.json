@@ -16,10 +16,10 @@
   "dependencies": {
     "dayjs": "^1.10.5",
     "eris": "^0.16.1",
-    "logging-ts": "git+https://github.com/jimchen5209/Logging-TS.git",
     "node-telegram-bot-api": "0.56.0",
     "opusscript": "^0.0.8",
-    "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
+    "status-client": "jimchen5209/StatusClient_JS#2.0.0",
+    "tslog-helper": "jimchen5209/TSLog-Helper#2.1.0"
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.53.6",

@@ -1,11 +1,11 @@
-import { CommandClient, TextChannel } from 'eris'; //MessageFile, MessageContent, Message,, PossiblyUncachedTextableChannel
-import { Category } from 'logging-ts';
+import { CommandClient, TextChannel } from 'eris'; //M
+import { Logger } from 'tslog-helper';
 
 export class DiscordText {
     private bot: CommandClient;
-    private logger: Category;
+    private logger: Logger;
 
-    constructor(bot: CommandClient, logger: Category) {
+    constructor(bot: CommandClient, logger: Logger) {
         this.bot = bot;
         this.logger = logger;
 

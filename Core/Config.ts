@@ -1,15 +1,15 @@
 import fs from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { Core } from '..';
 
 export class Config {
     public discord: { token: string, channels: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }[], admins: string[] };
     public telegram: { token: string, admins: string[], baseApiUrl: string|undefined };
     public debug: boolean;
-    private logger: Category;
+    private logger: Logger;
 
     constructor(core: Core) {
-        this.logger = new Category('Config', core.mainLogger);
+        this.logger = core.mainLogger.getChildLogger({ name: 'Config' });
         this.logger.info('Loading Config...');
         const discordDefaultConfig = { token: '', channels: [{ id: '', fileDest: [{ type: 'telegram', id: '', sendAll: true, sendPerUser: true }], timeZone: 'Asia/Taipei', sendIntervalSecond: 60, ignoreUsers: [] }], admins: [] };
         const telegramDefaultConfig = { token: '', admins: [], baseApiUrl: undefined };
@@ -20,7 +20,7 @@ export class Config {
             this.debug = (config.Debug) ? config.Debug : false;
             this.write();
         } else {
-            this.logger.error('Can\'t load config.json: File not found.', null);
+            this.logger.error('Can\'t load config.json: File not found.');
             this.logger.info('Generating empty config...');
             this.discord = discordDefaultConfig;
             this.telegram = telegramDefaultConfig;

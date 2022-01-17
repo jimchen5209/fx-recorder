@@ -1,11 +1,12 @@
 import { Config } from './Core/Config';
-import { catService } from 'logging-ts';
+import { LogHelper } from 'tslog-helper';
 import { Telegram } from './Components/Telegram/Core';
 import { Discord } from './Components/Discord/Core';
 import { Status } from 'status-client';
 
 export class Core {
-    public readonly mainLogger = catService;
+    private readonly logHelper = new LogHelper();
+    public readonly mainLogger = this.logHelper.logger;
     public readonly config = new Config(this);
     public telegram: Telegram | undefined;
     private readonly status = new Status('fx-recorder');
@@ -19,7 +20,6 @@ export class Core {
             }
         }
         try {
-            // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
             new Discord(this);
         } catch (error) {
             if (error instanceof Error) {
@@ -35,5 +35,4 @@ export class Core {
     }
 }
 
-// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 new Core();

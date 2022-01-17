@@ -1,5 +1,5 @@
 import { CommandClient, VoiceConnection, VoiceChannel } from 'eris';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -9,13 +9,13 @@ import LicsonMixer, { Readable } from '../../../Libs/LicsonMixer/mixer';
 import { EventEmitter } from 'events';
 import AudioUtils from '../../../Libs/audio';
 import AbortStream from '../../../Libs/abort';
-import { createWriteStream, mkdirSync, unlinkSync, existsSync, rmdirSync, WriteStream, readFileSync } from 'fs';
+import { createWriteStream, mkdirSync, unlinkSync, existsSync, rmSync, WriteStream, readFileSync } from 'fs';
 import { Silence } from './Silence';
 
 export class DiscordVoice extends EventEmitter {
     private core: Core;
     private bot: CommandClient;
-    private logger: Category;
+    private logger: Logger;
     private channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] };
     private recvMixer = new LicsonMixer(16, 2, 48000);
     private userMixers: { [key: string]: LicsonMixer } = {};
@@ -23,7 +23,7 @@ export class DiscordVoice extends EventEmitter {
     constructor(
         core: Core,
         bot: CommandClient,
-        logger: Category,
+        logger: Logger,
         channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }
     ) {
         super();
@@ -90,7 +90,7 @@ export class DiscordVoice extends EventEmitter {
         let writeStream: WriteStream;
         const perUserWriteStream: { [key: string]: WriteStream } = {};
 
-        if (existsSync(`temp/${this.channelConfig.id}`)) rmdirSync(`temp/${this.channelConfig.id}`, { recursive: true });
+        if (existsSync(`temp/${this.channelConfig.id}`)) rmSync(`temp/${this.channelConfig.id}`, { recursive: true });
         mkdirSync(`temp/${this.channelConfig.id}`);
 
         const endStream = (user: string | undefined = undefined) => {
@@ -245,7 +245,7 @@ export class DiscordVoice extends EventEmitter {
             this.bot.leaveVoiceChannel(channelID);
         });
         connection.once('disconnect', err => {
-            if (err) this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
+            this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
             this.stopSession(channelID, connection);
             setTimeout(() => {
                 this.startAudioSession(channelID);
