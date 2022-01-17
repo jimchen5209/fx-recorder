@@ -111,7 +111,7 @@ class MixerStream extends stream.Readable {
         super()
 
         try {
-            this._mixin = require('../../../Libs/LicsonMixer/mixer/build/Release/mix.node');
+            this._mixin = require('../../../Libs/LicsonMixer/build/Release/mix.node');
             console.log('[Mixer] Using optimized C++ implementation.');
         } catch (e) {
             this._mixin = this.mixin

@@ -128,5 +128,5 @@ dist
 
 #project
 config.json
-Libs/LicsonMixer/mixer/build/
+Libs/LicsonMixer/build/
 temp

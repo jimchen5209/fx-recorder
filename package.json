@@ -7,7 +7,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "start": "node dist",
-    "install": "cd Libs/LicsonMixer/mixer && node-gyp configure build",
+    "install": "cd Libs/LicsonMixer && node-gyp configure build",
     "lint": "tslint --project . --fix",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --sourceMap false"
