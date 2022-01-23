@@ -38,4 +38,15 @@ export class Telegram {
 
         return file;
     }
+
+    public async sendMessage(chatID: string, text: string) {
+        try {
+            await this.bot.sendMessage(chatID, text);
+        } catch (err) {
+            if (err instanceof Error) {
+                this.logger.error(`Message ${text} send failed:${err.message}`, err);
+                if (this.config.debug) console.log(err);
+            }
+        }
+    }
 }

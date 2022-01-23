@@ -41,13 +41,22 @@ export class DiscordVoice extends EventEmitter {
         this.startAudioSession(this.channelConfig.id);
     }
 
-    private startAudioSession(channelID: string) {
-        this.joinVoiceChannel(channelID).then(connection => {
-            connection.play(new Silence(), { format: 'opusPackets' });
-            this.startRecording(connection);
-            this.startSendRecord();
-            this.setEndStreamEvents(connection);
-        });
+    private async startAudioSession(channelID: string) {
+        for (let retryCount = 1; retryCount <= 5; ++retryCount){
+            const connection = await this.joinVoiceChannel(channelID);
+            if (connection !== undefined) {
+                this.logger.info(`Connected to ${channelID}, start recording...`);
+                connection.play(new Silence(), { format: 'opusPackets' });
+                this.startRecording(connection);
+                this.startSendRecord();
+                this.setEndStreamEvents(connection);
+                return;
+            }
+            this.logger.error(`Connecting to voice channel ${channelID} failed. Retrying (${retryCount} / 5)...`);
+        }
+        this.logger.fatal(`Connecting to voice channel ${channelID} failed after retrying 5 times. Channel recording aborted.`);
+
+        await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.');
     }
 
     private startRecording(connection: VoiceConnection) {
@@ -146,14 +155,14 @@ export class DiscordVoice extends EventEmitter {
                     if (element.sendAll) {
                         this.logger.info(`Sending ${mp3StartToSend}.mp3 of ${this.channelConfig.id} to telegram ${element.id}`);
                         const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}\n\n#Date${time.format('YYYYMMDD')} #Time${time.format('HHmm')} #Year${time.format('YYYY')}`;
-                        if (this.core.telegram) await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`, caption);
+                        await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`, caption);
                     }
                     if (element.sendPerUser) {
                         for (const user of Object.keys(this.userMixers)) {
                             if (existsSync(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)) {
                                 this.logger.info(`Sending ${user}-${mp3StartToSend}.mp3 of ${this.channelConfig.id} to telegram ${element.id}`);
                                 const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}\nUser:${user}\n\n#Date${time.format('YYYYMMDD')} #Time${time.format('HHmm')} #Year${time.format('YYYY')} #User${user}`;
-                                if (this.core.telegram) await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`, caption);
+                                await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`, caption);
                             }
                         }
                     }
@@ -198,7 +207,9 @@ export class DiscordVoice extends EventEmitter {
             clearInterval(sendInterval);
             this.logger.info('Sending rest of recording...');
             endStream();
-            sendRecordFile();
+            sendRecordFile().then(() => {
+                this.sendMessage('The record session has ended.');
+            });
             this.removeAllListeners();
         });
 
@@ -211,7 +222,19 @@ export class DiscordVoice extends EventEmitter {
             endStream(user);
         });
 
+        this.sendMessage('Record session started');
         startStream();
+    }
+
+    private async sendMessage(message: string) {
+        for (const element of this.channelConfig.fileDest) {
+            if (element.type === 'telegram' && element.id !== '' && this.core.telegram) {
+                await this.core.telegram.sendMessage(element.id, message);
+            }
+            if (element.type === 'discord' && element.id !== '') {
+                await this.bot.createMessage(element.id, message);
+            }
+        }
     }
 
     private stopSession(channelID:string, connection: VoiceConnection) {
@@ -231,27 +254,36 @@ export class DiscordVoice extends EventEmitter {
         this.bot.leaveVoiceChannel(channelID);
     }
 
-    private async joinVoiceChannel(channelID: string): Promise<VoiceConnection> {
+    private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`);
-        const connection = await this.bot.joinVoiceChannel(channelID);
-        connection.on('warn', (message: string) => {
-            this.logger.warn(`Warning from ${channelID}: ${message}`);
-        });
-        connection.on('error', err => {
-            this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
-        });
-        connection.once('ready', () => {
-            console.error('Voice connection reconnected.');
-            this.bot.leaveVoiceChannel(channelID);
-        });
-        connection.once('disconnect', err => {
-            this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
-            this.stopSession(channelID, connection);
-            setTimeout(() => {
-                this.startAudioSession(channelID);
-            }, 5 * 1000);
-        });
-        return connection;
+        try {
+
+            const connection = await this.bot.joinVoiceChannel(channelID);
+            connection.on('warn', (message: string) => {
+                this.logger.warn(`Warning from ${channelID}: ${message}`);
+            });
+            connection.on('error', err => {
+                this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
+            });
+            connection.once('ready', () => {
+                console.error('Voice connection reconnected.');
+                this.bot.leaveVoiceChannel(channelID);
+            });
+            connection.once('disconnect', err => {
+                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
+                this.sendMessage('There is an error with the voice connection.');
+                this.stopSession(channelID, connection);
+                setTimeout(() => {
+                    this.startAudioSession(channelID);
+                }, 5 * 1000);
+            });
+            return connection;
+        } catch (e) {
+            if (e instanceof Error) {
+                this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e);
+            }
+        }
+        return;
     }
 
     private endStream(user: string) {
