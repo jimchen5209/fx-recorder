@@ -8,12 +8,12 @@ export class Core {
     private readonly logHelper = new LogHelper();
     public readonly mainLogger = this.logHelper.logger;
     public readonly config = new Config(this);
-    public telegram: Telegram | undefined;
+    private _telegram: Telegram | undefined;
     private readonly status = new Status('fx-recorder');
 
     constructor() {
         try {
-            this.telegram = new Telegram(this);
+            this._telegram = new Telegram(this);
         } catch (error) {
             if (error instanceof Error) {
                 this.mainLogger.error('Error occurred when connecting to telegram:', error);
@@ -32,6 +32,10 @@ export class Core {
         }, 30 * 1000);
 
         this.status.set_status();
+    }
+
+    public get telegram() {
+        return this._telegram;
     }
 }
 
