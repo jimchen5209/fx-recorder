@@ -11,6 +11,7 @@ import AudioUtils from '../../../Libs/audio';
 import AbortStream from '../../../Libs/abort';
 import { createWriteStream, mkdirSync, unlinkSync, existsSync, rmSync, WriteStream, readFileSync } from 'fs';
 import { Silence } from './Silence';
+import { waitUntil, TimeoutError }  from 'async-wait-until';
 
 export class DiscordVoice extends EventEmitter {
     private core: Core;
@@ -19,6 +20,8 @@ export class DiscordVoice extends EventEmitter {
     private channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] };
     private recvMixer = new LicsonMixer(16, 2, 48000);
     private userMixers: { [key: string]: LicsonMixer } = {};
+    private active = true;
+    private readyToDelete = false;
 
     constructor(
         core: Core,
@@ -54,14 +57,20 @@ export class DiscordVoice extends EventEmitter {
             }
             this.logger.error(`Connecting to voice channel ${channelID} failed. Retrying (${retryCount} / 5)...`);
         }
+        this.active = false;
         this.logger.fatal(`Connecting to voice channel ${channelID} failed after retrying 5 times. Channel recording aborted.`);
 
         await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.');
     }
 
     private startRecording(connection: VoiceConnection) {
+        this.recvMixer.on('error', error => {
+            this.logger.error(`Error on mixer of ${this.channelConfig.id}: ${error.message}`, error);
+        });
+
         connection.receive('pcm').on('data', (data, user) => {
             if (!user || this.channelConfig.ignoreUsers.includes(user)) return;
+            if (!this.active) return;
 
             let source = this.recvMixer.getSources(user)[0];
             if (!source) {
@@ -81,6 +90,9 @@ export class DiscordVoice extends EventEmitter {
     private newPerUserMixer(user: string) {
         this.logger.info(`New per user mixer ${user} for ${this.channelConfig.id} created.`);
         this.userMixers[user] = new LicsonMixer(16, 2, 48000);
+        this.userMixers[user].on('error', error => {
+            this.logger.error(`Error on new per user mixer ${user} of ${this.channelConfig.id}: ${error.message}`, error);
+        });
         this.emit('newUserStream', user);
     }
 
@@ -207,10 +219,11 @@ export class DiscordVoice extends EventEmitter {
             clearInterval(sendInterval);
             this.logger.info('Sending rest of recording...');
             endStream();
-            sendRecordFile().then(() => {
-                this.sendMessage('The record session has ended.');
+            sendRecordFile().then(async () => {
+                await this.sendMessage('The record session has ended.');
+                this.removeAllListeners();
+                if (!this.active) this.readyToDelete = true;
             });
-            this.removeAllListeners();
         });
 
         this.on('newUserStream', (user: string) => {
@@ -254,6 +267,24 @@ export class DiscordVoice extends EventEmitter {
         this.bot.leaveVoiceChannel(channelID);
     }
 
+    public async stop(connection: VoiceConnection) {
+        this.active = false;
+
+        this.sendMessage('Recorder shutting down.');
+
+        this.stopSession(this.channelConfig.id, connection);
+
+        try {
+            await waitUntil(() => this.readyToDelete, { timeout: 30 * 1000 });
+        } catch (error) {
+            if (error instanceof TimeoutError) {
+                this.logger.error('Timed out waiting for 30 seconds.', error);
+            } else {
+                throw(error);
+            }
+        }
+    }
+
     private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`);
         try {
@@ -271,11 +302,13 @@ export class DiscordVoice extends EventEmitter {
             });
             connection.once('disconnect', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
-                this.sendMessage('There is an error with the voice connection.');
-                this.stopSession(channelID, connection);
-                setTimeout(() => {
-                    this.startAudioSession(channelID);
-                }, 5 * 1000);
+                if (this.active) {
+                    this.sendMessage('There is an error with the voice connection.');
+                    this.stopSession(channelID, connection);
+                    setTimeout(() => {
+                        this.startAudioSession(channelID);
+                    }, 5 * 1000);
+                }
             });
             return connection;
         } catch (e) {

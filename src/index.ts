@@ -9,6 +9,7 @@ export class Core {
     public readonly mainLogger = this.logHelper.logger;
     public readonly config = new Config(this);
     private _telegram: Telegram | undefined;
+    private discord: Discord | undefined;
     private readonly status = new Status('fx-recorder');
 
     constructor() {
@@ -20,7 +21,7 @@ export class Core {
             }
         }
         try {
-            new Discord(this);
+            this.discord = new Discord(this);
         } catch (error) {
             if (error instanceof Error) {
                 this.mainLogger.error('Error occurred when connecting to discord:', error);
@@ -32,10 +33,22 @@ export class Core {
         }, 30 * 1000);
 
         this.status.set_status();
+
+        // Enable graceful stop
+        process.once('SIGINT', () => this.stop('SIGINT'));
+        process.once('SIGTERM', () => this.stop('SIGTERM'));
     }
 
     public get telegram() {
         return this._telegram;
+    }
+
+    private async stop(reason: string){
+        this.mainLogger.info(`Stopping! Reason: ${reason}`);
+        await this.discord?.stop();
+        this._telegram?.stop();
+
+        process.exit(0);
     }
 }
 

@@ -49,4 +49,10 @@ export class Telegram {
             }
         }
     }
+
+    public stop() {
+        this.logger.info('Shutting down...');
+
+        this.bot.stopPolling();
+    }
 }

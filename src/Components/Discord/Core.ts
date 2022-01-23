@@ -41,4 +41,18 @@ export class Discord {
 
         this.bot.connect();
     }
+
+    public async stop() {
+        this.logger.info('Shutting down...');
+
+        for (const connection of this.bot.voiceConnections.values()) {
+            if (!connection.channelID) return;
+            if (!this.audios[connection.channelID]) return;
+
+            await this.audios[connection.channelID].stop(connection);
+            delete this.audios[connection.channelID];
+        }
+
+        this.bot.disconnect({ reconnect: false });
+    }
 }
