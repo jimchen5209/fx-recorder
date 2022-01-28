@@ -250,6 +250,32 @@ export class DiscordVoice extends EventEmitter {
         }
     }
 
+    private async sendAdminMessage(message: string) {
+        if (this.core.config.discord.logErrorsToAdmin) {
+            for (const admin of this.core.config.discord.admins) {
+                try {
+                    const dmChannel = await this.bot.getDMChannel(admin);
+                    await this.bot.createMessage(dmChannel.id, message);
+                } catch (error) {
+                    if (error instanceof Error) {
+                        this.logger.error(`Message "${message}" send to discord admin ${admin} failed: ${error.message}`, error);
+                    }
+                }
+            }
+        }
+        if (this.core.config.telegram.logErrorsToAdmin && this.core.telegram) {
+            for (const admin of this.core.config.telegram.admins) {
+                try {
+                    await this.core.telegram.sendMessage(admin, message);
+                } catch (error) {
+                    if (error instanceof Error) {
+                        this.logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error);
+                    }
+                }
+            }
+        }
+    }
+
     private stopSession(channelID:string, connection: VoiceConnection) {
         connection.stopPlaying();
         this.recvMixer.stop();
@@ -271,6 +297,7 @@ export class DiscordVoice extends EventEmitter {
         this.active = false;
 
         this.sendMessage('Recorder shutting down.');
+        this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`);
 
         this.stopSession(this.channelConfig.id, connection);
 
@@ -288,13 +315,14 @@ export class DiscordVoice extends EventEmitter {
     private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`);
         try {
-
             const connection = await this.bot.joinVoiceChannel(channelID);
             connection.on('warn', (message: string) => {
                 this.logger.warn(`Warning from ${channelID}: ${message}`);
+                if (this.active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`);
             });
             connection.on('error', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
+                if (this.active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`);
             });
             connection.once('ready', () => {
                 console.error('Voice connection reconnected.');
@@ -303,6 +331,7 @@ export class DiscordVoice extends EventEmitter {
             connection.once('disconnect', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
                 if (this.active) {
+                    this.sendAdminMessage(`Error from voice connection ${channelID}: ${err?.message}`);
                     this.sendMessage('There is an error with the voice connection.');
                     this.stopSession(channelID, connection);
                     setTimeout(() => {
@@ -314,6 +343,7 @@ export class DiscordVoice extends EventEmitter {
         } catch (e) {
             if (e instanceof Error) {
                 this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e);
+                this.sendAdminMessage(`Error from ${channelID}: ${e.name} ${e.message}`);
             }
         }
         return;
