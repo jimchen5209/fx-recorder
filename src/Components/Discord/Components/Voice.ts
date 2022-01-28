@@ -97,13 +97,13 @@ export class DiscordVoice extends EventEmitter {
     }
 
     private startSendRecord() {
-        const mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, this.core.config.debug);
+        const mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, this.core.config.logging.debug);
         const perUserMp3Stream: { [key: string]: Readable } = {};
 
         for (const user of Object.keys(this.userMixers)) {
             if (!this.userMixers[user]) continue;
 
-            perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.debug);
+            perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.logging.debug);
         }
 
         let mp3Start = '';
@@ -227,7 +227,7 @@ export class DiscordVoice extends EventEmitter {
         });
 
         this.on('newUserStream', (user: string) => {
-            perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.debug);
+            perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.logging.debug);
             startStream(user);
         });
 

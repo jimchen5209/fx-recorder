@@ -32,7 +32,6 @@ export class Telegram {
         } catch (err) {
             if (err instanceof Error) {
                 this.logger.error(`File ${file} send failed:${err.message}`, err);
-                if (this.config.debug) console.log(err);
             }
         }
 
@@ -45,7 +44,6 @@ export class Telegram {
         } catch (err) {
             if (err instanceof Error) {
                 this.logger.error(`Message ${text} send failed:${err.message}`, err);
-                if (this.config.debug) console.log(err);
             }
         }
     }

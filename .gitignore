@@ -127,6 +127,6 @@ dist
 .pnp.*
 
 #project
-config.json
+config*.json
 Libs/LicsonMixer/build/
 temp

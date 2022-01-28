@@ -13,6 +13,8 @@ export class Core {
     private readonly status = new Status('fx-recorder');
 
     constructor() {
+        this.logHelper.setDebug(this.config.logging.debug);
+        this.logHelper.setLogRaw(this.config.logging.raw);
         try {
             this._telegram = new Telegram(this);
         } catch (error) {
@@ -29,7 +31,7 @@ export class Core {
         }
 
         setInterval(() => {
-            Object.entries(process.memoryUsage()).forEach(item => { if (this.config.debug) console.log(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`); });
+            Object.entries(process.memoryUsage()).forEach(item => this.mainLogger.debug(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`));
         }, 30 * 1000);
 
         this.status.set_status();
