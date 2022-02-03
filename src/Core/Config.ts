@@ -3,7 +3,7 @@ import { Logger } from 'tslog-helper';
 import { Core } from '..';
 
 export class Config {
-    private configVersion = 2.1;
+    private configVersion = 2.2;
     private _discord: { token: string, channels: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }[], admins: string[], logErrorsToAdmin: boolean };
     private _telegram: { token: string, admins: string[], logErrorsToAdmin: boolean, baseApiUrl: string | undefined };
     private _logging: { debug: boolean, raw: boolean };
@@ -36,7 +36,7 @@ export class Config {
                 token: config.discord.token || discordDefault.token,
                 channels: [],
                 admins: config.discord.admins || discordDefault.admins,
-                logErrorsToAdmin: config.discord.logErrorsToAdmin || discordDefault.logErrorsToAdmin,
+                logErrorsToAdmin: (config.discord.logErrorsToAdmin != undefined) ? config.discord.logErrorsToAdmin : discordDefault.logErrorsToAdmin,
             };
             if (config.discord.channels) {
                 for (const channel of config.discord.channels) {
@@ -46,8 +46,8 @@ export class Config {
                             fileDest.push({
                                 type: dest.type || discordDefault.channels[0].fileDest[0].type,
                                 id: dest.id || discordDefault.channels[0].fileDest[0].id,
-                                sendAll: dest.sendAll || discordDefault.channels[0].fileDest[0].sendAll,
-                                sendPerUser: dest.sendPerUser || discordDefault.channels[0].fileDest[0].sendPerUser
+                                sendAll: (dest.sendAll !== undefined) ? dest.sendAll : discordDefault.channels[0].fileDest[0].sendAll,
+                                sendPerUser: (dest.sendPerUser !== undefined) ? dest.sendPerUser : discordDefault.channels[0].fileDest[0].sendPerUser
                             });
                         }
                     } else {
@@ -70,14 +70,14 @@ export class Config {
             this._telegram = {
                 token: config.telegram.token || telegramDefault.token,
                 admins: config.telegram.admins || telegramDefault.admins,
-                logErrorsToAdmin: config.telegram.logErrorsToAdmin || telegramDefault.logErrorsToAdmin,
+                logErrorsToAdmin: (config.telegram.logErrorsToAdmin !== undefined) ? config.telegram.logErrorsToAdmin : telegramDefault.logErrorsToAdmin,
                 baseApiUrl: config.telegram.baseApiUrl || telegramDefault.baseApiUrl
             };
 
             if (!config.logging) config.logging = {};
             this._logging = {
-                debug: config.Debug || config.logging.debug || loggingDefault.debug,
-                raw: config.logging.raw || loggingDefault.raw
+                debug: (config.Debug !== undefined) ? config.Debug : ((config.logging.debug !== undefined) ? config.logging.debug : loggingDefault.debug),
+                raw: (config.logging.raw !== undefined) ? config.logging.raw : loggingDefault.raw
             };
 
             if (versionChanged) {
