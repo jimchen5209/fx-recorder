@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
-    "lint": "tslint --project . --fix",
+    "lintTest": "eslint src/ --max-warnings 0",
+    "lintFix": "eslint src/ --fix",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --sourceMap false"
   },
