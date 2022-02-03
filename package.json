@@ -25,16 +25,16 @@
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.53.6",
     "@types/ws": "^8.2.2",
-    "@typescript-eslint/eslint-plugin": "^5.9.1",
-    "@typescript-eslint/parser": "^5.9.1",
-    "eslint": "^8.7.0",
-    "typescript": "^4.5.4"
+    "@typescript-eslint/eslint-plugin": "^5.10.2",
+    "@typescript-eslint/parser": "^5.10.1",
+    "eslint": "^8.8.0",
+    "typescript": "^4.5.5"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.7.0",
     "bufferutil": "^4.0.6",
     "erlpack": "github:abalabahaha/erlpack",
-    "node-addon-api": "^4.0.0",
+    "node-addon-api": "^4.3.0",
     "sodium-native": "^3.2.1"
   }
 }
