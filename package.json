@@ -16,7 +16,7 @@
   "dependencies": {
     "dayjs": "^1.10.8",
     "eris": "^0.16.1",
-    "node-telegram-bot-api": "0.56.0",
+    "node-telegram-bot-api": "0.57.0",
     "opusscript": "^0.0.8",
     "status-client": "jimchen5209/StatusClient_JS#2.0.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#2.1.0"
