@@ -14,7 +14,7 @@
   },
   "description": "",
   "dependencies": {
-    "dayjs": "^1.10.8",
+    "dayjs": "^1.11.5",
     "eris": "^0.16.1",
     "node-telegram-bot-api": "0.57.0",
     "opusscript": "^0.0.8",
