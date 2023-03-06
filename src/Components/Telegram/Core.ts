@@ -31,7 +31,7 @@ export class Telegram {
             this.logger.info(`File sent to ${chatID}: ${file}`);
         } catch (err) {
             if (err instanceof Error) {
-                this.logger.error(`File ${file} send failed:${err.message}`, err);
+                this.logger.error(`File ${file} send failed:${err.message}`);
             }
         }
 
@@ -43,7 +43,7 @@ export class Telegram {
             await this.bot.sendMessage(chatID, text);
         } catch (err) {
             if (err instanceof Error) {
-                this.logger.error(`Message ${text} send failed:${err.message}`, err);
+                this.logger.error(`Message ${text} send failed:${err.message}`);
             }
         }
     }
