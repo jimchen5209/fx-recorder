@@ -18,7 +18,7 @@
   "dependencies": {
     "async-wait-until": "^2.0.12",
     "dayjs": "^1.10.8",
-    "eris": "^0.17.1",
+    "eris": "^0.17.2",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
     "patch-package": "^6.4.7",
