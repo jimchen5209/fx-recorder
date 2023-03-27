@@ -107,13 +107,14 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
   integrity sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==
 
-"@types/node-telegram-bot-api@^0.61.3":
-  version "0.61.3"
-  resolved "https://registry.yarnpkg.com/@types/node-telegram-bot-api/-/node-telegram-bot-api-0.61.3.tgz#f34a0def27fe07bf674e6db88beb8843e7c5c73a"
-  integrity sha512-Z6VFc/k4/z70RxlJ9pp/efBj4vsEnRo1UAkweN3sbGNDa4o4jJj5YNx1pshIikTyxCB2UWszKAV64xpgN5CxGg==
+"@types/node-telegram-bot-api@^0.61.5":
+  version "0.61.5"
+  resolved "https://registry.yarnpkg.com/@types/node-telegram-bot-api/-/node-telegram-bot-api-0.61.5.tgz#a6eeaa2b06a7728553ddbf5de276d883a9351cce"
+  integrity sha512-zXSObMi2ihTp8yjjFCnEFQjv6k65SN4L6CfNYhcrGEVh5AeMSjRUB0NXBzXKbDRs8KzZpzKl1eSnKJKnFLrm2A==
   dependencies:
     "@types/node" "*"
     "@types/request" "*"
+    eventemitter3 ">=3.0.0"
 
 "@types/node@*":
   version "18.14.6"
@@ -746,6 +747,11 @@ esutils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
+
+eventemitter3@>=3.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-5.0.0.tgz#084eb7f5b5388df1451e63f4c2aafd71b217ccb3"
+  integrity sha512-riuVbElZZNXLeLEoprfNYoDSwTBRR44X3mnhdI1YcnENpWTCsTTVZ2zFuqQcpoyqPQIUXdiPEU0ECAq0KQRaHg==
 
 eventemitter3@^3.0.0:
   version "3.1.2"

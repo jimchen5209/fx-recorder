@@ -27,7 +27,7 @@
     "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
   },
   "devDependencies": {
-    "@types/node-telegram-bot-api": "^0.61.3",
+    "@types/node-telegram-bot-api": "^0.61.5",
     "@types/ws": "^8.5.1",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",
