@@ -345,7 +345,7 @@ export class DiscordVoice extends EventEmitter {
                 this.sendAdminMessage(`Error from ${channelID}: ${e.name} ${e.message}`)
             }
         }
-
+        return undefined
     }
 
     private endStream (user: string) {
