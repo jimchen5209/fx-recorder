@@ -8,7 +8,6 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
-    "postinstall": "patch-package",
     "lintTest": "eslint src/ --max-warnings 0",
     "lintFix": "eslint src/ --fix",
     "build": "tsc --pretty",
@@ -21,8 +20,6 @@
     "eris": "^0.17.2",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
-    "patch-package": "^6.5.1",
-    "postinstall-postinstall": "^2.1.0",
     "status-client": "jimchen5209/StatusClient_JS#2.1.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
   },
@@ -42,5 +39,8 @@
     "node-addon-api": "^6.0.0",
     "sodium-native": "^4.0.1"
   },
-  "packageManager": "yarn@3.5.0"
+  "packageManager": "yarn@3.5.0",
+  "resolutions": {
+    "eris@^0.17.2": "patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
+  }
 }
