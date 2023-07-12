@@ -21,7 +21,7 @@
     "eris": "^0.17.1",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
-    "patch-package": "^6.4.7",
+    "patch-package": "^7.0.1",
     "postinstall-postinstall": "^2.1.0",
     "status-client": "jimchen5209/StatusClient_JS#2.1.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
