@@ -963,13 +963,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"erlpack@github:abalabahaha/erlpack":
-  version: 0.1.3
-  resolution: "erlpack@https://github.com/abalabahaha/erlpack.git#commit=f7d730debe32c416d1b55b4217f8aef2ade05874"
+"erlpack@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "erlpack@npm:0.1.4"
   dependencies:
     bindings: ^1.5.0
     nan: ^2.15.0
-  checksum: 37d85a27f0e15c7cc10f5b605e7b860d38a291f616dadb1e2ff2a49215c56fa8724ca53923615e355229c85cc84713c762b04f8038f74789ce8e52504eaf7e1f
+    node-gyp: latest
+  checksum: d5bcc4a5eddec0b6040f9ef9dc028250c14343d275d6e091dc2db2bcaecc11b09cdf119720a333afba688cf35cd5a1da4ecdc79862c4d15f5426a90e756cfc50
   languageName: node
   linkType: hard
 
@@ -1363,7 +1364,7 @@ __metadata:
     bufferutil: ^4.0.8
     dayjs: ^1.11.10
     eris: ^0.17.2
-    erlpack: "github:abalabahaha/erlpack"
+    erlpack: ^0.1.4
     eslint: ^8.53.0
     node-addon-api: ^6.1.0
     node-gyp: ^9.4.1
