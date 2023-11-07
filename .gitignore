@@ -121,10 +121,13 @@ dist
 
 # yarn v2
 
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
 .pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 #project
 config*.json

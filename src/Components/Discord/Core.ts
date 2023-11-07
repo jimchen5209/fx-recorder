@@ -1,58 +1,58 @@
-import { CommandClient } from 'eris';
-import { Logger } from 'tslog-helper';
-import { Config } from '../../Core/Config';
-import { Core } from '../..';
-import { DiscordVoice } from './Components/Voice';
-import { DiscordText } from './Components/Text';
-import { mkdirSync ,existsSync, rmSync } from 'fs';
+import { CommandClient } from 'eris'
+import { Logger } from 'tslog-helper'
+import { Config } from '../../Core/Config'
+import { Core } from '../..'
+import { DiscordVoice } from './Components/Voice'
+import { DiscordText } from './Components/Text'
+import { mkdirSync ,existsSync, rmSync } from 'fs'
 
-const ERR_MISSING_TOKEN = Error('Discord token missing');
+const ERR_MISSING_TOKEN = Error('Discord token missing')
 
 export class Discord {
-    private config: Config;
-    private bot: CommandClient;
-    private logger: Logger;
-    public audios: { [key: string]: DiscordVoice } = {};
+    private config: Config
+    private bot: CommandClient
+    private logger: Logger
+    public audios: { [key: string]: DiscordVoice } = {}
 
-    constructor(core: Core) {
-        this.config = core.config;
-        this.logger = core.mainLogger.getChildLogger({ name: 'Discord' });
+    constructor (core: Core) {
+        this.config = core.config
+        this.logger = core.mainLogger.getChildLogger({ name: 'Discord' })
 
-        if (this.config.discord.token === '') throw ERR_MISSING_TOKEN;
+        if (this.config.discord.token === '') throw ERR_MISSING_TOKEN
 
         this.bot = new CommandClient(
             this.config.discord.token,
             { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] },
             { defaultCommandOptions: { caseInsensitive: true } }
-        );
+        )
 
         this.bot.once('ready', async () => {
-            this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
+            this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`)
 
-            if (existsSync('temp')) rmSync('temp', { recursive: true });
-            mkdirSync('temp');
+            if (existsSync('temp')) rmSync('temp', { recursive: true })
+            mkdirSync('temp')
 
             this.config.discord.channels.forEach(channel => {
-                this.audios[channel.id] = new DiscordVoice(core, this.bot, this.logger, channel);
-            });
-        });
+                this.audios[channel.id] = new DiscordVoice(core, this.bot, this.logger, channel)
+            })
+        })
 
-        new DiscordText(this.bot, this.logger);
+        new DiscordText(this.bot, this.logger)
 
-        this.bot.connect();
+        this.bot.connect()
     }
 
-    public async stop() {
-        this.logger.info('Shutting down...');
+    public async stop () {
+        this.logger.info('Shutting down...')
 
         for (const connection of this.bot.voiceConnections.values()) {
-            if (!connection.channelID) return;
-            if (!this.audios[connection.channelID]) return;
+            if (!connection.channelID) return
+            if (!this.audios[connection.channelID]) return
 
-            await this.audios[connection.channelID].stop(connection);
-            delete this.audios[connection.channelID];
+            await this.audios[connection.channelID].stop(connection)
+            delete this.audios[connection.channelID]
         }
 
-        this.bot.disconnect({ reconnect: false });
+        this.bot.disconnect({ reconnect: false })
     }
 }

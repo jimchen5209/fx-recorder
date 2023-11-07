@@ -1,7 +1,7 @@
-diff --git a/node_modules/eris/lib/voice/VoiceConnection.js b/node_modules/eris/lib/voice/VoiceConnection.js
-index 0c8ff0e..6c3f707 100644
---- a/node_modules/eris/lib/voice/VoiceConnection.js
-+++ b/node_modules/eris/lib/voice/VoiceConnection.js
+diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
+index 0c8ff0e12e647afbb1bf4e9b1b9d868306e7cfa0..6c3f707e700dd984f17d7b1c16b0b7d11c96115a 100644
+--- a/lib/voice/VoiceConnection.js
++++ b/lib/voice/VoiceConnection.js
 @@ -120,6 +120,7 @@ class VoiceConnection extends EventEmitter {
          this.connectionTimeout = null;
          this.connecting = false;

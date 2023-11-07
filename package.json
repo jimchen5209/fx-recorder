@@ -8,7 +8,6 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
-    "postinstall": "patch-package",
     "lintTest": "eslint src/ --max-warnings 0",
     "lintFix": "eslint src/ --fix",
     "build": "tsc --pretty",
@@ -17,28 +16,31 @@
   "description": "",
   "dependencies": {
     "async-wait-until": "^2.0.12",
-    "dayjs": "^1.10.8",
-    "eris": "^0.17.1",
+    "dayjs": "^1.11.7",
+    "eris": "^0.17.2",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
-    "patch-package": "^6.4.7",
-    "postinstall-postinstall": "^2.1.0",
     "status-client": "jimchen5209/StatusClient_JS#2.1.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
   },
   "devDependencies": {
-    "@types/node-telegram-bot-api": "^0.61.3",
-    "@types/ws": "^8.5.1",
-    "@typescript-eslint/eslint-plugin": "^5.16.0",
-    "@typescript-eslint/parser": "^5.16.0",
-    "eslint": "^8.10.0",
-    "typescript": "^4.5.5"
+    "@types/node-telegram-bot-api": "^0.61.6",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint": "^8.37.0",
+    "node-gyp": "^9.3.1",
+    "typescript": "^5.0.3"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.9.0",
-    "bufferutil": "^4.0.6",
+    "bufferutil": "^4.0.7",
     "erlpack": "github:abalabahaha/erlpack",
     "node-addon-api": "^6.0.0",
     "sodium-native": "^4.0.1"
+  },
+  "packageManager": "yarn@3.5.0",
+  "resolutions": {
+    "eris@^0.17.2": "patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
   }
 }
