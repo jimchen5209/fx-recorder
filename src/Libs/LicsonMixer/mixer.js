@@ -2,8 +2,6 @@
 
 const { Stream } = require('stream');
 const EventEmitter = require('events').EventEmitter;
-const deepAssign = require('deep-assign');
-const config = deepAssign(require('../config.example.json'), require('../config.json'));
 
 class Source extends EventEmitter {
     constructor(obj) {
@@ -349,10 +347,6 @@ class MixerStream extends Stream.Readable {
 
 // Attempt to load and use C++ module
 try {
-    if (config.debug.useJavascriptMixer) {
-        throw new Error('debug throw');
-    }
-
     MixerStream.prototype._mixin = require('../../../Libs/LicsonMixer/build/Release/mix.node');
     console.log('[Mixer] Using optimized C++ implementation.');
 } catch (e) {
