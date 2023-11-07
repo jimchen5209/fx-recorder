@@ -16,7 +16,7 @@
   "description": "",
   "dependencies": {
     "async-wait-until": "^2.0.12",
-    "dayjs": "^1.11.7",
+    "dayjs": "^1.11.10",
     "eris": "^0.17.2",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
@@ -24,20 +24,20 @@
     "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
   },
   "devDependencies": {
-    "@types/node-telegram-bot-api": "^0.61.6",
-    "@types/ws": "^8.5.4",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
-    "eslint": "^8.37.0",
-    "node-gyp": "^9.3.1",
-    "typescript": "^5.0.3"
+    "@types/node-telegram-bot-api": "^0.61.11",
+    "@types/ws": "^8.5.8",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.53.0",
+    "node-gyp": "^9.4.1",
+    "typescript": "^5.2.2"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.9.0",
-    "bufferutil": "^4.0.7",
+    "bufferutil": "^4.0.8",
     "erlpack": "github:abalabahaha/erlpack",
-    "node-addon-api": "^6.0.0",
-    "sodium-native": "^4.0.1"
+    "node-addon-api": "^6.1.0",
+    "sodium-native": "^4.0.4"
   },
   "packageManager": "yarn@3.5.0",
   "resolutions": {
