@@ -20,8 +20,8 @@
     "eris": "^0.17.2",
     "node-telegram-bot-api": "0.61.0",
     "opusscript": "^0.0.8",
-    "status-client": "jimchen5209/StatusClient_JS#2.1.0",
-    "tslog-helper": "jimchen5209/TSLog-Helper#2.2.0"
+    "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
+    "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.61.11",

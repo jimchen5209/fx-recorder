@@ -786,13 +786,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dayjs@npm:^1.10.8":
-  version: 1.11.7
-  resolution: "dayjs@npm:1.11.7"
-  checksum: 5003a7c1dd9ed51385beb658231c3548700b82d3548c0cfbe549d85f2d08e90e972510282b7506941452c58d32136d6362f009c77ca55381a09c704e9f177ebb
-  languageName: node
-  linkType: hard
-
 "dayjs@npm:^1.11.10":
   version: 1.11.10
   resolution: "dayjs@npm:1.11.10"
@@ -1348,8 +1341,8 @@ __metadata:
     node-telegram-bot-api: 0.61.0
     opusscript: ^0.0.8
     sodium-native: ^4.0.4
-    status-client: "jimchen5209/StatusClient_JS#2.1.0"
-    tslog-helper: "jimchen5209/TSLog-Helper#2.2.0"
+    status-client: "jimchen5209/StatusClient_JS#v2.2.0"
+    tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
     typescript: ^5.2.2
   dependenciesMeta:
     "@discordjs/opus":
@@ -2853,10 +2846,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"status-client@jimchen5209/StatusClient_JS#2.1.0":
-  version: 2.0.0
-  resolution: "status-client@https://github.com/jimchen5209/StatusClient_JS.git#commit=445aa44f991d78d67d2e33ad44fdedff159eddb8"
-  checksum: 776d6ca10003c26429b30f26d58774f42c5b0cd6adcb4511fd2373d270d9c22e54c07a6dc7ee00b6671511a29bc96cd01f3612b4058d1f90c1b3b54d2723e412
+"status-client@jimchen5209/StatusClient_JS#v2.2.0":
+  version: 2.2.0
+  resolution: "status-client@https://github.com/jimchen5209/StatusClient_JS.git#commit=86ad74fed1caa9d12a571d183fd8d64881e14b9b"
+  checksum: 7b222a391288e3d139fab133b7aa090a6ae798fc312bb65816419c8f0b2aa57ef02565a0bfc6bf497d4f1bbcef2a0023327da6bd807d704d8e5821d263364013
   languageName: node
   linkType: hard
 
@@ -3030,17 +3023,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslog-helper@jimchen5209/TSLog-Helper#2.2.0":
-  version: 2.2.0
-  resolution: "tslog-helper@https://github.com/jimchen5209/TSLog-Helper.git#commit=e6d2f53f2efbc3c5cf5cf47b39c7a64a76be0d87"
+"tslog-helper@jimchen5209/TSLog-Helper#v2.3.0":
+  version: 2.3.0
+  resolution: "tslog-helper@https://github.com/jimchen5209/TSLog-Helper.git#commit=09932c7ce1f42bb566d334821c201143ef5094eb"
   dependencies:
-    dayjs: ^1.10.8
-    tslog: ^3.2.2
-  checksum: 516c703733898ebefb973bc860041cc1276d04328bf510d6a7c32c17fd528085713496d8b973a03db6128e0cd5ccfa5bc9d8600ff7348b0833387e5a86595914
+    dayjs: ^1.11.10
+    tslog: ^3.3.4
+  checksum: 68704490b775a30023f71a6a1c9a17ceed975bf8fa4243595621e63787b922737e02db008c19dc7a7342c70c1242a3c7fd73fb8d646444d05f7d37e03147aa19
   languageName: node
   linkType: hard
 
-"tslog@npm:^3.2.2":
+"tslog@npm:^3.3.4":
   version: 3.3.4
   resolution: "tslog@npm:3.3.4"
   dependencies:
