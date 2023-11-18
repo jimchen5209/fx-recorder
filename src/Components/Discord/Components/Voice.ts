@@ -22,6 +22,9 @@ export class DiscordVoice extends EventEmitter {
     private userMixers: { [key: string]: LicsonMixer } = {}
     private active = true
     private readyToDelete = false
+    private maxWarning = 5
+    private warningCount = 0
+    private warningResetTimer: NodeJS.Timeout | undefined
 
     constructor (
         core: Core,
@@ -319,6 +322,25 @@ export class DiscordVoice extends EventEmitter {
             connection.on('warn', (message: string) => {
                 this.logger.warn(`Warning from ${channelID}: ${message}`)
                 if (this.active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
+                if (this.warningResetTimer) {
+                    clearTimeout(this.warningResetTimer)
+                    this.warningResetTimer = undefined
+                }
+                const tempTimer = setTimeout(() => {
+                    this.warningResetTimer = undefined
+                    this.warningCount = 0
+                }, 1 * 1000)
+                this.warningResetTimer = tempTimer
+
+                this.warningCount++
+                if (this.warningCount >= this.maxWarning) {
+                    this.logger.error(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
+                    if (this.active) this.sendAdminMessage(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
+                    this.stopSession(channelID, connection)
+                    setTimeout(() => {
+                        this.startAudioSession(channelID)
+                    }, 5 * 1000)
+                }
             })
             connection.on('error', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err)
@@ -326,6 +348,8 @@ export class DiscordVoice extends EventEmitter {
             })
             connection.on('ready', () => {
                 this.logger.warn('Voice connection reconnected.')
+                this.warningResetTimer = undefined
+                this.warningCount = 0
             })
             connection.once('disconnect', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err)
@@ -350,7 +374,6 @@ export class DiscordVoice extends EventEmitter {
 
     private endStream (user: string) {
         this.recvMixer.getSources(user)[0]?.stream.end()
-        // this.userMixers[user]?.getSources(user)[0]?.stream.end();
         this.userMixers[user]?.stop()
         this.emit('userEndStream', user)
     }
