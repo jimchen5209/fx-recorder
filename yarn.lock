@@ -1339,7 +1339,7 @@ __metadata:
     node-addon-api: ^6.1.0
     node-gyp: ^9.4.1
     node-telegram-bot-api: 0.61.0
-    opusscript: ^0.0.8
+    opusscript: ^0.1.1
     sodium-native: ^4.0.4
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
     tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
@@ -2388,6 +2388,13 @@ __metadata:
   version: 0.0.8
   resolution: "opusscript@npm:0.0.8"
   checksum: 0c3175a4013f5bd4578ae06f906573717ab5570d6013a15796273fb375f083530073374add3838fa944afbe242740fd27053629f7796a208d7e8be14674ba147
+  languageName: node
+  linkType: hard
+
+"opusscript@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "opusscript@npm:0.1.1"
+  checksum: 0c3d6035e201db2aaa04ba90823d385142c526e708b5d2ae0e1f16c03334fedb14e89e71c9e85c0d3e9bbf431eeffeae5742665b3c31714dd2b13b84c4a7c841
   languageName: node
   linkType: hard
 
