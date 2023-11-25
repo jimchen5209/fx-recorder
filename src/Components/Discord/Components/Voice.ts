@@ -12,6 +12,7 @@ import AbortStream from '../../../Libs/abort'
 import { createWriteStream, mkdirSync, unlinkSync, existsSync, rmSync, WriteStream, readFileSync } from 'fs'
 import { Silence } from './Silence'
 import { waitUntil, TimeoutError }  from 'async-wait-until'
+import { debounce } from 'lodash'
 
 export class DiscordVoice extends EventEmitter {
     private core: Core
@@ -315,31 +316,38 @@ export class DiscordVoice extends EventEmitter {
         }
     }
 
+    private isWarningExceed() {
+        if (this.warningResetTimer) {
+            clearTimeout(this.warningResetTimer)
+            this.warningResetTimer = undefined
+        }
+        const tempTimer = setTimeout(() => {
+            this.warningResetTimer = undefined
+            this.warningCount = 0
+        }, 1 * 1000)
+        this.warningResetTimer = tempTimer
+
+        this.warningCount++
+        return this.warningCount >= this.maxWarning
+     }
+
     private async joinVoiceChannel (channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`)
         try {
             const connection = await this.bot.joinVoiceChannel(channelID)
+            const reconnect = debounce(() => {
+                this.stopSession(channelID, connection)
+                setTimeout(() => {
+                    this.startAudioSession(channelID)
+                }, 5 * 1000)
+            }, 500)
             connection.on('warn', (message: string) => {
                 this.logger.warn(`Warning from ${channelID}: ${message}`)
                 if (this.active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
-                if (this.warningResetTimer) {
-                    clearTimeout(this.warningResetTimer)
-                    this.warningResetTimer = undefined
-                }
-                const tempTimer = setTimeout(() => {
-                    this.warningResetTimer = undefined
-                    this.warningCount = 0
-                }, 1 * 1000)
-                this.warningResetTimer = tempTimer
-
-                this.warningCount++
-                if (this.warningCount >= this.maxWarning) {
+                if (this.isWarningExceed()) {
                     this.logger.error(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
                     if (this.active) this.sendAdminMessage(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
-                    this.stopSession(channelID, connection)
-                    setTimeout(() => {
-                        this.startAudioSession(channelID)
-                    }, 5 * 1000)
+                    reconnect()
                 }
             })
             connection.on('error', err => {
@@ -356,10 +364,7 @@ export class DiscordVoice extends EventEmitter {
                 if (this.active) {
                     this.sendAdminMessage(`Error from voice connection ${channelID}: ${err?.message}`)
                     this.sendMessage('There is an error with the voice connection.')
-                    this.stopSession(channelID, connection)
-                    setTimeout(() => {
-                        this.startAudioSession(channelID)
-                    }, 5 * 1000)
+                    reconnect()
                 }
             })
             return connection

@@ -18,12 +18,14 @@
     "async-wait-until": "^2.0.12",
     "dayjs": "^1.11.10",
     "eris": "^0.17.2",
+    "lodash": "^4.17.21",
     "node-telegram-bot-api": "0.64.0",
     "opusscript": "^0.1.1",
     "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4",
     "@types/node": "^20.9.1",
     "@types/node-telegram-bot-api": "^0.63.2",
     "@types/ws": "^8.5.9",
