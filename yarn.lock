@@ -249,16 +249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
-  version: 20.10.0
-  resolution: "@types/node@npm:20.10.0"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: f379e57d9d28cb5f3d8eab943de0c54a0ca2f95ee356e1fe2a1a4fa718b740103ae522c50ce107cffd52c3642ef3244cfc55bf5369081dd6c48369c8587b21ae
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^20.10.3":
+"@types/node@npm:*, @types/node@npm:^20.10.3":
   version: 20.10.3
   resolution: "@types/node@npm:20.10.3"
   dependencies:
@@ -936,7 +927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"define-properties@npm:^1.1.3, define-properties@npm:^1.1.4, define-properties@npm:^1.2.0":
+"define-properties@npm:^1.1.3, define-properties@npm:^1.2.0, define-properties@npm:^1.2.1":
   version: 1.2.1
   resolution: "define-properties@npm:1.2.1"
   dependencies:
@@ -2590,14 +2581,14 @@ __metadata:
   linkType: hard
 
 "object.assign@npm:^4.1.4":
-  version: 4.1.4
-  resolution: "object.assign@npm:4.1.4"
+  version: 4.1.5
+  resolution: "object.assign@npm:4.1.5"
   dependencies:
-    call-bind: "npm:^1.0.2"
-    define-properties: "npm:^1.1.4"
+    call-bind: "npm:^1.0.5"
+    define-properties: "npm:^1.2.1"
     has-symbols: "npm:^1.0.3"
     object-keys: "npm:^1.1.1"
-  checksum: 2f286118c023e557757620e647b02e7c88d3d417e0c568fca0820de8ec9cca68928304854d5b03e99763eddad6e78a6716e2930f7e6372e4b9b843f3fd3056f3
+  checksum: 60108e1fa2706f22554a4648299b0955236c62b3685c52abf4988d14fffb0e7731e00aa8c6448397e3eb63d087dcc124a9f21e1980f36d0b2667f3c18bacd469
   languageName: node
   linkType: hard
 
