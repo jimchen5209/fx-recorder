@@ -239,13 +239,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-telegram-bot-api@npm:^0.64.1":
-  version: 0.64.1
-  resolution: "@types/node-telegram-bot-api@npm:0.64.1"
+"@types/node-telegram-bot-api@npm:^0.64.2":
+  version: 0.64.2
+  resolution: "@types/node-telegram-bot-api@npm:0.64.2"
   dependencies:
     "@types/node": "npm:*"
     "@types/request": "npm:*"
-  checksum: 72f7870fd08314122fbac755deb275b75180a3de296fbbca79f0a0612bf4a91d23062e693c9578cf56e644afdc6dff4bb73d486947f938a66c416b4866fd897e
+  checksum: 8f3d06a4be7362a7feb60c7308d855730632b6ed0f5d7d61d791ec8abed5ba58d0323db8a0aab2021b69587ca8a4d9ab413ef32799c7c3276f37c548905873b1
   languageName: node
   linkType: hard
 
@@ -1521,7 +1521,7 @@ __metadata:
     "@discordjs/opus": "npm:0.9.0"
     "@types/lodash": "npm:^4.14.202"
     "@types/node": "npm:^20.10.6"
-    "@types/node-telegram-bot-api": "npm:^0.64.1"
+    "@types/node-telegram-bot-api": "npm:^0.64.2"
     "@types/ws": "npm:^8.5.10"
     "@typescript-eslint/eslint-plugin": "npm:^6.17.0"
     "@typescript-eslint/parser": "npm:^6.17.0"
