@@ -26,12 +26,12 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.202",
-    "@types/node": "^20.10.7",
+    "@types/node": "^20.11.0",
     "@types/node-telegram-bot-api": "^0.64.2",
     "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^6.18.0",
-    "@typescript-eslint/parser": "^6.18.0",
-    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "eslint": "^8.56.0",
     "node-gyp": "^10.0.1",
     "typescript": "^5.3.3"
   },
@@ -40,7 +40,7 @@
     "bufferutil": "^4.0.8",
     "erlpack": "^0.1.4",
     "node-addon-api": "^7.0.0",
-    "sodium-native": "^4.0.4"
+    "sodium-native": "^4.0.5"
   },
   "packageManager": "yarn@4.0.2",
   "resolutions": {
