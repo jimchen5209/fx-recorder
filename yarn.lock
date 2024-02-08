@@ -1536,7 +1536,7 @@ __metadata:
     node-gyp: "npm:^10.0.1"
     node-telegram-bot-api: "npm:0.64.0"
     opusscript: "npm:^0.1.1"
-    sodium-native: "npm:^4.0.5"
+    sodium-native: "npm:^4.0.6"
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
     tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
     typescript: "npm:^5.3.3"
@@ -3062,13 +3062,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sodium-native@npm:^4.0.5":
-  version: 4.0.5
-  resolution: "sodium-native@npm:4.0.5"
+"sodium-native@npm:^4.0.6":
+  version: 4.0.6
+  resolution: "sodium-native@npm:4.0.6"
   dependencies:
     node-gyp: "npm:latest"
     node-gyp-build: "npm:^4.6.0"
-  checksum: d2317355d350e483713a95ad3234215e3a665df8f90d8a602b849b4a05bc14cfe58a61393453db288543be704ad73b05531859672281a935c3dcac55788b4f28
+  checksum: 6ca4de2f934bdc5408460363afb7c17777a20f626653701c2f87bda34f601498cf4fa82156f03bbb58f1ce5d95d9194c74c47b882875588f9f36c44abc9ff325
   languageName: node
   linkType: hard
 
