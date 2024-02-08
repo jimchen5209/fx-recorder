@@ -1546,7 +1546,7 @@ __metadata:
     node-gyp: "npm:^10.0.1"
     node-telegram-bot-api: "npm:0.64.0"
     opusscript: "npm:^0.1.1"
-    sodium-native: "npm:^4.0.6"
+    sodium-native: "npm:^4.0.7"
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
     tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
     typescript: "npm:^5.3.3"
@@ -3076,7 +3076,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sodium-native@npm:^4.0.6":
+"sodium-native@npm:^4.0.7":
   version: 4.0.7
   resolution: "sodium-native@npm:4.0.7"
   dependencies:
