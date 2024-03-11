@@ -29,7 +29,7 @@
     "@types/node": "^20.11.16",
     "@types/node-telegram-bot-api": "^0.64.2",
     "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
     "node-gyp": "^10.0.1",
