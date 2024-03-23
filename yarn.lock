@@ -263,7 +263,7 @@ __metadata:
   resolution: "@types/node@npm:20.11.28"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: c599745243ed9ae4ca87460f18f88d02ab7424b545136aa504ed7a1d898e3a9bb133c927bcc7e861f79d7f6043ef917a173e780c8a001e129221e92f6d97b0ee
+  checksum: 10c0/c599745243ed9ae4ca87460f18f88d02ab7424b545136aa504ed7a1d898e3a9bb133c927bcc7e861f79d7f6043ef917a173e780c8a001e129221e92f6d97b0ee
   languageName: node
   linkType: hard
 
@@ -1555,7 +1555,7 @@ __metadata:
     node-gyp: "npm:^10.0.1"
     node-telegram-bot-api: "npm:0.64.0"
     opusscript: "npm:^0.1.1"
-    sodium-native: "npm:^4.0.7"
+    sodium-native: "npm:^4.0.10"
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
     tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
     typescript: "npm:^5.3.3"
@@ -3085,13 +3085,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sodium-native@npm:^4.0.7":
-  version: 4.0.7
-  resolution: "sodium-native@npm:4.0.7"
+"sodium-native@npm:^4.0.10":
+  version: 4.0.10
+  resolution: "sodium-native@npm:4.0.10"
   dependencies:
     node-gyp: "npm:latest"
     node-gyp-build: "npm:^4.6.0"
-  checksum: 10c0/5f065b888e61b19df8336ff803cbcb7d29786a5450c5362dad2b3608d702d3185b3e7fdca06017e144a5d341defd654a7dc554d3ef3928122a3db27bdc23048d
+  checksum: 10c0/95fcc84a3b4589833a41ac9e6abebb719978bbdc50945cf4e78df87d0273f021e1f4079d9b788dca563b34ceb9d83d0d2aab12448da66af9c489fe30bcadc0c1
   languageName: node
   linkType: hard
 
