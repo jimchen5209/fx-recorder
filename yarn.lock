@@ -1605,7 +1605,7 @@ __metadata:
     lodash: "npm:^4.17.21"
     node-addon-api: "npm:^8.0.0"
     node-gyp: "npm:^10.0.1"
-    node-telegram-bot-api: "npm:0.64.0"
+    node-telegram-bot-api: "npm:0.65.1"
     opusscript: "npm:^0.1.1"
     sodium-native: "npm:^4.0.10"
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
@@ -2600,9 +2600,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-telegram-bot-api@npm:0.64.0":
-  version: 0.64.0
-  resolution: "node-telegram-bot-api@npm:0.64.0"
+"node-telegram-bot-api@npm:0.65.1":
+  version: 0.65.1
+  resolution: "node-telegram-bot-api@npm:0.65.1"
   dependencies:
     "@cypress/request": "npm:^3.0.1"
     "@cypress/request-promise": "npm:^5.0.0"
@@ -2613,7 +2613,7 @@ __metadata:
     file-type: "npm:^3.9.0"
     mime: "npm:^1.6.0"
     pump: "npm:^2.0.0"
-  checksum: 10c0/a5606b4dd0a4440cab121d32e859eabd1abdf3b90d135b946db52f523ae0772160b6509989a17a2ee2f137785851be32bdefd9defc5da256a704e3dcd84fd0b8
+  checksum: 10c0/ba1b11db403900b61ad3cd7cbc343282a3b74d856902219ce23f57e211301136bce9b3112816426780a90378e6b03c6e80b0aed682a4842ebbbb9d696cc19293
   languageName: node
   linkType: hard
 

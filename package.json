@@ -19,7 +19,7 @@
     "dayjs": "^1.11.10",
     "eris": "^0.17.2",
     "lodash": "^4.17.21",
-    "node-telegram-bot-api": "0.64.0",
+    "node-telegram-bot-api": "0.65.1",
     "opusscript": "^0.1.1",
     "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
