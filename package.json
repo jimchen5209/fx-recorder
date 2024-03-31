@@ -30,7 +30,7 @@
     "@types/node-telegram-bot-api": "^0.64.2",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.3.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.56.0",
     "node-gyp": "^10.1.0",
     "typescript": "^5.3.3"
