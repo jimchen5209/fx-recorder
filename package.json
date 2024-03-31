@@ -25,22 +25,22 @@
     "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.202",
-    "@types/node": "^20.11.28",
-    "@types/node-telegram-bot-api": "^0.64.2",
+    "@types/lodash": "^4.17.0",
+    "@types/node": "^20.12.2",
+    "@types/node-telegram-bot-api": "^0.64.6",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "node-gyp": "^10.1.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.3"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.9.0",
     "bufferutil": "^4.0.8",
     "erlpack": "^0.1.4",
     "node-addon-api": "^8.0.0",
-    "sodium-native": "^4.0.10"
+    "sodium-native": "^4.1.1"
   },
   "packageManager": "yarn@4.1.1",
   "resolutions": {
