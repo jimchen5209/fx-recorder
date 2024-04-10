@@ -33,7 +33,7 @@
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.57.0",
     "node-gyp": "^10.1.0",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.4"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.9.0",
