@@ -9,7 +9,7 @@ export class Core {
     public readonly mainLogger = this.logHelper.logger
     public readonly config = new Config(this)
     private _telegram: Telegram | undefined
-    private discord: Discord | undefined
+    private _discord: Discord | undefined
     private readonly status = new Status('fx-recorder')
 
     constructor () {
@@ -23,7 +23,7 @@ export class Core {
             }
         }
         try {
-            this.discord = new Discord(this)
+            this._discord = new Discord(this)
         } catch (error) {
             if (error instanceof Error) {
                 this.mainLogger.error('Error occurred when connecting to discord:', error)
@@ -45,10 +45,14 @@ export class Core {
         return this._telegram
     }
 
+    public get discord() {
+        return this._discord
+    }
+
     private async stop (reason: string) {
         this.mainLogger.info(`Stopping! Reason: ${reason}`)
-        await this.discord?.stop()
-        this._telegram?.stop()
+        await this._discord?.disconnect()
+        this._telegram?.disconnect()
 
         process.exit(0)
     }

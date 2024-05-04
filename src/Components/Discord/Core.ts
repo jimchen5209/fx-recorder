@@ -4,7 +4,7 @@ import { Config } from '../../Core/Config'
 import { Core } from '../..'
 import { DiscordVoice } from './Components/Voice'
 import { DiscordText } from './Components/Text'
-import { mkdirSync ,existsSync, rmSync } from 'fs'
+import { mkdirSync, existsSync, rmSync } from 'fs'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
@@ -42,17 +42,17 @@ export class Discord {
         this.bot.connect()
     }
 
-    public async stop () {
+    public async disconnect (reconnect = false) {
         this.logger.info('Shutting down...')
 
         for (const connection of this.bot.voiceConnections.values()) {
-            if (!connection.channelID) return
-            if (!this.audios[connection.channelID]) return
+            if (!connection.channelID) continue
+            if (!this.audios[connection.channelID]) continue
 
             await this.audios[connection.channelID].stop(connection)
             delete this.audios[connection.channelID]
         }
 
-        this.bot.disconnect({ reconnect: false })
+        this.bot.disconnect({ reconnect })
     }
 }

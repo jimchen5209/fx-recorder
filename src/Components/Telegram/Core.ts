@@ -49,7 +49,7 @@ export class Telegram {
         }
     }
 
-    public stop () {
+    public disconnect () {
         this.logger.info('Shutting down...')
 
         this.bot.stopPolling()
