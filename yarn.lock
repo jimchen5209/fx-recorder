@@ -225,10 +225,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.17.1":
-  version: 4.17.1
-  resolution: "@types/lodash@npm:4.17.1"
-  checksum: 10c0/af2ad8a3c8d7deb170a7ec6e18afc5ae8980576e5f7fe798d8a95a1df7222c15bdf967a25a35879f575a3b64743de00145710ee461a0051e055e94e4fe253f45
+"@types/lodash@npm:^4.17.7":
+  version: 4.17.7
+  resolution: "@types/lodash@npm:4.17.7"
+  checksum: 10c0/40c965b5ffdcf7ff5c9105307ee08b782da228c01b5c0529122c554c64f6b7168fc8f11dc79aa7bae4e67e17efafaba685dc3a47e294dbf52a65ed2b67100561
   languageName: node
   linkType: hard
 
@@ -1583,7 +1583,7 @@ __metadata:
   resolution: "fx-record-ts-bot@workspace:."
   dependencies:
     "@discordjs/opus": "npm:0.9.0"
-    "@types/lodash": "npm:^4.17.1"
+    "@types/lodash": "npm:^4.17.7"
     "@types/node": "npm:^20.12.11"
     "@types/node-telegram-bot-api": "npm:^0.64.6"
     "@types/ws": "npm:^8.5.10"
