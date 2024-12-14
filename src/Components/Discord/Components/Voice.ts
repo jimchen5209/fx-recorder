@@ -26,6 +26,9 @@ export class DiscordVoice extends EventEmitter {
     private maxWarning = 5
     private warningCount = 0
     private warningResetTimer: NodeJS.Timeout | undefined
+    private maxReconnect = 5
+    private reconnectCount = 0
+    private reconnectResetTimer: NodeJS.Timeout | undefined
 
     constructor (
         core: Core,
@@ -316,7 +319,7 @@ export class DiscordVoice extends EventEmitter {
         }
     }
 
-    private isWarningExceed() {
+    private isWarningExceed () {
         if (this.warningResetTimer) {
             clearTimeout(this.warningResetTimer)
             this.warningResetTimer = undefined
@@ -329,7 +332,22 @@ export class DiscordVoice extends EventEmitter {
 
         this.warningCount++
         return this.warningCount >= this.maxWarning
-     }
+    }
+
+    private isReconnectExceed () {
+        if (this.reconnectResetTimer) {
+            clearTimeout(this.reconnectResetTimer)
+            this.reconnectResetTimer = undefined
+        }
+        const tempTimer = setTimeout(() => {
+            this.reconnectResetTimer = undefined
+            this.reconnectCount = 0
+        }, 1 * 1000)
+        this.reconnectResetTimer = tempTimer
+
+        this.reconnectCount++
+        return this.reconnectCount >= this.maxReconnect
+    }
 
     private async joinVoiceChannel (channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`)
@@ -337,6 +355,11 @@ export class DiscordVoice extends EventEmitter {
             const connection = await this.bot.joinVoiceChannel(channelID)
             const reconnect = debounce(() => {
                 this.stopSession(channelID, connection)
+                if (this.isReconnectExceed()) {
+                    this.logger.error(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
+                    if (this.active) this.sendAdminMessage(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
+                    this.core.discord?.disconnect(true)
+                }
                 setTimeout(() => {
                     this.startAudioSession(channelID)
                 }, 5 * 1000)
