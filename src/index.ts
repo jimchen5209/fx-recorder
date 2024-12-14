@@ -1,20 +1,24 @@
 import { Config } from './Core/Config'
-import { LogHelper } from 'tslog-helper'
 import { Telegram } from './Components/Telegram/Core'
 import { Discord } from './Components/Discord/Core'
 import { Status } from 'status-client'
+import { ILogObj, Logger } from 'tslog'
 
 export class Core {
-    private readonly logHelper = new LogHelper()
-    public readonly mainLogger = this.logHelper.logger
+    public readonly mainLogger: Logger<ILogObj> = new Logger({
+        name: 'Main',
+        prettyLogTimeZone: 'local',
+        hideLogPositionForProduction: true,
+        minLevel: 3 // Info
+    })
     public readonly config = new Config(this)
     private _telegram: Telegram | undefined
     private _discord: Discord | undefined
     private readonly status = new Status('fx-recorder')
 
     constructor () {
-        this.logHelper.setDebug(this.config.logging.debug)
-        this.logHelper.setLogRaw(this.config.logging.raw)
+        if (this.config.logging.debug) this.mainLogger.settings.minLevel = 0 // Silly
+
         try {
             this._telegram = new Telegram(this)
         } catch (error) {

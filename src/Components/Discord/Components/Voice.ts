@@ -1,5 +1,5 @@
 import { CommandClient, VoiceConnection, VoiceChannel } from 'eris'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
@@ -17,7 +17,7 @@ import { debounce } from 'lodash'
 export class DiscordVoice extends EventEmitter {
     private core: Core
     private bot: CommandClient
-    private logger: Logger
+    private logger: Logger<ILogObj>
     private channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }
     private recvMixer = new LicsonMixer(16, 2, 48000)
     private userMixers: { [key: string]: LicsonMixer } = {}
@@ -33,7 +33,7 @@ export class DiscordVoice extends EventEmitter {
     constructor (
         core: Core,
         bot: CommandClient,
-        logger: Logger,
+        logger: Logger<ILogObj>,
         channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }
     ) {
         super()

@@ -1,5 +1,5 @@
 import { CommandClient } from 'eris'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Config } from '../../Core/Config'
 import { Core } from '../..'
 import { DiscordVoice } from './Components/Voice'
@@ -11,12 +11,12 @@ const ERR_MISSING_TOKEN = Error('Discord token missing')
 export class Discord {
     private config: Config
     private bot: CommandClient
-    private logger: Logger
+    private logger: Logger<ILogObj>
     public audios: { [key: string]: DiscordVoice } = {}
 
     constructor (core: Core) {
         this.config = core.config
-        this.logger = core.mainLogger.getChildLogger({ name: 'Discord' })
+        this.logger = core.mainLogger.getSubLogger({ name: 'Discord' })
 
         if (this.config.discord.token === '') throw ERR_MISSING_TOKEN
 

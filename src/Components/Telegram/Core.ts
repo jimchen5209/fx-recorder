@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api'
 import { Core } from '../..'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Config } from '../../Core/Config'
 
 const ERR_MISSING_TOKEN = Error('Telegram bot api token not found!')
@@ -8,11 +8,11 @@ const ERR_MISSING_TOKEN = Error('Telegram bot api token not found!')
 export class Telegram {
     private bot: TelegramBot
     private config: Config
-    private logger: Logger
+    private logger: Logger<ILogObj>
 
     constructor (core: Core) {
         this.config = core.config
-        this.logger = core.mainLogger.getChildLogger({ name: 'Telegram' })
+        this.logger = core.mainLogger.getSubLogger({ name: 'Telegram' })
 
         if (this.config.telegram.token === '') throw ERR_MISSING_TOKEN
 

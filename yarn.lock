@@ -689,13 +689,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer-from@npm:^1.0.0":
-  version: 1.1.2
-  resolution: "buffer-from@npm:1.1.2"
-  checksum: 10c0/124fff9d66d691a86d3b062eff4663fe437a9d9ee4b47b1b9e97f5a5d14f6d5399345db80f796827be7c95e70a8e765dd404b7c3ff3b3324f98e9b0c8826cc34
-  languageName: node
-  linkType: hard
-
 "bufferutil@npm:^4.0.8":
   version: 4.0.8
   resolution: "bufferutil@npm:4.0.8"
@@ -911,7 +904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dayjs@npm:^1.11.10, dayjs@npm:^1.11.13":
+"dayjs@npm:^1.11.13":
   version: 1.11.13
   resolution: "dayjs@npm:1.11.13"
   checksum: 10c0/a3caf6ac8363c7dade9d1ee797848ddcf25c1ace68d9fe8678ecf8ba0675825430de5d793672ec87b24a69bf04a1544b176547b2539982275d5542a7955f35b7
@@ -1609,7 +1602,7 @@ __metadata:
     opusscript: "npm:^0.1.1"
     sodium-native: "npm:^4.3.1"
     status-client: "jimchen5209/StatusClient_JS#v2.2.0"
-    tslog-helper: "jimchen5209/TSLog-Helper#v2.3.0"
+    tslog: "npm:^4.9.3"
     typescript: "npm:^5.7.2"
   dependenciesMeta:
     "@discordjs/opus":
@@ -3313,23 +3306,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.5.21":
-  version: 0.5.21
-  resolution: "source-map-support@npm:0.5.21"
-  dependencies:
-    buffer-from: "npm:^1.0.0"
-    source-map: "npm:^0.6.0"
-  checksum: 10c0/9ee09942f415e0f721d6daad3917ec1516af746a8120bba7bb56278707a37f1eb8642bde456e98454b8a885023af81a16e646869975f06afc1a711fb90484e7d
-  languageName: node
-  linkType: hard
-
-"source-map@npm:^0.6.0":
-  version: 0.6.1
-  resolution: "source-map@npm:0.6.1"
-  checksum: 10c0/ab55398007c5e5532957cb0beee2368529618ac0ab372d789806f5718123cc4367d57de3904b4e6a4170eb5a0b0f41373066d02ca0735a0c4d75c7d328d3e011
-  languageName: node
-  linkType: hard
-
 "sprintf-js@npm:^1.1.3":
   version: 1.1.3
   resolution: "sprintf-js@npm:1.1.3"
@@ -3592,22 +3568,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslog-helper@jimchen5209/TSLog-Helper#v2.3.0":
-  version: 2.3.0
-  resolution: "tslog-helper@https://github.com/jimchen5209/TSLog-Helper.git#commit=09932c7ce1f42bb566d334821c201143ef5094eb"
-  dependencies:
-    dayjs: "npm:^1.11.10"
-    tslog: "npm:^3.3.4"
-  checksum: 10c0/633a61de2982389e1849376a30a2e8f400d901a46db560cdffcae4380d5d063c9d0f8bb2f907b0ce2b0d4d7e6825a33e102cf4ac7ea3299db332eb14bcbda9fa
-  languageName: node
-  linkType: hard
-
-"tslog@npm:^3.3.4":
-  version: 3.3.4
-  resolution: "tslog@npm:3.3.4"
-  dependencies:
-    source-map-support: "npm:^0.5.21"
-  checksum: 10c0/ebe8b1f4242498c4d95a2cb8dbfa6a144e76c5d08590b945cebb787efebbd94338111606afb1e82c2e6a5d1d88fc18efad7ae438f9fa8182e5d4615bc776045c
+"tslog@npm:^4.9.3":
+  version: 4.9.3
+  resolution: "tslog@npm:4.9.3"
+  checksum: 10c0/9db2c02b01be44a97e447061958565ceb8faf33a241cf9c030d5f1ebefff74434b66090985f5a75189a514aae2267999851c281b8cd8dc8cd93dd158b1033319
   languageName: node
   linkType: hard
 

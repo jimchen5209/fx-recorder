@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, writeFileSync, copyFileSync, constants } from 'fs'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Core } from '..'
 
 export interface FileDestination {
@@ -51,7 +51,7 @@ export class Config {
     private _discord: DiscordConfig
     private _telegram: TelegramConfig
     private _logging: LogConfig
-    private logger: Logger
+    private logger: Logger<ILogObj>
 
     private readonly discordDefault = {
         token: '',
@@ -74,7 +74,7 @@ export class Config {
      * Config Manager Core
      */
     constructor (core: Core) {
-        this.logger = core.mainLogger.getChildLogger({ name: 'Config' })
+        this.logger = core.mainLogger.getSubLogger({ name: 'Config' })
         this.logger.info('Loading Config...')
 
         let versionChanged = false

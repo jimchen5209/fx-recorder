@@ -11,7 +11,7 @@
     "lintTest": "eslint src/ --max-warnings 0",
     "lintFix": "eslint src/ --fix",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty --sourceMap false"
+    "build:prod": "tsc --pretty ---inlineSourceMap false"
   },
   "description": "",
   "dependencies": {
@@ -22,7 +22,7 @@
     "node-telegram-bot-api": "0.66.0",
     "opusscript": "^0.1.1",
     "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
-    "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
+    "tslog": "^4.9.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.13",

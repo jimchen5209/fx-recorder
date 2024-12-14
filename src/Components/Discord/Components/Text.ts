@@ -1,11 +1,11 @@
-import { CommandClient, TextChannel } from 'eris' //M
-import { Logger } from 'tslog-helper'
+import { CommandClient, TextChannel } from 'eris'
+import { ILogObj, Logger } from 'tslog'
 
 export class DiscordText {
     private bot: CommandClient
-    private logger: Logger
+    private logger: Logger<ILogObj>
 
-    constructor (bot: CommandClient, logger: Logger) {
+    constructor (bot: CommandClient, logger: Logger<ILogObj>) {
         this.bot = bot
         this.logger = logger
 
