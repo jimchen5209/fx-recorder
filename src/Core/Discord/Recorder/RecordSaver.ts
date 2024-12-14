@@ -92,7 +92,7 @@ export class RecordSaver {
     }
   }
 
-  private startStream (user: string | undefined = undefined) {
+  private startStream(user: string | undefined = undefined) {
     if (!user) {
       this.mp3Start = dayjs.utc().tz(this.channelConfig.timeZone).format('YYYY-MM-DD HH-mm-ss')
       this.logger.debug(`Start recording stream from ${this.mp3Start} to temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
@@ -115,16 +115,16 @@ export class RecordSaver {
     }
   }
 
-  public addUser (user: string) {
+  public addUser(user: string) {
     this.perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
     this.startStream(user)
   }
 
-  public removeUser (user: string) {
+  public removeUser(user: string) {
     this.endStream(user)
   }
 
-  private getRecordFile () {
+  private getRecordFile() {
     const mp3StartToSend = this.finalMp3Start
     const mp3End = dayjs.utc().tz(this.channelConfig.timeZone).format('YYYY-MM-DD HH-mm-ss')
     const time = dayjs.tz(mp3StartToSend, 'YYYY-MM-DD HH-mm-ss', this.channelConfig.timeZone)
@@ -137,7 +137,7 @@ export class RecordSaver {
       audioFilePath: `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`,
       audioFileName: `${mp3StartToSend}.mp3`,
       perUserFiles: Object.keys(this.userMixers)
-        .filter( user => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
+        .filter(user => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
         .map(user => {
           this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)
           return {
@@ -150,7 +150,7 @@ export class RecordSaver {
     } as IRecordFile
   }
 
-  public getFilePeriod () {
+  public getFilePeriod() {
     this.endStream()
     this.startStream()
     return this.getRecordFile()
@@ -167,11 +167,11 @@ export class RecordSaver {
     }
   }
 
-  public startSession () {
+  public startSession() {
     this.startStream()
   }
 
-  public endSession () {
+  public endSession() {
     this.endStream()
     return this.getRecordFile()
   }

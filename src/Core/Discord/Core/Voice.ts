@@ -48,7 +48,7 @@ export class DiscordVoice extends EventEmitter {
     for (let retryCount = 1; retryCount <= 5; ++retryCount) {
       const connection = await this.joinVoiceChannel(channelID)
       if (connection !== undefined) {
-        this.logger.info(`Connected, start recording...`)
+        this.logger.info('Connected, start recording...')
         connection.play(new Silence(), { format: 'opusPackets' })
         this.startRecording(connection)
         return
@@ -56,7 +56,7 @@ export class DiscordVoice extends EventEmitter {
       this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
     }
     this.active = false
-    this.logger.fatal(`Connecting to voice channel failed after retrying 5 times. Channel recording aborted.`)
+    this.logger.fatal('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
 
     await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
   }
@@ -219,7 +219,7 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
-    this.logger.info(`Connecting...`)
+    this.logger.info('Connecting...')
     try {
       const connection = await this.client.joinVoiceChannel(channelID)
       const reconnect = debounce(() => {

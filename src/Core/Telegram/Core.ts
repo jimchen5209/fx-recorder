@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api'
 import { ILogObj, Logger } from 'tslog'
+
 import { instances } from '../../Utils/Instances'
 
 const ERR_MISSING_TOKEN = Error('Telegram bot api token not found!')

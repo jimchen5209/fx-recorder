@@ -1,11 +1,11 @@
-import { Logger, ILogObj } from "tslog"
+import { Logger, ILogObj } from 'tslog'
 
 import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
 import AbortStream from '../../../Libs/abort'
 
-import { RecordSaver } from "./RecordSaver"
-import { DiscordChannel } from "../../../Utils/Config"
-import { instances } from "../../../Utils/Instances"
+import { RecordSaver } from './RecordSaver'
+import { DiscordChannel } from '../../../Utils/Config'
+import { instances } from '../../../Utils/Instances'
 
 export class Recorder {
   private channelConfig: DiscordChannel
@@ -72,7 +72,7 @@ export class Recorder {
   }
 
   public stop() {
-    this.logger.info(`Stop recording and saving file`)
+    this.logger.info('Stop recording and saving file')
     this.recvMixer.stop()
 
     const restFiles = this._saver.endSession()

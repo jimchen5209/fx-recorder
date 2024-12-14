@@ -1,4 +1,5 @@
 import { ILogObj, Logger } from 'tslog'
+
 import type { Discord } from '../Core/Discord/Core'
 import { Config, loggerOptions } from './Config'
 import { Telegram } from '../Core/Telegram/Core'
