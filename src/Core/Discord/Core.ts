@@ -1,29 +1,24 @@
-import { CommandClient } from 'eris'
+import { Client } from 'eris'
 import { ILogObj, Logger } from 'tslog'
-import { Config } from '../../Core/Config'
-import { Core } from '../..'
 import { DiscordVoice } from './Components/Voice'
-import { DiscordText } from './Components/Text'
 import { mkdirSync, existsSync, rmSync } from 'fs'
+import { instances } from '../../Utils/Instances'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
 export class Discord {
-  private config: Config
-  private bot: CommandClient
+  private bot: Client
   private logger: Logger<ILogObj>
   public audios: { [key: string]: DiscordVoice } = {}
 
-  constructor(core: Core) {
-    this.config = core.config
-    this.logger = core.mainLogger.getSubLogger({ name: 'Discord' })
+  constructor() {
+    this.logger = instances.mainLogger.getSubLogger({ name: 'Discord' })
 
-    if (this.config.discord.token === '') throw ERR_MISSING_TOKEN
+    if (instances.config.discord.token === '') throw ERR_MISSING_TOKEN
 
-    this.bot = new CommandClient(
-      this.config.discord.token,
-      { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] },
-      { defaultCommandOptions: { caseInsensitive: true } }
+    this.bot = new Client(
+      instances.config.discord.token,
+      { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
     )
 
     this.bot.once('ready', async () => {
@@ -32,13 +27,13 @@ export class Discord {
       if (existsSync('temp')) rmSync('temp', { recursive: true })
       mkdirSync('temp')
 
-      this.config.discord.channels.forEach(channel => {
-        this.audios[channel.id] = new DiscordVoice(core, this.bot, this.logger, channel)
+      instances.config.discord.channels.forEach(channel => {
+        this.audios[channel.id] = new DiscordVoice(this.bot, this.logger, channel)
       })
     })
+  }
 
-    new DiscordText(this.bot, this.logger)
-
+  public start() {
     this.bot.connect()
   }
 

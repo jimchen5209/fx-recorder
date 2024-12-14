@@ -1,6 +1,5 @@
-import { readFileSync, existsSync, writeFileSync, copyFileSync, constants } from 'fs'
-import { ILogObj, Logger } from 'tslog'
-import { Core } from '..'
+import { readFileSync as readFile, existsSync as exists, writeFileSync as writeFile, copyFileSync as copyFile, constants } from 'fs'
+import { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface FileDestination {
   type: string,
@@ -46,6 +45,13 @@ interface ConfigValue {
   logging: LogConfig
 }
 
+export const loggerOptions: ISettingsParam<ILogObj> = {
+  name: 'Main',
+  prettyLogTimeZone: 'local',
+  hideLogPositionForProduction: true,
+  minLevel: 3 // Info
+}
+
 export class Config {
   private configVersion = 2.2
   private _discord: DiscordConfig
@@ -73,14 +79,14 @@ export class Config {
   /**
      * Config Manager Core
      */
-  constructor(core: Core) {
-    this.logger = core.mainLogger.getSubLogger({ name: 'Config' })
+  constructor(mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Config' })
     this.logger.info('Loading Config...')
 
     let versionChanged = false
 
-    if (existsSync('./config.json')) {
-      const config = JSON.parse(readFileSync('config.json', { encoding: 'utf-8' }))
+    if (exists('./config.json')) {
+      const config = JSON.parse(readFile('config.json', { encoding: 'utf-8' }))
 
       versionChanged = this.checkVersion(config.configVersion)
 
@@ -190,17 +196,17 @@ export class Config {
   private backupAndQuit(config: ConfigValue) {
     if (!config.configVersion) config.configVersion = 'legacy'
     let copyConfigName = `./config-${config.configVersion}.json`
-    if (existsSync(copyConfigName)) {
+    if (exists(copyConfigName)) {
       let copyNumber = 1
       copyConfigName = `./config-${config.configVersion}-${copyNumber}.json`
-      while (existsSync(copyConfigName)) {
+      while (exists(copyConfigName)) {
         copyNumber++
         copyConfigName = `./config-${config.configVersion}-${copyNumber}.json`
       }
     }
 
     // backup old config
-    copyFileSync('./config.json', copyConfigName, constants.COPYFILE_EXCL)
+    copyFile('./config.json', copyConfigName, constants.COPYFILE_EXCL)
     // save new config
     this.save()
 
@@ -240,6 +246,6 @@ export class Config {
       telegram: this._telegram,
       logging: this._logging
     }, null, 4)
-    writeFileSync('./config.json', json, 'utf8')
+    writeFile('./config.json', json, 'utf8')
   }
 }

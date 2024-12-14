@@ -1,10 +1,9 @@
-import { CommandClient, VoiceConnection, VoiceChannel } from 'eris'
+import { Client, VoiceConnection, VoiceChannel } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { Core } from '../../..'
 import LicsonMixer, { Readable } from '../../../Libs/LicsonMixer/mixer'
 import { EventEmitter } from 'events'
 import AudioUtils from '../../../Libs/audio'
@@ -13,10 +12,10 @@ import { createWriteStream, mkdirSync, unlinkSync, existsSync, rmSync, WriteStre
 import { Silence } from './Silence'
 import { waitUntil, TimeoutError }  from 'async-wait-until'
 import { debounce } from 'lodash'
+import { instances } from '../../../Utils/Instances'
 
 export class DiscordVoice extends EventEmitter {
-  private core: Core
-  private bot: CommandClient
+  private client: Client
   private logger: Logger<ILogObj>
   private channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }
   private recvMixer = new LicsonMixer(16, 2, 48000)
@@ -31,15 +30,13 @@ export class DiscordVoice extends EventEmitter {
   private reconnectResetTimer: NodeJS.Timeout | undefined
 
   constructor(
-    core: Core,
-    bot: CommandClient,
+    bot: Client,
     logger: Logger<ILogObj>,
     channelConfig: { id: string, fileDest: { type: string, id: string, sendAll: boolean, sendPerUser: boolean }[], timeZone: string, sendIntervalSecond: number, ignoreUsers: string[] }
   ) {
     super()
 
-    this.core = core
-    this.bot = bot
+    this.client = bot
     this.logger = logger
     this.channelConfig = channelConfig
 
@@ -104,13 +101,13 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private startSendRecord() {
-    const mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, this.core.config.logging.debug)
+    const mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, instances.config.logging.debug)
     const perUserMp3Stream: { [key: string]: Readable } = {}
 
     for (const user of Object.keys(this.userMixers)) {
       if (!this.userMixers[user]) continue
 
-      perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.logging.debug)
+      perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
     }
 
     let mp3Start = ''
@@ -170,18 +167,18 @@ export class DiscordVoice extends EventEmitter {
       const time = dayjs.tz(mp3StartToSend, 'YYYY-MM-DD HH-mm-ss', this.channelConfig.timeZone)
 
       for (const element of this.channelConfig.fileDest) {
-        if (element.type === 'telegram' && element.id !== '' && this.core.telegram) {
+        if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
           if (element.sendAll) {
             this.logger.info(`Sending ${mp3StartToSend}.mp3 of ${this.channelConfig.id} to telegram ${element.id}`)
             const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}\n\n#Date${time.format('YYYYMMDD')} #Time${time.format('HHmm')} #Year${time.format('YYYY')}`
-            await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`, caption)
+            await instances.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`, caption)
           }
           if (element.sendPerUser) {
             for (const user of Object.keys(this.userMixers)) {
               if (existsSync(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)) {
                 this.logger.info(`Sending ${user}-${mp3StartToSend}.mp3 of ${this.channelConfig.id} to telegram ${element.id}`)
                 const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}\nUser:${user}\n\n#Date${time.format('YYYYMMDD')} #Time${time.format('HHmm')} #Year${time.format('YYYY')} #User${user}`
-                await this.core.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`, caption)
+                await instances.telegram.sendAudio(element.id, `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`, caption)
               }
             }
           }
@@ -190,14 +187,14 @@ export class DiscordVoice extends EventEmitter {
           if (element.sendAll) {
             this.logger.info(`Sending ${mp3StartToSend}.mp3 of ${this.channelConfig.id} to discord ${element.id}`)
             const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}`
-            await this.bot.createMessage(element.id, caption, { name: `${mp3StartToSend}.mp3`, file: readFileSync(`temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`) })
+            await this.client.createMessage(element.id, caption, { name: `${mp3StartToSend}.mp3`, file: readFileSync(`temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`) })
           }
           if (element.sendPerUser) {
             for (const user of Object.keys(this.userMixers)) {
               if (existsSync(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)) {
                 this.logger.info(`Sending ${user}-${mp3StartToSend}.mp3 of ${this.channelConfig.id} to discord ${element.id}`)
                 const caption = `Start:${mp3StartToSend}\nEnd:${mp3End}\nUser:${user}`
-                await this.bot.createMessage(element.id, caption, { name: `${user}-${mp3StartToSend}.mp3`, file: readFileSync(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`) })
+                await this.client.createMessage(element.id, caption, { name: `${user}-${mp3StartToSend}.mp3`, file: readFileSync(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`) })
               }
             }
           }
@@ -234,7 +231,7 @@ export class DiscordVoice extends EventEmitter {
     })
 
     this.on('newUserStream', (user: string) => {
-      perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], this.core.config.logging.debug)
+      perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
       startStream(user)
     })
 
@@ -248,21 +245,21 @@ export class DiscordVoice extends EventEmitter {
 
   private async sendMessage(message: string) {
     for (const element of this.channelConfig.fileDest) {
-      if (element.type === 'telegram' && element.id !== '' && this.core.telegram) {
-        await this.core.telegram.sendMessage(element.id, message)
+      if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
+        await instances.telegram.sendMessage(element.id, message)
       }
       if (element.type === 'discord' && element.id !== '') {
-        await this.bot.createMessage(element.id, message)
+        await this.client.createMessage(element.id, message)
       }
     }
   }
 
   private async sendAdminMessage(message: string) {
-    if (this.core.config.discord.logErrorsToAdmin) {
-      for (const admin of this.core.config.discord.admins) {
+    if (instances.config.discord.logErrorsToAdmin) {
+      for (const admin of instances.config.discord.admins) {
         try {
-          const dmChannel = await this.bot.getDMChannel(admin)
-          await this.bot.createMessage(dmChannel.id, message)
+          const dmChannel = await this.client.getDMChannel(admin)
+          await this.client.createMessage(dmChannel.id, message)
         } catch (error) {
           if (error instanceof Error) {
             this.logger.error(`Message "${message}" send to discord admin ${admin} failed: ${error.message}`, error)
@@ -270,10 +267,10 @@ export class DiscordVoice extends EventEmitter {
         }
       }
     }
-    if (this.core.config.telegram.logErrorsToAdmin && this.core.telegram) {
-      for (const admin of this.core.config.telegram.admins) {
+    if (instances.config.telegram.logErrorsToAdmin && instances.telegram) {
+      for (const admin of instances.config.telegram.admins) {
         try {
-          await this.core.telegram.sendMessage(admin, message)
+          await instances.telegram.sendMessage(admin, message)
         } catch (error) {
           if (error instanceof Error) {
             this.logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error)
@@ -297,7 +294,7 @@ export class DiscordVoice extends EventEmitter {
       delete this.userMixers[key]
     }
 
-    this.bot.leaveVoiceChannel(channelID)
+    this.client.leaveVoiceChannel(channelID)
   }
 
   public async stop(connection: VoiceConnection) {
@@ -352,13 +349,13 @@ export class DiscordVoice extends EventEmitter {
   private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
     this.logger.info(`Connecting to ${channelID}...`)
     try {
-      const connection = await this.bot.joinVoiceChannel(channelID)
+      const connection = await this.client.joinVoiceChannel(channelID)
       const reconnect = debounce(() => {
         this.stopSession(channelID, connection)
         if (this.isReconnectExceed()) {
           this.logger.error(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
           if (this.active) this.sendAdminMessage(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
-          this.core.discord?.disconnect(true)
+          instances.discord?.disconnect(true)
         }
         setTimeout(() => {
           this.startAudioSession(channelID)
@@ -407,12 +404,12 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private setEndStreamEvents(connection: VoiceConnection) {
-    const guildID = (this.bot.getChannel(this.channelConfig.id) as VoiceChannel).guild.id
+    const guildID = (this.client.getChannel(this.channelConfig.id) as VoiceChannel).guild.id
     connection.on('userDisconnect', user => {
       this.endStream(user)
     })
 
-    this.bot.on('voiceChannelSwitch', (member, newChannel) => {
+    this.client.on('voiceChannelSwitch', (member, newChannel) => {
       if (newChannel.guild.id !== guildID) return
       if (newChannel.id !== this.channelConfig.id) {
         this.endStream(member.id)

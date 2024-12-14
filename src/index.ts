@@ -1,65 +1,44 @@
-import { Config } from './Core/Config'
-import { Telegram } from './Components/Telegram/Core'
-import { Discord } from './Components/Discord/Core'
+import { Telegram } from './Core/Telegram/Core'
+import { Discord } from './Core/Discord/Core'
 import { Status } from 'status-client'
-import { ILogObj, Logger } from 'tslog'
+import { instances } from './Utils/Instances'
 
-export class Core {
-  public readonly mainLogger: Logger<ILogObj> = new Logger({
-    name: 'Main',
-    prettyLogTimeZone: 'local',
-    hideLogPositionForProduction: true,
-    minLevel: 3 // Info
-  })
-  public readonly config = new Config(this)
-  private _telegram: Telegram | undefined
-  private _discord: Discord | undefined
-  private readonly status = new Status('fx-recorder')
+const logger = instances.mainLogger
+logger.info('Starting...')
+if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
-  constructor() {
-    if (this.config.logging.debug) this.mainLogger.settings.minLevel = 0 // Silly
+const status = new Status('VoiceLog')
 
-    try {
-      this._telegram = new Telegram(this)
-    } catch (error) {
-      if (error instanceof Error) {
-        this.mainLogger.error('Error occurred when connecting to telegram:', error)
-      }
-    }
-    try {
-      this._discord = new Discord(this)
-    } catch (error) {
-      if (error instanceof Error) {
-        this.mainLogger.error('Error occurred when connecting to discord:', error)
-      }
-    }
+// Initialize the bot
+const discord = (instances.discord = new Discord())
+instances.telegram = new Telegram()
 
-    setInterval(() => {
-      Object.entries(process.memoryUsage()).forEach(item => this.mainLogger.debug(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`))
-    }, 30 * 1000)
+discord.start()
+status.set_status()
 
-    this.status.set_status()
+process.on('warning', (e) => {
+  logger.warn(e.message)
+})
 
-    // Enable graceful stop
-    process.once('SIGINT', () => this.stop('SIGINT'))
-    process.once('SIGTERM', () => this.stop('SIGTERM'))
-  }
+setInterval(() => {
+  Object.entries(process.memoryUsage()).forEach((item) =>
+    logger.debug(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`)
+  )
+}, 30 * 1000)
 
-  public get telegram() {
-    return this._telegram
-  }
+// Graceful shutdown
+const stop = () => {
+  console.log()
+  logger.info('Shutting down...')
+  instances.discord?.disconnect()
+  instances.telegram?.disconnect()
 
-  public get discord() {
-    return this._discord
-  }
-
-  private async stop(reason: string) {
-    this.mainLogger.info(`Stopping! Reason: ${reason}`)
-    await this._discord?.disconnect()
-    this._telegram?.disconnect()
-
+  // Wait for 120 seconds before force quitting
+  setTimeout(() => {
+    logger.warn('Force quitting...')
     process.exit(0)
-  }
+  }, 120 * 1000)
 }
 
-new Core()
+process.on('SIGINT', () => stop())
+process.on('SIGTERM', () => stop())
