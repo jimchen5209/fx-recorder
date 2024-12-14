@@ -42,7 +42,7 @@
     "node-addon-api": "^8.3.0",
     "sodium-native": "^4.3.1"
   },
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "yarn@4.5.3",
   "resolutions": {
     "eris@^0.17.2": "patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
   }
