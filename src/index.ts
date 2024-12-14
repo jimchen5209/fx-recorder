@@ -1,7 +1,10 @@
+import { Status } from 'status-client'
+
 import { Telegram } from './Core/Telegram/Core'
 import { Discord } from './Core/Discord/Core'
-import { Status } from 'status-client'
 import { instances } from './Utils/Instances'
+
+let quitting = false
 
 const logger = instances.mainLogger
 logger.info('Starting...')
@@ -29,9 +32,15 @@ setInterval(() => {
 // Graceful shutdown
 const stop = () => {
   console.log()
+  if (quitting) {
+    logger.warn('Force quitting...')
+    process.exit(0)
+  }
+
   logger.info('Shutting down...')
   instances.discord?.disconnect()
   instances.telegram?.disconnect()
+  quitting = true
 
   // Wait for 120 seconds before force quitting
   setTimeout(() => {

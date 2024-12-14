@@ -12,6 +12,8 @@ import { Recorder } from '../Recorder/Recorder'
 import { IRecordFile } from '../Recorder/RecordSaver'
 
 export class DiscordVoice extends EventEmitter {
+  private client: Client
+  private channelConfig: DiscordChannel
   private logger: Logger<ILogObj>
   private recorder: Recorder
   private sendInterval: NodeJS.Timeout | undefined
@@ -28,12 +30,14 @@ export class DiscordVoice extends EventEmitter {
   private reconnectResetTimer: NodeJS.Timeout | undefined
 
   constructor(
-    private client: Client,
-    private channelConfig: DiscordChannel,
+    client: Client,
+    channelConfig: DiscordChannel,
     logger: Logger<ILogObj>
   ) {
     super()
 
+    this.client = client
+    this.channelConfig = channelConfig
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     this.recorder = new Recorder(channelConfig)
 
@@ -116,9 +120,9 @@ export class DiscordVoice extends EventEmitter {
         }
         if (element.sendPerUser) {
           for (const userFile of file.perUserFiles) {
-              this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-              const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-              await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
+            this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
+            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+            await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
 
           }
         }
@@ -132,7 +136,7 @@ export class DiscordVoice extends EventEmitter {
         if (element.sendPerUser) {
           for (const userFile of file.perUserFiles) {
             this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-              const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
             await this.client.createMessage(element.id, caption, { name: userFile.audioFileName, file: readFile(userFile.audioFilePath) })
           }
         }

@@ -29,6 +29,10 @@ export interface IRecordFile {
 }
 
 export class RecordSaver {
+  private channelConfig: DiscordChannel
+  private recvMixer: LicsonMixer
+  private userMixers: { [key: string]: LicsonMixer }
+
   private logger: Logger<ILogObj>
   private mp3Stream: Readable
   private perUserMp3Stream: { [key: string]: Readable } = {}
@@ -39,7 +43,10 @@ export class RecordSaver {
   private writeStream?: WriteStream
   private perUserWriteStream: { [key: string]: WriteStream } = {}
 
-  constructor(private channelConfig: DiscordChannel, private recvMixer: LicsonMixer, private userMixers: { [key: string]: LicsonMixer }) {
+  constructor(channelConfig: DiscordChannel, recvMixer: LicsonMixer, userMixers: { [key: string]: LicsonMixer }) {
+    this.channelConfig = channelConfig
+    this.recvMixer = recvMixer
+    this.userMixers = userMixers
     this.logger = instances.mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
 
     this.mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, instances.config.logging.debug)
@@ -51,7 +58,7 @@ export class RecordSaver {
     }
 
     if (exists(`temp/${this.channelConfig.id}`)) rmDir(`temp/${this.channelConfig.id}`, { recursive: true })
-      mkDir(`temp/${this.channelConfig.id}`)
+    mkDir(`temp/${this.channelConfig.id}`)
 
     // setup dayjs
     dayjs.extend(utc)

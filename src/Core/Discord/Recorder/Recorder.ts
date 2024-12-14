@@ -8,6 +8,7 @@ import { DiscordChannel } from "../../../Utils/Config"
 import { instances } from "../../../Utils/Instances"
 
 export class Recorder {
+  private channelConfig: DiscordChannel
   private logger: Logger<ILogObj>
   private _saver: RecordSaver
 
@@ -15,7 +16,8 @@ export class Recorder {
   private recvMixer = new LicsonMixer(16, 2, 48000)
   private userMixers: { [key: string]: LicsonMixer } = {}
 
-  constructor(private channelConfig: DiscordChannel) {
+  constructor(channelConfig: DiscordChannel) {
+    this.channelConfig = channelConfig
     this.logger = instances.mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
     this._saver = new RecordSaver(channelConfig, this.recvMixer, this.userMixers)
 
@@ -25,20 +27,20 @@ export class Recorder {
   }
 
   public storeBuffer(data: Buffer, user: string) {
-      if (!user || this.channelConfig.ignoreUsers.includes(user)) return
+    if (!user || this.channelConfig.ignoreUsers.includes(user)) return
 
-      let source = this.recvMixer.getSources(user)[0]
-      if (!source) {
-        this.logger.info(`Add new user ${user} to record mixer`)
-        source = this.recvMixer.addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
-      }
-      source.stream.write(data)
+    let source = this.recvMixer.getSources(user)[0]
+    if (!source) {
+      this.logger.info(`Add new user ${user} to record mixer`)
+      source = this.recvMixer.addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
+    }
+    source.stream.write(data)
 
-      if (!this.userMixers[user]) this.newPerUserMixer(user)
+    if (!this.userMixers[user]) this.newPerUserMixer(user)
 
-      let perUserSource = this.userMixers[user].getSources(user)[0]
-      if (!perUserSource) perUserSource = this.userMixers[user].addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
-      perUserSource.stream.write(data)
+    let perUserSource = this.userMixers[user].getSources(user)[0]
+    if (!perUserSource) perUserSource = this.userMixers[user].addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
+    perUserSource.stream.write(data)
   }
 
   private newPerUserMixer(user: string) {
