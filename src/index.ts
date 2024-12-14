@@ -10,7 +10,7 @@ const logger = instances.mainLogger
 logger.info('Starting...')
 if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
-const status = new Status('VoiceLog')
+const status = new Status('fx-recorder')
 
 // Initialize the bot
 const discord = (instances.discord = new Discord())
