@@ -1074,9 +1074,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eris@npm:0.17.2":
-  version: 0.17.2
-  resolution: "eris@npm:0.17.2"
+"eris@npm:0.18.0":
+  version: 0.18.0
+  resolution: "eris@npm:0.18.0"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -1086,13 +1086,13 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/74608d0daea43c34baffc1a44000703e06e37ed6fb26388c5f8e84aee7e635efceb1871af0bb8fcb523df2a7ed5577975db9cef08f173406f8d5e57bd43fc697
+  checksum: 10c0/76104ded92e8c2b94b9b1abe89a20d4643175c0f96e1082c9e637f53cbc8c310569a1b13bd414a48872ec4f041a757e3a8cd8ad9ce1ee260a02716fdfc0473a9
   languageName: node
   linkType: hard
 
-"eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::locator=fx-record-ts-bot%40workspace%3A.":
-  version: 0.17.2
-  resolution: "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=eb9818&locator=fx-record-ts-bot%40workspace%3A."
+"eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch":
+  version: 0.18.0
+  resolution: "eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch::version=0.18.0&hash=6328ca"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -1102,7 +1102,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/122212291c383b355604bd0ee2aa209c0763d75cf78ea554d595981bacd912d56d887bcb5318469f14db57eb346eb48d53c5e717c006527f6ce5449636cfc387
+  checksum: 10c0/96b0351a75beeff84f6f6ef099dcb964aa125152a72f317be402694073e65e92ea9db20605ef65b1479883e32764eabe57f11ffa1e2ab5540934f8f5367436c5
   languageName: node
   linkType: hard
 
@@ -1599,7 +1599,7 @@ __metadata:
     async-wait-until: "npm:^2.0.18"
     bufferutil: "npm:^4.0.8"
     dayjs: "npm:^1.11.13"
-    eris: "npm:^0.17.2"
+    eris: "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch"
     erlpack: "npm:^0.1.4"
     eslint: "npm:^8.57.1"
     lodash: "npm:^4.17.21"

@@ -17,7 +17,7 @@
   "dependencies": {
     "async-wait-until": "^2.0.18",
     "dayjs": "^1.11.13",
-    "eris": "^0.17.2",
+    "eris": "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch",
     "lodash": "^4.17.21",
     "node-telegram-bot-api": "0.66.0",
     "opusscript": "^0.1.1",
@@ -42,8 +42,5 @@
     "node-addon-api": "^8.3.0",
     "sodium-native": "^4.3.1"
   },
-  "packageManager": "yarn@4.5.3",
-  "resolutions": {
-    "eris@^0.17.2": "patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
-  }
+  "packageManager": "yarn@4.5.3"
 }
