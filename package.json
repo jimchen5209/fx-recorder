@@ -8,8 +8,8 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
-    "lintTest": "eslint src/ --max-warnings 0",
-    "lintFix": "eslint src/ --fix",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint . --max-warnings 0",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty ---inlineSourceMap false"
   },
@@ -25,15 +25,17 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@stylistic/eslint-plugin": "^2.12.1",
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.10.2",
     "@types/node-telegram-bot-api": "^0.64.7",
     "@types/ws": "^8.5.13",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint": "^8.57.1",
+    "eslint": "^9.17.0",
+    "globals": "^15.13.0",
     "node-gyp": "^11.0.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.9.0",
