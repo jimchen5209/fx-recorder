@@ -21,6 +21,30 @@ export class Discord {
       { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
     )
 
+    this.client.on('voiceChannelJoin', (member, channel) => {
+      if (member.id === this.client.user.id) return
+      this.handleUserConnect(channel.id)
+    })
+
+    this.client.on('voiceChannelLeave', (member, channel) => {
+      if (member.id === this.client.user.id) return
+      this.handleUserDisconnect(channel.id, member.id)
+    })
+
+    this.client.on('voiceChannelSwitch', (member, newChannel, oldChannel) => {
+      if (member.id === this.client.user.id) return
+      this.handleUserDisconnect(oldChannel.id, member.id)
+      this.handleUserConnect(newChannel.id)
+    })
+
+    this.client.on('warn', (message, id) => {
+      this.logger.warn(`Warn on shard ${id}: ${message}`)
+    })
+
+    this.client.on('error', (error, id) => {
+      this.logger.error(`Error on shard ${id}: ${error.message}`, error)
+    })
+
     this.client.once('ready', async () => {
       this.logger.info(`Logged in as ${this.client.user.username} (${this.client.user.id})`)
 
@@ -31,6 +55,20 @@ export class Discord {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
       })
     })
+  }
+
+  // Leave or Switch out of the channel
+  private handleUserDisconnect(channelID: string, userID: string) {
+    if (!this.audios[channelID]) return
+
+    this.audios[channelID].handleUserDisconnect(userID)
+  }
+
+  // Join or Switch into the channel
+  private handleUserConnect(channelID: string) {
+    if (!this.audios[channelID]) return
+
+    this.audios[channelID].handleUserConnect()
   }
 
   public start() {

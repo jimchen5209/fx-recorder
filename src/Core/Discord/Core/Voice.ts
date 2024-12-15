@@ -19,7 +19,7 @@ export class DiscordVoice extends EventEmitter {
   private recorder: Recorder
   private sendInterval: NodeJS.Timeout | undefined
 
-  private active = true
+  private active = false
   private readyToDelete = false
 
   private warningFailSafe = new FailSafe()
@@ -38,7 +38,7 @@ export class DiscordVoice extends EventEmitter {
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     this.recorder = new Recorder(channelConfig)
 
-    this.startAudioSession(channelConfig.id)
+    this.autoLeaveOrJoinChannel()
   }
 
   private async startAudioSession(channelID: string) {
@@ -59,12 +59,15 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private startRecording(connection: VoiceConnection) {
-    this.setEndStreamEvents(connection)
+    this.active = true
+    connection.on('userDisconnect', user => {
+      this.handleUserDisconnect(user)
+    })
+    this.recorder.startStream()
     connection.receive('pcm').on('data', (data, user) => {
       if (!this.active) return
       this.recorder.storeBuffer(data, user)
     })
-    this.recorder.startStream()
     this.startSendRecord()
 
     this.sendMessage('Record session started')
@@ -243,17 +246,44 @@ export class DiscordVoice extends EventEmitter {
     return undefined
   }
 
-  private setEndStreamEvents(connection: VoiceConnection) {
-    const guildID = (this.client.getChannel(this.channelConfig.id) as VoiceChannel).guild.id
-    connection.on('userDisconnect', user => {
-      this.recorder.endStream(user)
-    })
+  public handleUserConnect() {
+    this.autoLeaveOrJoinChannel()
+  }
 
-    this.client.on('voiceChannelSwitch', (member, newChannel) => {
-      if (newChannel.guild.id !== guildID) return
-      if (newChannel.id !== this.channelConfig.id) {
-        this.recorder.endStream(member.id)
+  public handleUserDisconnect(userID: string) {
+    this.recorder.endStream(userID)
+    this.autoLeaveOrJoinChannel()
+  }
+
+  private autoLeaveOrJoinChannel= debounce(() => {
+    const voiceChannel = this.client.getChannel(this.channelConfig.id) as VoiceChannel
+    let noUser = true
+
+    this.logger.debug(`Members in channel : ${voiceChannel.voiceMembers?.map(user => user.id).join(', ')}`)
+    voiceChannel.voiceMembers?.forEach(user => {
+      if ((!(user.id in this.channelConfig.ignoreUsers)) && user.id !== this.client.user.id) {
+        this.logger.debug(`User in channel : ${user.id}`)
+        noUser = false
       }
     })
-  }
+    this.logger.debug(`No user in channel : ${noUser}`)
+
+    const connection = this.client.voiceConnections.find(connection => connection.channelID === this.channelConfig.id)
+    this.logger.debug(`Connection in channel exist : ${connection !== undefined}`)
+    if (noUser) {
+      if (connection) {
+        this.active = false
+
+        this.logger.info('Pausing...')
+        this.sendMessage('No user in the channel, pausing...')
+        this.sendAdminMessage(`No user in ${this.channelConfig.id}, recorder pausing...`)
+
+        this.stopSession(this.channelConfig.id, connection)
+      }
+    } else {
+      if (!connection) {
+        this.startAudioSession(this.channelConfig.id)
+      }
+    }
+  }, 500)
 }

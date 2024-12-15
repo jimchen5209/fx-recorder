@@ -30,11 +30,11 @@ export interface IRecordFile {
 
 export class RecordSaver {
   private channelConfig: DiscordChannel
-  private recvMixer: LicsonMixer
-  private userMixers: { [key: string]: LicsonMixer }
+  private recvMixer?: LicsonMixer
+  private userMixers?: { [key: string]: LicsonMixer }
 
   private logger: Logger<ILogObj>
-  private mp3Stream: Readable
+  private mp3Stream?: Readable
   private perUserMp3Stream: { [key: string]: Readable } = {}
 
 
@@ -43,19 +43,9 @@ export class RecordSaver {
   private writeStream?: WriteStream
   private perUserWriteStream: { [key: string]: WriteStream } = {}
 
-  constructor(channelConfig: DiscordChannel, recvMixer: LicsonMixer, userMixers: { [key: string]: LicsonMixer }) {
+  constructor(channelConfig: DiscordChannel) {
     this.channelConfig = channelConfig
-    this.recvMixer = recvMixer
-    this.userMixers = userMixers
     this.logger = instances.mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
-
-    this.mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, instances.config.logging.debug)
-
-    for (const user of Object.keys(this.userMixers)) {
-      if (!this.userMixers[user]) continue
-
-      this.perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
-    }
 
     if (exists(`temp/${this.channelConfig.id}`)) rmDir(`temp/${this.channelConfig.id}`, { recursive: true })
     mkDir(`temp/${this.channelConfig.id}`)
@@ -66,18 +56,35 @@ export class RecordSaver {
     dayjs.extend(customParseFormat)
   }
 
+  public setRecvMixer(recvMixer: LicsonMixer) {
+    this.recvMixer = recvMixer
+    this.mp3Stream = AudioUtils.generatePCMtoMP3Stream(this.recvMixer, instances.config.logging.debug)
+  }
+
+  public setUserMixers(userMixers: { [key: string]: LicsonMixer }) {
+    this.userMixers = userMixers
+
+    for (const user of Object.keys(this.userMixers)) {
+      if (!this.userMixers[user]) continue
+
+      this.perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
+    }
+  }
+
   private endStream(user: string | undefined = undefined) {
     if (!user) {
       this.logger.debug(`End recording stream from ${this.mp3Start} to temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
-      this.mp3Stream.unpipe()
+      this.mp3Stream?.unpipe()
       this.writeStream?.end()
 
-      for (const element of Object.keys(this.userMixers)) {
-        if (!this.userMixers[element]) continue
-        this.logger.debug(`End recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
-        if (this.perUserMp3Stream[element]) this.perUserMp3Stream[element].unpipe()
-        if (this.perUserWriteStream[element]) this.perUserWriteStream[element].end()
-        delete this.perUserWriteStream[element]
+      if (this.userMixers) {
+        for (const element of Object.keys(this.userMixers)) {
+          if (!this.userMixers[element]) continue
+          this.logger.debug(`End recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
+          if (this.perUserMp3Stream[element]) this.perUserMp3Stream[element].unpipe()
+          if (this.perUserWriteStream[element]) this.perUserWriteStream[element].end()
+          delete this.perUserWriteStream[element]
+        }
       }
 
       this.finalMp3Start = this.mp3Start
@@ -97,8 +104,9 @@ export class RecordSaver {
       this.mp3Start = dayjs.utc().tz(this.channelConfig.timeZone).format('YYYY-MM-DD HH-mm-ss')
       this.logger.debug(`Start recording stream from ${this.mp3Start} to temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
       this.writeStream = createWriteStream(`temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
-      this.mp3Stream.pipe(this.writeStream)
+      this.mp3Stream?.pipe(this.writeStream)
 
+      if (!this.userMixers) return
       for (const element of Object.keys(this.userMixers)) {
         if (!this.userMixers[element] || !this.perUserMp3Stream[element]) continue
         if (this.userMixers[element].getSources(user).length === 0) continue
@@ -116,7 +124,7 @@ export class RecordSaver {
   }
 
   public addUser(user: string) {
-    this.perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
+    if (this.userMixers) this.perUserMp3Stream[user] = AudioUtils.generatePCMtoMP3Stream(this.userMixers[user], instances.config.logging.debug)
     this.startStream(user)
   }
 
@@ -136,7 +144,7 @@ export class RecordSaver {
       tags: [`#Date${time.format('YYYYMMDD')}`, `#Time${time.format('HHmm')}`, `#Year${time.format('YYYY')}`],
       audioFilePath: `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`,
       audioFileName: `${mp3StartToSend}.mp3`,
-      perUserFiles: Object.keys(this.userMixers)
+      perUserFiles: this.userMixers ? Object.keys(this.userMixers)
         .filter(user => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
         .map(user => {
           this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)
@@ -146,7 +154,7 @@ export class RecordSaver {
             audioFileName: `${user}-${mp3StartToSend}.mp3`,
             tag: `#User${user}`
           }
-        })
+        }): []
     } as IRecordFile
   }
 
@@ -159,6 +167,8 @@ export class RecordSaver {
   public removeRecordFile = (mp3Start: string) => {
     this.logger.debug(`Removing record file temp/${this.channelConfig.id}/${mp3Start}.mp3`)
     deleteFile(`temp/${this.channelConfig.id}/${mp3Start}.mp3`)
+
+    if (!this.userMixers) return
     for (const user of Object.keys(this.userMixers)) {
       if (exists(`temp/${this.channelConfig.id}/${user}-${mp3Start}.mp3`)) {
         this.logger.debug(`Removing record file temp/${this.channelConfig.id}/${user}-${mp3Start}.mp3`)
