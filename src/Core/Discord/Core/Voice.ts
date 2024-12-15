@@ -10,6 +10,7 @@ import { instances } from '../../../Utils/Instances'
 import { DiscordChannel } from '../../../Utils/Config'
 import { Recorder } from '../Recorder/Recorder'
 import { IRecordFile } from '../Recorder/RecordSaver'
+import { FailSafe } from '../../../Utils/FailSafe'
 
 export class DiscordVoice extends EventEmitter {
   private client: Client
@@ -21,13 +22,9 @@ export class DiscordVoice extends EventEmitter {
   private active = true
   private readyToDelete = false
 
-  private maxWarning = 5
-  private warningCount = 0
-  private warningResetTimer: NodeJS.Timeout | undefined
-
-  private maxReconnect = 5
-  private reconnectCount = 0
-  private reconnectResetTimer: NodeJS.Timeout | undefined
+  private warningFailSafe = new FailSafe()
+  private errorFailSafe = new FailSafe()
+  private reconnectFailSafe = new FailSafe()
 
   constructor(
     client: Client,
@@ -188,75 +185,52 @@ export class DiscordVoice extends EventEmitter {
     }
   }
 
-  private isWarningExceed() {
-    if (this.warningResetTimer) {
-      clearTimeout(this.warningResetTimer)
-      this.warningResetTimer = undefined
+  private tryReconnect = debounce((channelID: string, connection: VoiceConnection) => {
+    this.stopSession(channelID, connection)
+    if (this.reconnectFailSafe.checkHitExceed()) {
+      this.logger.error(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
+      if (this.active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
+      instances.discord?.disconnect(true)
     }
-    const tempTimer = setTimeout(() => {
-      this.warningResetTimer = undefined
-      this.warningCount = 0
-    }, 1 * 1000)
-    this.warningResetTimer = tempTimer
-
-    this.warningCount++
-    return this.warningCount >= this.maxWarning
-  }
-
-  private isReconnectExceed() {
-    if (this.reconnectResetTimer) {
-      clearTimeout(this.reconnectResetTimer)
-      this.reconnectResetTimer = undefined
-    }
-    const tempTimer = setTimeout(() => {
-      this.reconnectResetTimer = undefined
-      this.reconnectCount = 0
-    }, 1 * 1000)
-    this.reconnectResetTimer = tempTimer
-
-    this.reconnectCount++
-    return this.reconnectCount >= this.maxReconnect
-  }
+    setTimeout(() => {
+      this.startAudioSession(channelID)
+    }, 5 * 1000)
+  }, 500)
 
   private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
     this.logger.info('Connecting...')
     try {
       const connection = await this.client.joinVoiceChannel(channelID)
-      const reconnect = debounce(() => {
-        this.stopSession(channelID, connection)
-        if (this.isReconnectExceed()) {
-          this.logger.error(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
-          if (this.active) this.sendAdminMessage(`Reconnect count exceeded ${this.maxReconnect}. Trying to reconnect bot...`)
-          instances.discord?.disconnect(true)
-        }
-        setTimeout(() => {
-          this.startAudioSession(channelID)
-        }, 5 * 1000)
-      }, 500)
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
         if (this.active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
-        if (this.isWarningExceed()) {
-          this.logger.error(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
-          if (this.active) this.sendAdminMessage(`Warning count exceeded ${this.maxWarning}. Reconnecting...`)
-          reconnect()
+        if (this.warningFailSafe.checkHitExceed()) {
+          this.logger.error(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
+          if (this.active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
+          this.tryReconnect(channelID, connection)
         }
       })
       connection.on('error', err => {
         this.logger.error(err.message, err)
         if (this.active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
+        if (this.errorFailSafe.checkHitExceed()) {
+          this.logger.error(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
+          if (this.active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
+          this.tryReconnect(channelID, connection)
+        }
       })
       connection.on('ready', () => {
         this.logger.warn('Voice connection reconnected.')
-        this.warningResetTimer = undefined
-        this.warningCount = 0
+        this.warningFailSafe.resetError()
+        this.errorFailSafe.resetError()
+        this.reconnectFailSafe.resetError()
       })
       connection.once('disconnect', err => {
         this.logger.error(`Error from voice connection: ${err?.message}`, err)
         if (this.active) {
           this.sendAdminMessage(`Error from voice connection ${channelID}: ${err?.message}`)
           this.sendMessage('There is an error with the voice connection.')
-          reconnect()
+          this.tryReconnect(channelID, connection)
         }
       })
       return connection
