@@ -51,9 +51,30 @@ export class Discord {
       if (existsSync('temp')) rmSync('temp', { recursive: true })
       mkdirSync('temp')
 
+      this.updateStatus()
+
       instances.config.discord.channels.forEach(channel => {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
+        this.audios[channel.id].on('status', () => this.updateStatus())
       })
+    })
+  }
+
+  private updateStatus() {
+    const recordingCount = Object.values(this.audios).filter(audio => audio.active).length
+    this.logger.debug(`Recording ${recordingCount} channel${recordingCount > 1 ? 's' : ''}`)
+
+    if (recordingCount > 0) {
+      return this.client.editStatus('dnd', {
+        name: 'Recorder',
+        state: `Recording ${recordingCount} channel${recordingCount > 1 ? 's' : ''}`,
+        type: 4
+      })
+    }
+    this.client.editStatus('idle', {
+      name: 'Recorder',
+      state: 'Idle',
+      type: 4
     })
   }
 

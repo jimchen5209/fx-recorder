@@ -1,4 +1,4 @@
-import { Client, VoiceConnection, VoiceChannel } from 'eris'
+import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { EventEmitter } from 'events'
 import { readFileSync as readFile } from 'fs'
@@ -19,7 +19,7 @@ export class DiscordVoice extends EventEmitter {
   private recorder: Recorder
   private sendInterval: NodeJS.Timeout | undefined
 
-  private active = false
+  private _active = false
   private readyToDelete = false
 
   private warningFailSafe = new FailSafe()
@@ -52,25 +52,41 @@ export class DiscordVoice extends EventEmitter {
       }
       this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
     }
-    this.active = false
+    this._active = false
     this.logger.fatal('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
 
     await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
   }
 
   private startRecording(connection: VoiceConnection) {
-    this.active = true
+    this._active = true
     connection.on('userDisconnect', user => {
       this.handleUserDisconnect(user)
     })
     this.recorder.startStream()
     connection.receive('pcm').on('data', (data, user) => {
-      if (!this.active) return
+      if (!this._active) return
       this.recorder.storeBuffer(data, user)
     })
     this.startSendRecord()
 
     this.sendMessage('Record session started')
+    this.updateStatus()
+  }
+
+  private updateStatus() {
+    const guild = (this.client.getChannel(this.channelConfig.id) as VoiceChannel).guild
+
+    guild.editMember('@me', {nick: this._active ? `🔴 ${this.client.user.username}` : ''})
+      .catch(error => {
+        if (error instanceof DiscordRESTError) {
+          this.logger.warn(`Failed to update nickname: ${error.message}`)
+        }
+        else if (error instanceof Error) {
+          this.logger.error(`Failed to update status: ${error.message}`, error)
+        }
+      })
+    this.emit('status')
   }
 
   private async sendMessage(message: string) {
@@ -162,14 +178,15 @@ export class DiscordVoice extends EventEmitter {
     const file = this.recorder.stop()
     this.sendRecord(file).then(async () => {
       await this.sendMessage('The record session has ended.')
-      if (!this.active) this.readyToDelete = true
+      if (!this._active) this.readyToDelete = true
     })
 
     this.client.leaveVoiceChannel(channelID)
   }
 
   public async stop(connection: VoiceConnection) {
-    this.active = false
+    this._active = false
+    this.updateStatus()
 
     this.logger.info('Shutting down...')
     this.sendMessage('Recorder shutting down.')
@@ -192,7 +209,7 @@ export class DiscordVoice extends EventEmitter {
     this.stopSession(channelID, connection)
     if (this.reconnectFailSafe.checkHitExceed()) {
       this.logger.error(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
-      if (this.active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
+      if (this._active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
       instances.discord?.disconnect(true)
     }
     setTimeout(() => {
@@ -206,19 +223,19 @@ export class DiscordVoice extends EventEmitter {
       const connection = await this.client.joinVoiceChannel(channelID)
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
-        if (this.active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
+        if (this._active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
         if (this.warningFailSafe.checkHitExceed()) {
           this.logger.error(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
-          if (this.active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
+          if (this._active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
           this.tryReconnect(channelID, connection)
         }
       })
       connection.on('error', err => {
         this.logger.error(err.message, err)
-        if (this.active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
+        if (this._active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
         if (this.errorFailSafe.checkHitExceed()) {
           this.logger.error(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
-          if (this.active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
+          if (this._active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
           this.tryReconnect(channelID, connection)
         }
       })
@@ -230,7 +247,7 @@ export class DiscordVoice extends EventEmitter {
       })
       connection.once('disconnect', err => {
         this.logger.error(`Error from voice connection: ${err?.message}`, err)
-        if (this.active) {
+        if (this._active) {
           this.sendAdminMessage(`Error from voice connection ${channelID}: ${err?.message}`)
           this.sendMessage('There is an error with the voice connection.')
           this.tryReconnect(channelID, connection)
@@ -272,7 +289,8 @@ export class DiscordVoice extends EventEmitter {
     this.logger.debug(`Connection in channel exist : ${connection !== undefined}`)
     if (noUser) {
       if (connection) {
-        this.active = false
+        this._active = false
+        this.updateStatus()
 
         this.logger.info('Pausing...')
         this.sendMessage('No user in the channel, pausing...')
@@ -286,4 +304,8 @@ export class DiscordVoice extends EventEmitter {
       }
     }
   }, 500)
+
+  public get active() {
+    return this._active
+  }
 }
