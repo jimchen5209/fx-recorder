@@ -278,7 +278,7 @@ export class DiscordVoice extends EventEmitter {
 
     this.logger.debug(`Members in channel : ${voiceChannel.voiceMembers?.map(user => user.id).join(', ')}`)
     voiceChannel.voiceMembers?.forEach(user => {
-      if ((!(user.id in this.channelConfig.ignoreUsers)) && user.id !== this.client.user.id) {
+      if (!this.channelConfig.ignoreUsers.includes(user.id) && user.id !== this.client.user.id) {
         this.logger.debug(`User in channel : ${user.id}`)
         noUser = false
       }
