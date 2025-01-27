@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@stylistic/eslint-plugin": "^2.12.1",
+    "@stylistic/eslint-plugin": "^3.0.0",
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.10.2",
     "@types/node-telegram-bot-api": "^0.64.7",
