@@ -269,9 +269,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stylistic/eslint-plugin@npm:^2.12.1":
-  version: 2.12.1
-  resolution: "@stylistic/eslint-plugin@npm:2.12.1"
+"@stylistic/eslint-plugin@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@stylistic/eslint-plugin@npm:3.1.0"
   dependencies:
     "@typescript-eslint/utils": "npm:^8.13.0"
     eslint-visitor-keys: "npm:^4.2.0"
@@ -280,7 +280,7 @@ __metadata:
     picomatch: "npm:^4.0.2"
   peerDependencies:
     eslint: ">=8.40.0"
-  checksum: 10c0/52859e4148a268c8a16cad53dd2d89a641a26e1e61bb4f7368cf5ee1b7fc9904519ade65719096607dc03f22cf2a06d6d363f5b0e8510609e0a2ebd89acc344d
+  checksum: 10c0/e593d78103a89e0555c119625c0ba8c80c8d2c7add0e85215f6be9929002207067df53714785c2c75b8b9e6df774d25c7dead211aed89a57cb45b5cec902a19e
   languageName: node
   linkType: hard
 
@@ -1691,7 +1691,7 @@ __metadata:
   dependencies:
     "@discordjs/opus": "npm:0.9.0"
     "@eslint/js": "npm:^9.17.0"
-    "@stylistic/eslint-plugin": "npm:^2.12.1"
+    "@stylistic/eslint-plugin": "npm:^3.1.0"
     "@types/lodash": "npm:^4.17.13"
     "@types/node": "npm:^22.10.2"
     "@types/node-telegram-bot-api": "npm:^0.64.7"
