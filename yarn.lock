@@ -277,7 +277,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@projectdysnomia/dysnomia@npm:^0.2.3":
+"@projectdysnomia/dysnomia@npm:0.2.3":
   version: 0.2.3
   resolution: "@projectdysnomia/dysnomia@npm:0.2.3"
   dependencies:
@@ -310,6 +310,42 @@ __metadata:
     zlib-sync:
       optional: true
   checksum: 10c0/74f2ef3046fb357bb8aedf713e92b2c05cd17dda79649192f40994bb770b470c2f513165e3de8cc4c8148e5da99a4e606df446e188d4e991dad829b46810b2d9
+  languageName: node
+  linkType: hard
+
+"@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch":
+  version: 0.2.3
+  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch::version=0.2.3&hash=b69a39"
+  dependencies:
+    "@stablelib/xchacha20poly1305": "npm:~1.0.1"
+    opusscript: "npm:^0.1.1"
+    ws: "npm:^8.18.0"
+  peerDependencies:
+    "@discordjs/opus": ^0.9.0
+    erlpack: "*"
+    eventemitter3: ^5.0.1
+    pako: ^2.1.0
+    sodium-native: ^4.1.1
+    zlib-sync: ^0.1.9
+  dependenciesMeta:
+    "@stablelib/xchacha20poly1305":
+      optional: true
+    opusscript:
+      optional: true
+  peerDependenciesMeta:
+    "@discordjs/opus":
+      optional: true
+    erlpack:
+      optional: true
+    eventemitter3:
+      optional: true
+    pako:
+      optional: true
+    sodium-native:
+      optional: true
+    zlib-sync:
+      optional: true
+  checksum: 10c0/61b42725d1645a78a8bb05f4b834a36dcbbef3992daa28c110a7df6020c6eeaa4541309b4dea60f5dd0d289b1972b145274a5191047cfc2538d156096c2acb8f
   languageName: node
   linkType: hard
 
@@ -1857,7 +1893,7 @@ __metadata:
   dependencies:
     "@discordjs/opus": "npm:0.10.0"
     "@eslint/js": "npm:^9.28.0"
-    "@projectdysnomia/dysnomia": "npm:^0.2.3"
+    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@types/lodash": "npm:^4.17.17"
     "@types/node": "npm:^22.15.30"

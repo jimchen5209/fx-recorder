@@ -1,0 +1,18 @@
+diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
+index ee9c237c1048a9a489799d2f4d8ce422b45ef731..6faa7dd22ffaaed71bec5b0a0c9b52f2ff1e997f 100644
+--- a/lib/voice/VoiceConnection.js
++++ b/lib/voice/VoiceConnection.js
+@@ -430,7 +430,12 @@ class VoiceConnection extends EventEmitter {
+             if(this.connecting || this.ready) {
+                 let reconnecting = true;
+                 if(code === 4006) {
+-                    reconnecting = false;
++                    if (this.channelID) {
++                        reconnecting = true;
++                        err = null;
++                    } else {
++                        reconnecting = false;
++                    }
+                 } else if(code === 4014) {
+                     if(this.channelID) {
+                         data.endpoint = null;
