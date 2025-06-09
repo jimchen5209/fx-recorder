@@ -15,7 +15,7 @@
   },
   "description": "",
   "dependencies": {
-    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch",
+    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e#~/.yarn/patches/@projectdysnomia-dysnomia-https-2c89d76fac.patch",
     "async-wait-until": "^2.0.27",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",

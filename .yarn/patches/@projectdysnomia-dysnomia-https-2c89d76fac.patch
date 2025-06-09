@@ -1,8 +1,8 @@
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
-index ee9c237c1048a9a489799d2f4d8ce422b45ef731..6faa7dd22ffaaed71bec5b0a0c9b52f2ff1e997f 100644
+index af55c31de04285f7874e3a618e8a85d9bd48c799..da7eb169f985ba5f8a0b7c028d396f80a9c394fc 100644
 --- a/lib/voice/VoiceConnection.js
 +++ b/lib/voice/VoiceConnection.js
-@@ -430,7 +430,12 @@ class VoiceConnection extends EventEmitter {
+@@ -546,7 +546,12 @@ class VoiceConnection extends EventEmitter {
              if(this.connecting || this.ready) {
                  let reconnecting = true;
                  if(code === 4006) {

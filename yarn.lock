@@ -74,6 +74,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emnapi/core@npm:^1.4.3":
+  version: 1.4.3
+  resolution: "@emnapi/core@npm:1.4.3"
+  dependencies:
+    "@emnapi/wasi-threads": "npm:1.0.2"
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/e30101d16d37ef3283538a35cad60e22095aff2403fb9226a35330b932eb6740b81364d525537a94eb4fb51355e48ae9b10d779c0dd1cdcd55d71461fe4b45c7
+  languageName: node
+  linkType: hard
+
+"@emnapi/runtime@npm:^1.4.3":
+  version: 1.4.3
+  resolution: "@emnapi/runtime@npm:1.4.3"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/3b7ab72d21cb4e034f07df80165265f85f445ef3f581d1bc87b67e5239428baa00200b68a7d5e37a0425c3a78320b541b07f76c5530f6f6f95336a6294ebf30b
+  languageName: node
+  linkType: hard
+
+"@emnapi/wasi-threads@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@emnapi/wasi-threads@npm:1.0.2"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/f0621b1fc715221bd2d8332c0ca922617bcd77cdb3050eae50a124eb8923c54fa425d23982dc8f29d505c8798a62d1049bace8b0686098ff9dd82270e06d772e
+  languageName: node
+  linkType: hard
+
 "@eslint-community/eslint-utils@npm:^4.2.0, @eslint-community/eslint-utils@npm:^4.7.0":
   version: 4.7.0
   resolution: "@eslint-community/eslint-utils@npm:4.7.0"
@@ -221,6 +249,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@napi-rs/wasm-runtime@npm:^0.2.10":
+  version: 0.2.11
+  resolution: "@napi-rs/wasm-runtime@npm:0.2.11"
+  dependencies:
+    "@emnapi/core": "npm:^1.4.3"
+    "@emnapi/runtime": "npm:^1.4.3"
+    "@tybys/wasm-util": "npm:^0.9.0"
+  checksum: 10c0/049bd14c58b99fbe0967b95e9921c5503df196b59be22948d2155f17652eb305cff6728efd8685338b855da7e476dd2551fbe3a313fc2d810938f0717478441e
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -277,10 +316,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@projectdysnomia/dysnomia@npm:0.2.3":
+"@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e":
   version: 0.2.3
-  resolution: "@projectdysnomia/dysnomia@npm:0.2.3"
+  resolution: "@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e"
   dependencies:
+    "@snazzah/davey": "npm:^0.1.5"
     "@stablelib/xchacha20poly1305": "npm:~1.0.1"
     opusscript: "npm:^0.1.1"
     ws: "npm:^8.18.0"
@@ -292,6 +332,8 @@ __metadata:
     sodium-native: ^4.1.1
     zlib-sync: ^0.1.9
   dependenciesMeta:
+    "@snazzah/davey":
+      optional: true
     "@stablelib/xchacha20poly1305":
       optional: true
     opusscript:
@@ -309,14 +351,15 @@ __metadata:
       optional: true
     zlib-sync:
       optional: true
-  checksum: 10c0/74f2ef3046fb357bb8aedf713e92b2c05cd17dda79649192f40994bb770b470c2f513165e3de8cc4c8148e5da99a4e606df446e188d4e991dad829b46810b2d9
+  checksum: 10c0/0ae461b1f7ab5c35bd85bcee7d9c48ff177b893f4469ab267fdc48df081a79761ccf5c6f907c0ba0a7fe8c38c7856a504794165466f80b1af469f7ab49e6f128
   languageName: node
   linkType: hard
 
-"@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch":
+"@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e#~/.yarn/patches/@projectdysnomia-dysnomia-https-2c89d76fac.patch":
   version: 0.2.3
-  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch::version=0.2.3&hash=b69a39"
+  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e#~/.yarn/patches/@projectdysnomia-dysnomia-https-2c89d76fac.patch::version=0.2.3&hash=94f7ee"
   dependencies:
+    "@snazzah/davey": "npm:^0.1.5"
     "@stablelib/xchacha20poly1305": "npm:~1.0.1"
     opusscript: "npm:^0.1.1"
     ws: "npm:^8.18.0"
@@ -328,6 +371,8 @@ __metadata:
     sodium-native: ^4.1.1
     zlib-sync: ^0.1.9
   dependenciesMeta:
+    "@snazzah/davey":
+      optional: true
     "@stablelib/xchacha20poly1305":
       optional: true
     opusscript:
@@ -345,7 +390,158 @@ __metadata:
       optional: true
     zlib-sync:
       optional: true
-  checksum: 10c0/61b42725d1645a78a8bb05f4b834a36dcbbef3992daa28c110a7df6020c6eeaa4541309b4dea60f5dd0d289b1972b145274a5191047cfc2538d156096c2acb8f
+  checksum: 10c0/87d62caa09fe8b01c5abd07fe8977c9bfdb60bb37e02fd6a7d329d88994635a4fcf615bb76eb3a7739b5bbc542f8c886dc48dc58e7b4e3e3ad42a93c5ef3ef8a
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-android-arm-eabi@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-android-arm-eabi@npm:0.1.5"
+  conditions: os=android & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-android-arm64@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-android-arm64@npm:0.1.5"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-darwin-arm64@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-darwin-arm64@npm:0.1.5"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-darwin-x64@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-darwin-x64@npm:0.1.5"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-freebsd-x64@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-freebsd-x64@npm:0.1.5"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-linux-arm-gnueabihf@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-linux-arm-gnueabihf@npm:0.1.5"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-linux-arm64-gnu@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-linux-arm64-gnu@npm:0.1.5"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-linux-arm64-musl@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-linux-arm64-musl@npm:0.1.5"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-linux-x64-gnu@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-linux-x64-gnu@npm:0.1.5"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-linux-x64-musl@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-linux-x64-musl@npm:0.1.5"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-wasm32-wasi@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-wasm32-wasi@npm:0.1.5"
+  dependencies:
+    "@napi-rs/wasm-runtime": "npm:^0.2.10"
+  conditions: cpu=wasm32
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-win32-arm64-msvc@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-win32-arm64-msvc@npm:0.1.5"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-win32-ia32-msvc@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-win32-ia32-msvc@npm:0.1.5"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey-win32-x64-msvc@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey-win32-x64-msvc@npm:0.1.5"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@snazzah/davey@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@snazzah/davey@npm:0.1.5"
+  dependencies:
+    "@snazzah/davey-android-arm-eabi": "npm:0.1.5"
+    "@snazzah/davey-android-arm64": "npm:0.1.5"
+    "@snazzah/davey-darwin-arm64": "npm:0.1.5"
+    "@snazzah/davey-darwin-x64": "npm:0.1.5"
+    "@snazzah/davey-freebsd-x64": "npm:0.1.5"
+    "@snazzah/davey-linux-arm-gnueabihf": "npm:0.1.5"
+    "@snazzah/davey-linux-arm64-gnu": "npm:0.1.5"
+    "@snazzah/davey-linux-arm64-musl": "npm:0.1.5"
+    "@snazzah/davey-linux-x64-gnu": "npm:0.1.5"
+    "@snazzah/davey-linux-x64-musl": "npm:0.1.5"
+    "@snazzah/davey-wasm32-wasi": "npm:0.1.5"
+    "@snazzah/davey-win32-arm64-msvc": "npm:0.1.5"
+    "@snazzah/davey-win32-ia32-msvc": "npm:0.1.5"
+    "@snazzah/davey-win32-x64-msvc": "npm:0.1.5"
+  dependenciesMeta:
+    "@snazzah/davey-android-arm-eabi":
+      optional: true
+    "@snazzah/davey-android-arm64":
+      optional: true
+    "@snazzah/davey-darwin-arm64":
+      optional: true
+    "@snazzah/davey-darwin-x64":
+      optional: true
+    "@snazzah/davey-freebsd-x64":
+      optional: true
+    "@snazzah/davey-linux-arm-gnueabihf":
+      optional: true
+    "@snazzah/davey-linux-arm64-gnu":
+      optional: true
+    "@snazzah/davey-linux-arm64-musl":
+      optional: true
+    "@snazzah/davey-linux-x64-gnu":
+      optional: true
+    "@snazzah/davey-linux-x64-musl":
+      optional: true
+    "@snazzah/davey-wasm32-wasi":
+      optional: true
+    "@snazzah/davey-win32-arm64-msvc":
+      optional: true
+    "@snazzah/davey-win32-ia32-msvc":
+      optional: true
+    "@snazzah/davey-win32-x64-msvc":
+      optional: true
+  checksum: 10c0/968c9e1a2358c9853aabd61effb08529c842443701f9dd8bf6a0168c6a174250b3b63fe2a0ab4e5ca6a040cb72e3a3c34cf217139fb3bc0e660ce60792032c23
   languageName: node
   linkType: hard
 
@@ -456,6 +652,15 @@ __metadata:
   peerDependencies:
     eslint: ">=9.0.0"
   checksum: 10c0/94160bfc172a3934dd35be87887f43f7e3ffe9d1645096860a4e4c61877bb0fb62eb20a90e50ad74767ee794ed10f334f7165952cf9bcbd8bae6b80dc10c0d62
+  languageName: node
+  linkType: hard
+
+"@tybys/wasm-util@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "@tybys/wasm-util@npm:0.9.0"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/f9fde5c554455019f33af6c8215f1a1435028803dc2a2825b077d812bed4209a1a64444a4ca0ce2ea7e1175c8d88e2f9173a36a33c199e8a5c671aa31de8242d
   languageName: node
   linkType: hard
 
@@ -1893,7 +2098,7 @@ __metadata:
   dependencies:
     "@discordjs/opus": "npm:0.10.0"
     "@eslint/js": "npm:^9.28.0"
-    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@npm%3A0.2.3#~/.yarn/patches/@projectdysnomia-dysnomia-npm-0.2.3-f9fe380f79.patch"
+    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b6a65efb8b831016f4b854d3ca7ab066b2f0074e#~/.yarn/patches/@projectdysnomia-dysnomia-https-2c89d76fac.patch"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@types/lodash": "npm:^4.17.17"
     "@types/node": "npm:^22.15.30"
@@ -3910,6 +4115,13 @@ __metadata:
   peerDependencies:
     typescript: ">=4.8.4"
   checksum: 10c0/9806a38adea2db0f6aa217ccc6bc9c391ddba338a9fe3080676d0d50ed806d305bb90e8cef0276e793d28c8a929f400abb184ddd7ff83a416959c0f4d2ce754f
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.4.0":
+  version: 2.8.1
+  resolution: "tslib@npm:2.8.1"
+  checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
   languageName: node
   linkType: hard
 
