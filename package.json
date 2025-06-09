@@ -15,7 +15,7 @@
   },
   "description": "",
   "dependencies": {
-    "async-wait-until": "^2.0.18",
+    "async-wait-until": "^2.0.27",
     "dayjs": "^1.11.13",
     "eris": "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch",
     "lodash": "^4.17.21",
@@ -25,24 +25,24 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@stylistic/eslint-plugin": "^2.12.1",
-    "@types/lodash": "^4.17.13",
-    "@types/node": "^22.10.2",
-    "@types/node-telegram-bot-api": "^0.64.7",
-    "@types/ws": "^8.5.13",
-    "eslint": "^9.17.0",
-    "globals": "^15.14.0",
-    "node-gyp": "^11.0.0",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.18.2"
+    "@eslint/js": "^9.28.0",
+    "@stylistic/eslint-plugin": "^4.4.1",
+    "@types/lodash": "^4.17.17",
+    "@types/node": "^22.15.30",
+    "@types/node-telegram-bot-api": "^0.64.9",
+    "@types/ws": "^8.18.1",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0",
+    "node-gyp": "^11.2.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1"
   },
   "optionalDependencies": {
-    "@discordjs/opus": "0.9.0",
-    "bufferutil": "^4.0.8",
+    "@discordjs/opus": "0.10.0",
+    "bufferutil": "^4.0.9",
     "erlpack": "^0.1.4",
-    "node-addon-api": "^8.3.0",
-    "sodium-native": "^4.3.1"
+    "node-addon-api": "^8.3.1",
+    "sodium-native": "^5.0.6"
   },
   "packageManager": "yarn@4.5.3"
 }
