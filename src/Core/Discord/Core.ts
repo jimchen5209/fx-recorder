@@ -1,4 +1,4 @@
-import { Client } from 'eris'
+import { Client } from '@projectdysnomia/dysnomia'
 import { ILogObj, Logger } from 'tslog'
 import { DiscordVoice } from './Core/Voice'
 import { mkdirSync, existsSync, rmSync } from 'fs'
@@ -18,7 +18,7 @@ export class Discord {
 
     this.client = new Client(
       instances.config.discord.token,
-      { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
+      { restMode: true, gateway: { intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] } }
     )
 
     this.client.on('voiceChannelJoin', (member, channel) => {

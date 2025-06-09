@@ -1,4 +1,4 @@
-import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from 'eris'
+import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from '@projectdysnomia/dysnomia'
 import { ILogObj, Logger } from 'tslog'
 import { EventEmitter } from 'events'
 import { readFileSync as readFile } from 'fs'
@@ -147,13 +147,19 @@ export class DiscordVoice extends EventEmitter {
         if (element.sendAll) {
           this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
           const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-          await this.client.createMessage(element.id, caption, { name: file.audioFileName, file: readFile(file.audioFilePath) })
+          await this.client.createMessage(element.id, {
+            content: caption, 
+            attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
+          })
         }
         if (element.sendPerUser) {
           for (const userFile of file.perUserFiles) {
             this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
             const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-            await this.client.createMessage(element.id, caption, { name: userFile.audioFileName, file: readFile(userFile.audioFilePath) })
+            await this.client.createMessage(element.id, {
+              content: caption, 
+              attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
+            })
           }
         }
       }

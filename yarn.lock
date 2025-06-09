@@ -277,6 +277,137 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@projectdysnomia/dysnomia@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@projectdysnomia/dysnomia@npm:0.2.3"
+  dependencies:
+    "@stablelib/xchacha20poly1305": "npm:~1.0.1"
+    opusscript: "npm:^0.1.1"
+    ws: "npm:^8.18.0"
+  peerDependencies:
+    "@discordjs/opus": ^0.9.0
+    erlpack: "*"
+    eventemitter3: ^5.0.1
+    pako: ^2.1.0
+    sodium-native: ^4.1.1
+    zlib-sync: ^0.1.9
+  dependenciesMeta:
+    "@stablelib/xchacha20poly1305":
+      optional: true
+    opusscript:
+      optional: true
+  peerDependenciesMeta:
+    "@discordjs/opus":
+      optional: true
+    erlpack:
+      optional: true
+    eventemitter3:
+      optional: true
+    pako:
+      optional: true
+    sodium-native:
+      optional: true
+    zlib-sync:
+      optional: true
+  checksum: 10c0/74f2ef3046fb357bb8aedf713e92b2c05cd17dda79649192f40994bb770b470c2f513165e3de8cc4c8148e5da99a4e606df446e188d4e991dad829b46810b2d9
+  languageName: node
+  linkType: hard
+
+"@stablelib/aead@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/aead@npm:1.0.1"
+  checksum: 10c0/8ec16795a6f94264f93514661e024c5b0434d75000ea133923c57f0db30eab8ddc74fa35f5ff1ae4886803a8b92e169b828512c9e6bc02c818688d0f5b9f5aef
+  languageName: node
+  linkType: hard
+
+"@stablelib/binary@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/binary@npm:1.0.1"
+  dependencies:
+    "@stablelib/int": "npm:^1.0.1"
+  checksum: 10c0/154cb558d8b7c20ca5dc2e38abca2a3716ce36429bf1b9c298939cea0929766ed954feb8a9c59245ac64c923d5d3466bb7d99f281debd3a9d561e1279b11cd35
+  languageName: node
+  linkType: hard
+
+"@stablelib/chacha20poly1305@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/chacha20poly1305@npm:1.0.1"
+  dependencies:
+    "@stablelib/aead": "npm:^1.0.1"
+    "@stablelib/binary": "npm:^1.0.1"
+    "@stablelib/chacha": "npm:^1.0.1"
+    "@stablelib/constant-time": "npm:^1.0.1"
+    "@stablelib/poly1305": "npm:^1.0.1"
+    "@stablelib/wipe": "npm:^1.0.1"
+  checksum: 10c0/fe202aa8aface111c72bc9ec099f9c36a7b1470eda9834e436bb228618a704929f095b937f04e867fe4d5c40216ff089cbfeb2eeb092ab33af39ff333eb2c1e6
+  languageName: node
+  linkType: hard
+
+"@stablelib/chacha@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/chacha@npm:1.0.1"
+  dependencies:
+    "@stablelib/binary": "npm:^1.0.1"
+    "@stablelib/wipe": "npm:^1.0.1"
+  checksum: 10c0/4d70b484ae89416d21504024f977f5517bf16b344b10fb98382c9e3e52fe8ca77ac65f5d6a358d8b152f2c9ffed101a1eb15ed1707cdf906e1b6624db78d2d16
+  languageName: node
+  linkType: hard
+
+"@stablelib/constant-time@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/constant-time@npm:1.0.1"
+  checksum: 10c0/694a282441215735a1fdfa3d06db5a28ba92423890967a154514ef28e0d0298ce7b6a2bc65ebc4273573d6669a6b601d330614747aa2e69078c1d523d7069e12
+  languageName: node
+  linkType: hard
+
+"@stablelib/int@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/int@npm:1.0.1"
+  checksum: 10c0/e1a6a7792fc2146d65de56e4ef42e8bc385dd5157eff27019b84476f564a1a6c43413235ed0e9f7c9bb8907dbdab24679467aeb10f44c92e6b944bcd864a7ee0
+  languageName: node
+  linkType: hard
+
+"@stablelib/poly1305@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/poly1305@npm:1.0.1"
+  dependencies:
+    "@stablelib/constant-time": "npm:^1.0.1"
+    "@stablelib/wipe": "npm:^1.0.1"
+  checksum: 10c0/080185ffa92f5111e6ecfeab7919368b9984c26d048b9c09a111fbc657ea62bb5dfe6b56245e1804ce692a445cc93ab6625936515fa0e7518b8f2d86feda9630
+  languageName: node
+  linkType: hard
+
+"@stablelib/wipe@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/wipe@npm:1.0.1"
+  checksum: 10c0/c5a54f769c286a5b3ecff979471dfccd4311f2e84a959908e8c0e3aa4eed1364bd9707f7b69d1384b757e62cc295c221fa27286c7f782410eb8a690f30cfd796
+  languageName: node
+  linkType: hard
+
+"@stablelib/xchacha20@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/xchacha20@npm:1.0.1"
+  dependencies:
+    "@stablelib/binary": "npm:^1.0.1"
+    "@stablelib/chacha": "npm:^1.0.1"
+    "@stablelib/wipe": "npm:^1.0.1"
+  checksum: 10c0/7b72e9ebf414b3ea9355c2c780dd992e62ede3d4839ca0f8e8b980d4bbe9af9216fde31b1f7ebd7bd38de120fe74b0c99d8628b7bcdeac820e91df09c2618002
+  languageName: node
+  linkType: hard
+
+"@stablelib/xchacha20poly1305@npm:~1.0.1":
+  version: 1.0.1
+  resolution: "@stablelib/xchacha20poly1305@npm:1.0.1"
+  dependencies:
+    "@stablelib/aead": "npm:^1.0.1"
+    "@stablelib/chacha20poly1305": "npm:^1.0.1"
+    "@stablelib/constant-time": "npm:^1.0.1"
+    "@stablelib/wipe": "npm:^1.0.1"
+    "@stablelib/xchacha20": "npm:^1.0.1"
+  checksum: 10c0/cd1e525bdbd15894b1b51f41bf6e546cd6bc1c5408a1399cbe97677211aca92641503c040576f8c51df88ef70796ed69de690a4ee1ab81a64ba4327f449dcd1c
+  languageName: node
+  linkType: hard
+
 "@stylistic/eslint-plugin@npm:^4.4.1":
   version: 4.4.1
   resolution: "@stylistic/eslint-plugin@npm:4.4.1"
@@ -1207,38 +1338,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eris@npm:0.18.0":
-  version: 0.18.0
-  resolution: "eris@npm:0.18.0"
-  dependencies:
-    opusscript: "npm:^0.0.8"
-    tweetnacl: "npm:^1.0.3"
-    ws: "npm:^8.2.3"
-  dependenciesMeta:
-    opusscript:
-      optional: true
-    tweetnacl:
-      optional: true
-  checksum: 10c0/76104ded92e8c2b94b9b1abe89a20d4643175c0f96e1082c9e637f53cbc8c310569a1b13bd414a48872ec4f041a757e3a8cd8ad9ce1ee260a02716fdfc0473a9
-  languageName: node
-  linkType: hard
-
-"eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch":
-  version: 0.18.0
-  resolution: "eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch::version=0.18.0&hash=6328ca"
-  dependencies:
-    opusscript: "npm:^0.0.8"
-    tweetnacl: "npm:^1.0.3"
-    ws: "npm:^8.2.3"
-  dependenciesMeta:
-    opusscript:
-      optional: true
-    tweetnacl:
-      optional: true
-  checksum: 10c0/96b0351a75beeff84f6f6ef099dcb964aa125152a72f317be402694073e65e92ea9db20605ef65b1479883e32764eabe57f11ffa1e2ab5540934f8f5367436c5
-  languageName: node
-  linkType: hard
-
 "erlpack@npm:^0.1.4":
   version: 0.1.4
   resolution: "erlpack@npm:0.1.4"
@@ -1758,6 +1857,7 @@ __metadata:
   dependencies:
     "@discordjs/opus": "npm:0.10.0"
     "@eslint/js": "npm:^9.28.0"
+    "@projectdysnomia/dysnomia": "npm:^0.2.3"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@types/lodash": "npm:^4.17.17"
     "@types/node": "npm:^22.15.30"
@@ -1766,7 +1866,6 @@ __metadata:
     async-wait-until: "npm:^2.0.27"
     bufferutil: "npm:^4.0.9"
     dayjs: "npm:^1.11.13"
-    eris: "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch"
     erlpack: "npm:^0.1.4"
     eslint: "npm:^9.28.0"
     globals: "npm:^16.2.0"
@@ -2947,13 +3046,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"opusscript@npm:^0.0.8":
-  version: 0.0.8
-  resolution: "opusscript@npm:0.0.8"
-  checksum: 10c0/784215c8c825794d76876a0e130f221ad592afdecef681dd1ff8bafb8b2831b31d7ec5cc93115c827004b7e815bf70ef75aa24fb3cd5de2b11b6bce0537006e2
-  languageName: node
-  linkType: hard
-
 "opusscript@npm:^0.1.1":
   version: 0.1.1
   resolution: "opusscript@npm:0.1.1"
@@ -3808,13 +3900,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tweetnacl@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "tweetnacl@npm:1.0.3"
-  checksum: 10c0/069d9df51e8ad4a89fbe6f9806c68e06c65be3c7d42f0701cc43dba5f0d6064686b238bbff206c5addef8854e3ce00c643bff59432ea2f2c639feab0ee1a93f9
-  languageName: node
-  linkType: hard
-
 "type-check@npm:^0.4.0, type-check@npm:~0.4.0":
   version: 0.4.0
   resolution: "type-check@npm:0.4.0"
@@ -4153,7 +4238,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.2.3":
+"ws@npm:^8.18.0":
   version: 8.18.2
   resolution: "ws@npm:8.18.2"
   peerDependencies:
