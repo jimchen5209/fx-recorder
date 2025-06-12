@@ -127,42 +127,47 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private async sendRecord(file: IRecordFile) {
-    for (const element of this.channelConfig.fileDest) {
-      if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
-        if (element.sendAll) {
-          this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-          const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-          await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
-        }
-        if (element.sendPerUser) {
-          for (const userFile of file.perUserFiles) {
-            this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-            await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
+    try {
+      for (const element of this.channelConfig.fileDest) {
+        if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
+          if (element.sendAll) {
+            this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
+            const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
+            await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
+          }
+          if (element.sendPerUser) {
+            for (const userFile of file.perUserFiles) {
+              this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
+              const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+              await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
 
+            }
           }
         }
-      }
-      if (element.type === 'discord' && element.id !== '') {
-        if (element.sendAll) {
-          this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-          const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-          await this.client.createMessage(element.id, {
-            content: caption, 
-            attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
-          })
-        }
-        if (element.sendPerUser) {
-          for (const userFile of file.perUserFiles) {
-            this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+        if (element.type === 'discord' && element.id !== '') {
+          if (element.sendAll) {
+            this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
+            const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
             await this.client.createMessage(element.id, {
               content: caption, 
-              attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
+              attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
             })
+          }
+          if (element.sendPerUser) {
+            for (const userFile of file.perUserFiles) {
+              this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
+              const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+              await this.client.createMessage(element.id, {
+                content: caption, 
+                attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
+              })
+            }
           }
         }
       }
+    } catch (error) {
+      this.logger.error(`Error sending record file ${file.audioFileName}:`, error)
+      if (this._active) this.sendAdminMessage(`Error sending record file ${file.audioFileName}`)
     }
   }
 
@@ -233,6 +238,7 @@ export class DiscordVoice extends EventEmitter {
         if (this.warningFailSafe.checkHitExceed()) {
           this.logger.error(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
           if (this._active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
+          this._active = false
           this.tryReconnect(channelID, connection)
         }
       })
@@ -242,6 +248,7 @@ export class DiscordVoice extends EventEmitter {
         if (this.errorFailSafe.checkHitExceed()) {
           this.logger.error(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
           if (this._active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
+          this._active = false
           this.tryReconnect(channelID, connection)
         }
       })
