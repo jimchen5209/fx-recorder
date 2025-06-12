@@ -1,7 +1,16 @@
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
-index 8078daae083ddd55f24b36f5881763c9b58a0549..f2ed54086d928b0b820a2c7ef73a798dfdc1c40d 100644
+index 8078daae083ddd55f24b36f5881763c9b58a0549..26f7c3673ee71da625f7ab2d067843d3f5b98446 100644
 --- a/lib/voice/VoiceConnection.js
 +++ b/lib/voice/VoiceConnection.js
+@@ -392,7 +392,7 @@ class VoiceConnection extends EventEmitter {
+                             this.disconnect(err);
+                         }
+                     });
+-                    const udpMessage = Buffer.allocUnsafe(74);
++                    const udpMessage = Buffer.alloc(74);
+                     udpMessage.writeUInt16BE(0x1, 0);
+                     udpMessage.writeUInt16BE(70, 2);
+                     udpMessage.writeUInt32BE(this.ssrc, 4);
 @@ -546,7 +546,12 @@ class VoiceConnection extends EventEmitter {
              if(this.connecting || this.ready) {
                  let reconnecting = true;
