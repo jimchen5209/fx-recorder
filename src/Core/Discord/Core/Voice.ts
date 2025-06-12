@@ -245,6 +245,7 @@ export class DiscordVoice extends EventEmitter {
           this.tryReconnect(channelID, connection)
         }
       })
+      connection.on('debug', (message) => this.logger.debug(message))
       connection.on('ready', () => {
         this.logger.warn('Voice connection reconnected.')
         this.warningFailSafe.resetError()
