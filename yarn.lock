@@ -357,7 +357,7 @@ __metadata:
 
 "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch":
   version: 0.2.3
-  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch::version=0.2.3&hash=866e14"
+  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch::version=0.2.3&hash=eb010c"
   dependencies:
     "@snazzah/davey": "npm:^0.1.6"
     "@stablelib/xchacha20poly1305": "npm:~1.0.1"
@@ -390,7 +390,7 @@ __metadata:
       optional: true
     zlib-sync:
       optional: true
-  checksum: 10c0/b701912c55359e289267fe755b5774bbc2739c437571eb890e0e97cde662daaa68c24b5c4a1f46cf0ffb34091b1f4ab029cf11d2d9600c2b7338065c424fc771
+  checksum: 10c0/1d37a50f22e506352fd5263c0ecad35a3851b93aab1ac158f158d4895d82207966538f39c9e6cd197e94bd36c974624311b13477da37af8efdf2dfa717ad3b04
   languageName: node
   linkType: hard
 

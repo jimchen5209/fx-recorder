@@ -1,5 +1,5 @@
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
-index 8078daae083ddd55f24b36f5881763c9b58a0549..26f7c3673ee71da625f7ab2d067843d3f5b98446 100644
+index 8078daae083ddd55f24b36f5881763c9b58a0549..c1e5247a5f0a69ee1fe859276f92ec2017948f2a 100644
 --- a/lib/voice/VoiceConnection.js
 +++ b/lib/voice/VoiceConnection.js
 @@ -392,7 +392,7 @@ class VoiceConnection extends EventEmitter {
@@ -25,3 +25,11 @@ index 8078daae083ddd55f24b36f5881763c9b58a0549..26f7c3673ee71da625f7ab2d067843d3
                  } else if(code === 4014) {
                      if(this.channelID) {
                          data.endpoint = null;
+@@ -911,6 +916,7 @@ class VoiceConnection extends EventEmitter {
+             }
+ 
+             const userID = this.ssrcUserMap[msg.readUIntBE(8, 4)];
++            if (!userID) return;
+             if(this.daveSession && userID && !data.equals(SILENCE_FRAME)) {
+                 try {
+                     const canDecrypt = this.#daveReady || (this.daveSession.ready && this.daveSession.canPassthrough(userID));
