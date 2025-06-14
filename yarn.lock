@@ -316,9 +316,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9":
+"@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e":
   version: 0.2.3
-  resolution: "@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9"
+  resolution: "@projectdysnomia/dysnomia@https://github.com/Snazzah/dysnomia.git#commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e"
   dependencies:
     "@snazzah/davey": "npm:^0.1.6"
     "@stablelib/xchacha20poly1305": "npm:~1.0.1"
@@ -351,13 +351,13 @@ __metadata:
       optional: true
     zlib-sync:
       optional: true
-  checksum: 10c0/c4613f1338121430727223094cf7020e2ab289c6b5a6a40292500727cb461261f5694fd482646dcb037e843cb191eeb292dfdebbcbcc155af2f9e09695e22d5d
+  checksum: 10c0/7a0b68f38b1e4d04c442eafb15d55df783797660d67720d30052f0238bd1c6ece5a5107f7e30676d4eb7b55e0d7de3484844378c8ef433c44e3a693af118d62c
   languageName: node
   linkType: hard
 
-"@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch":
+"@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e#~/.yarn/patches/@projectdysnomia-dysnomia-https-0f7a4a947b.patch":
   version: 0.2.3
-  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch::version=0.2.3&hash=9c73f0"
+  resolution: "@projectdysnomia/dysnomia@patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e#~/.yarn/patches/@projectdysnomia-dysnomia-https-0f7a4a947b.patch::version=0.2.3&hash=119539"
   dependencies:
     "@snazzah/davey": "npm:^0.1.6"
     "@stablelib/xchacha20poly1305": "npm:~1.0.1"
@@ -390,7 +390,7 @@ __metadata:
       optional: true
     zlib-sync:
       optional: true
-  checksum: 10c0/0a50850c83bb6d477cc2822481e7f3ab78dc3ab6d20ad173fc4c6f9e334e7b3f1eb5f9dd3a7fd65925f0330f781acaae68f2ab56923bbb2fdf1377a8ec5377c2
+  checksum: 10c0/f9a3bacbc4d9567e444631202f24bf1d6cfa83df1377cc64d44f3cbb490242d9de896be0c551df46fda36ae17864f97e3fa3a0723141ef83be7d805b3b4c70e7
   languageName: node
   linkType: hard
 
@@ -2098,7 +2098,7 @@ __metadata:
   dependencies:
     "@discordjs/opus": "npm:0.10.0"
     "@eslint/js": "npm:^9.28.0"
-    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch"
+    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e#~/.yarn/patches/@projectdysnomia-dysnomia-https-0f7a4a947b.patch"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@types/lodash": "npm:^4.17.17"
     "@types/node": "npm:^22.15.30"
