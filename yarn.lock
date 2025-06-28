@@ -1789,7 +1789,7 @@ __metadata:
     eslint: "npm:^9.29.0"
     globals: "npm:^16.2.0"
     lodash: "npm:^4.17.21"
-    node-addon-api: "npm:^8.3.1"
+    node-addon-api: "npm:^8.4.0"
     node-gyp: "npm:^11.2.0"
     node-telegram-bot-api: "npm:0.66.0"
     opusscript: "npm:^0.1.1"
@@ -2802,12 +2802,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.1.0, node-addon-api@npm:^8.3.1":
+"node-addon-api@npm:^8.1.0":
   version: 8.3.1
   resolution: "node-addon-api@npm:8.3.1"
   dependencies:
     node-gyp: "npm:latest"
   checksum: 10c0/e28f1c5094130ecc3a0bf882e0385e74cac9c5112d35287dbce369959551ab7ca4d1f1a69af737107c894c14b4063dd5002e2b3c16a27035d025bb06eefee058
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^8.4.0":
+  version: 8.4.0
+  resolution: "node-addon-api@npm:8.4.0"
+  dependencies:
+    node-gyp: "npm:latest"
+  checksum: 10c0/d51be099e1b9a6ac4a72f1a60787004d44c8ffe4be1efa38755d54b2a9f4f66647cc6913070e0ed20256d0e6eacceabfff90175fba2ef71153c2d06f8db8e7a9
   languageName: node
   linkType: hard
 

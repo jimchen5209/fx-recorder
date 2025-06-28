@@ -41,7 +41,7 @@
     "@discordjs/opus": "0.10.0",
     "bufferutil": "^4.0.9",
     "erlpack": "^0.1.4",
-    "node-addon-api": "^8.3.1",
+    "node-addon-api": "^8.4.0",
     "sodium-native": "^5.0.6"
   },
   "packageManager": "yarn@4.5.3"
