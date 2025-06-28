@@ -44,5 +44,5 @@
     "node-addon-api": "^8.4.0",
     "sodium-native": "^5.0.6"
   },
-  "packageManager": "yarn@4.5.3"
+  "packageManager": "yarn@4.9.2"
 }
