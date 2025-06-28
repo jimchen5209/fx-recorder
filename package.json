@@ -25,7 +25,7 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.28.0",
+    "@eslint/js": "^9.29.0",
     "@stylistic/eslint-plugin": "^4.4.1",
     "@types/lodash": "^4.17.17",
     "@types/node": "^22.15.30",
