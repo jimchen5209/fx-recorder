@@ -36,7 +36,7 @@
     "globals": "^16.3.0",
     "node-gyp": "^11.2.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.36.0"
+    "typescript-eslint": "^8.37.0"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.10.0",
