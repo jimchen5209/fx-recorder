@@ -340,7 +340,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.16.3":
+"@types/node@npm:^22.16.4":
   version: 22.16.4
   resolution: "@types/node@npm:22.16.4"
   dependencies:
@@ -1771,7 +1771,7 @@ __metadata:
     "@eslint/js": "npm:^9.31.0"
     "@stylistic/eslint-plugin": "npm:^5.1.0"
     "@types/lodash": "npm:^4.17.20"
-    "@types/node": "npm:^22.16.3"
+    "@types/node": "npm:^22.16.4"
     "@types/node-telegram-bot-api": "npm:^0.64.9"
     "@types/ws": "npm:^8.18.1"
     "@typescript-eslint/types": "npm:^8.37.0"
@@ -1783,7 +1783,7 @@ __metadata:
     eslint: "npm:^9.31.0"
     globals: "npm:^16.3.0"
     lodash: "npm:^4.17.21"
-    node-addon-api: "npm:^8.4.0"
+    node-addon-api: "npm:^8.5.0"
     node-gyp: "npm:^11.2.0"
     node-telegram-bot-api: "npm:0.66.0"
     opusscript: "npm:^0.1.1"
@@ -2796,7 +2796,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.1.0, node-addon-api@npm:^8.4.0":
+"node-addon-api@npm:^8.1.0, node-addon-api@npm:^8.5.0":
   version: 8.5.0
   resolution: "node-addon-api@npm:8.5.0"
   dependencies:
