@@ -469,6 +469,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/types@npm:^8.38.0":
+  version: 8.38.0
+  resolution: "@typescript-eslint/types@npm:8.38.0"
+  checksum: 10c0/f0ac0060c98c0f3d1871f107177b6ae25a0f1846ca8bd8cfc7e1f1dd0ddce293cd8ac4a5764d6a767de3503d5d01defcd68c758cb7ba6de52f82b209a918d0d2
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/typescript-estree@npm:8.37.0":
   version: 8.37.0
   resolution: "@typescript-eslint/typescript-estree@npm:8.37.0"
@@ -1774,7 +1781,7 @@ __metadata:
     "@types/node": "npm:^22.16.4"
     "@types/node-telegram-bot-api": "npm:^0.64.9"
     "@types/ws": "npm:^8.18.1"
-    "@typescript-eslint/types": "npm:^8.37.0"
+    "@typescript-eslint/types": "npm:^8.38.0"
     async-wait-until: "npm:^2.0.27"
     bufferutil: "npm:^4.0.9"
     dayjs: "npm:^1.11.13"
