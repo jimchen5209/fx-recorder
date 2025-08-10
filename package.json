@@ -25,18 +25,18 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
-    "@stylistic/eslint-plugin": "^5.2.2",
+    "@eslint/js": "^9.33.0",
+    "@stylistic/eslint-plugin": "^5.2.3",
     "@types/lodash": "^4.17.20",
-    "@types/node": "^22.16.5",
-    "@types/node-telegram-bot-api": "^0.64.9",
+    "@types/node": "^22.17.1",
+    "@types/node-telegram-bot-api": "^0.64.10",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/types": "^8.38.0",
-    "eslint": "^9.32.0",
+    "@typescript-eslint/types": "^8.39.0",
+    "eslint": "^9.33.0",
     "globals": "^16.3.0",
-    "node-gyp": "^11.2.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0"
+    "node-gyp": "^11.3.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.10.0",
