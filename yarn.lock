@@ -3514,12 +3514,12 @@ __metadata:
   linkType: hard
 
 "sodium-native@npm:^5.0.6":
-  version: 5.0.6
-  resolution: "sodium-native@npm:5.0.6"
+  version: 5.0.7
+  resolution: "sodium-native@npm:5.0.7"
   dependencies:
     require-addon: "npm:^1.1.0"
     which-runtime: "npm:^1.2.1"
-  checksum: 10c0/af6a3341ed8d52d81a46af6faacdc65715adcbea03784901be6c77bfd66876f97f01d3f685cdf0629a65fca665a7064177630823a38c41dc7cf13be080d51860
+  checksum: 10c0/fce3dace434c99b27724691109311c7bdc6a4fb0991c09616ebc91aa62582cc1c1d0be297dc446b5c90a11a391353dcdfb539302df472f529c6439aef26346d5
   languageName: node
   linkType: hard
 
