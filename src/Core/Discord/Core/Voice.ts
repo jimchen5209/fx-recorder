@@ -1,16 +1,15 @@
-import { type Client, type VoiceConnection, type VoiceChannel, DiscordRESTError } from 'eris'
-import type { ILogObj, Logger } from 'tslog'
 import { EventEmitter } from 'node:events'
 import { readFileSync as readFile } from 'node:fs'
-import { waitUntil, TimeoutError } from 'async-wait-until'
+import { TimeoutError, waitUntil } from 'async-wait-until'
+import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from 'eris'
 import { debounce } from 'lodash'
-
-import { Silence } from './Silence'
-import { instances } from '../../../Utils/Instances'
+import type { ILogObj, Logger } from 'tslog'
 import type { DiscordChannel } from '../../../Utils/Config'
+import { FailSafe } from '../../../Utils/FailSafe'
+import { instances } from '../../../Utils/Instances'
 import { Recorder } from '../Recorder/Recorder'
 import type { IRecordFile } from '../Recorder/RecordSaver'
-import { FailSafe } from '../../../Utils/FailSafe'
+import { Silence } from './Silence'
 
 export class DiscordVoice extends EventEmitter {
   private client: Client

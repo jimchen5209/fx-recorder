@@ -1,8 +1,8 @@
 import { type ILogObj, Logger } from 'tslog'
 
 import type { Discord } from '../Core/Discord/Core'
-import { Config, loggerOptions } from './Config'
 import type { Telegram } from '../Core/Telegram/Core'
+import { Config, loggerOptions } from './Config'
 
 interface Instances {
   mainLogger: Logger<ILogObj>
