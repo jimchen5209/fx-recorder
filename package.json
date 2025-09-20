@@ -8,6 +8,10 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
+    "lint": "biome lint --write src/",
+    "lint:unsafe": "biome lint --write --unsafe src/",
+    "format": "biome format --write src/",
+    "biome:ci": "biome ci src/",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty ---inlineSourceMap false"
   },
@@ -23,6 +27,7 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.3",
     "@types/lodash": "^4.17.20",
     "@types/node": "^22.17.1",
     "@types/node-telegram-bot-api": "^0.64.10",
