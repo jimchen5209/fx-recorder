@@ -23,6 +23,18 @@
     },
     {
       "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "matchCurrentAge": "> 2 week",
+      "automerge": false,
+      "addLabels": [
+        "status:ready-to-merge"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
         "major"
       ],
       "automerge": false,
