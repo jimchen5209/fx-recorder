@@ -1,0 +1,3 @@
+patchedDependencies:
+  eris: patches/eris.patch
+minimumReleaseAge: 20160
