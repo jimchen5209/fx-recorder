@@ -1,7 +1,7 @@
 import { type Client, type VoiceConnection, type VoiceChannel, DiscordRESTError } from 'eris'
 import type { ILogObj, Logger } from 'tslog'
-import { EventEmitter } from 'events'
-import { readFileSync as readFile } from 'fs'
+import { EventEmitter } from 'node:events'
+import { readFileSync as readFile } from 'node:fs'
 import { waitUntil, TimeoutError }  from 'async-wait-until'
 import { debounce } from 'lodash'
 

@@ -1,4 +1,4 @@
-import Stream from 'stream'
+import Stream from 'node:stream'
 
 const SILENCE_FRAME = Buffer.from([0xF8, 0xFF, 0xFE])
 

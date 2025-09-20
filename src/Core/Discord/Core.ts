@@ -1,7 +1,7 @@
 import { Client } from 'eris'
 import type { ILogObj, Logger } from 'tslog'
 import { DiscordVoice } from './Core/Voice'
-import { mkdirSync, existsSync, rmSync } from 'fs'
+import { mkdirSync, existsSync, rmSync } from 'node:fs'
 import { instances } from '../../Utils/Instances'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')

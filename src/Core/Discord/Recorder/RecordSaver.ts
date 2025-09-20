@@ -1,4 +1,4 @@
-import { createWriteStream, mkdirSync as mkDir, unlinkSync as deleteFile, existsSync as exists, rmSync as rmDir, type WriteStream } from 'fs'
+import { createWriteStream, mkdirSync as mkDir, unlinkSync as deleteFile, existsSync as exists, rmSync as rmDir, type WriteStream } from 'node:fs'
 import type { Logger, ILogObj } from 'tslog'
 
 import dayjs from 'dayjs'
