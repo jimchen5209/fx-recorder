@@ -13,7 +13,15 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
-    "lineWidth": 180
+    "lineWidth": 180,
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/coverage",
+      "!**/ecosystem.config.js",
+      "!**/Libs/**"
+    ]
   },
   "linter": {
     "enabled": true,

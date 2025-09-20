@@ -46,7 +46,7 @@ export class Recorder {
     if (!this.userMixers) return
     this.logger.info(`Created new per user mixer ${user}`)
     this.userMixers[user] = new LicsonMixer(16, 2, 48000)
-    this.userMixers[user].on('error', error => {
+    this.userMixers[user].on('error', (error) => {
       this.logger.error(`Error on new per user mixer ${user}: ${error.message}`, error)
     })
     this._saver.addUser(user)
@@ -65,7 +65,7 @@ export class Recorder {
   public startStream() {
     this.recvMixer = new LicsonMixer(16, 2, 48000)
     this.userMixers = {}
-    this.recvMixer.on('error', error => {
+    this.recvMixer.on('error', (error) => {
       this.logger.error(`Error on mixer: ${error.message}`, error)
     })
     this._saver.setRecvMixer(this.recvMixer)

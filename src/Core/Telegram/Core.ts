@@ -16,18 +16,13 @@ export class Telegram {
 
     this.bot = new TelegramBot(instances.config.telegram.token, { baseApiUrl: instances.config.telegram.baseApiUrl })
 
-
     // biome-ignore lint/style/useNamingConvention: Package Specific Format
     this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_to_message_id: msg.message_id }))
   }
 
   public async sendAudio(chatID: string, file: string, caption: string) {
     try {
-      await this.bot.sendAudio(
-        chatID,
-        file,
-        { caption }
-      )
+      await this.bot.sendAudio(chatID, file, { caption })
       this.logger.info(`File sent to ${chatID}: ${file}`)
     } catch (err) {
       if (err instanceof Error) {
