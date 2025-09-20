@@ -1,5 +1,5 @@
-import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from 'eris'
-import { ILogObj, Logger } from 'tslog'
+import { type Client, type VoiceConnection, type VoiceChannel, DiscordRESTError } from 'eris'
+import type { ILogObj, Logger } from 'tslog'
 import { EventEmitter } from 'events'
 import { readFileSync as readFile } from 'fs'
 import { waitUntil, TimeoutError }  from 'async-wait-until'
@@ -7,9 +7,9 @@ import { debounce } from 'lodash'
 
 import { Silence } from './Silence'
 import { instances } from '../../../Utils/Instances'
-import { DiscordChannel } from '../../../Utils/Config'
+import type { DiscordChannel } from '../../../Utils/Config'
 import { Recorder } from '../Recorder/Recorder'
-import { IRecordFile } from '../Recorder/RecordSaver'
+import type { IRecordFile } from '../Recorder/RecordSaver'
 import { FailSafe } from '../../../Utils/FailSafe'
 
 export class DiscordVoice extends EventEmitter {

@@ -1,5 +1,5 @@
 import { readFileSync as readFile, existsSync as exists, writeFileSync as writeFile, copyFileSync as copyFile, constants } from 'fs'
-import { ILogObj, ISettingsParam, Logger } from 'tslog'
+import type { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface FileDestination {
   type: string,

@@ -1,16 +1,17 @@
-import { createWriteStream, mkdirSync as mkDir, unlinkSync as deleteFile, existsSync as exists, rmSync as rmDir, WriteStream } from 'fs'
-import { Logger, ILogObj } from 'tslog'
+import { createWriteStream, mkdirSync as mkDir, unlinkSync as deleteFile, existsSync as exists, rmSync as rmDir, type WriteStream } from 'fs'
+import type { Logger, ILogObj } from 'tslog'
 
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
-import LicsonMixer, { Readable } from '../../../Libs/LicsonMixer/mixer'
+import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
+import type { Readable } from '../../../Libs/LicsonMixer/mixer'
 import AudioUtils from '../../../Libs/audio'
 
 import { instances } from '../../../Utils/Instances'
-import { DiscordChannel } from '../../../Utils/Config'
+import type { DiscordChannel } from '../../../Utils/Config'
 
 export interface IUserRecordFile {
   user: string

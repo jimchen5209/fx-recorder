@@ -1,5 +1,5 @@
 import { Client } from 'eris'
-import { ILogObj, Logger } from 'tslog'
+import type { ILogObj, Logger } from 'tslog'
 import { DiscordVoice } from './Core/Voice'
 import { mkdirSync, existsSync, rmSync } from 'fs'
 import { instances } from '../../Utils/Instances'

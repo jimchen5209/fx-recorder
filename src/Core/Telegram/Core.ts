@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api'
-import { ILogObj, Logger } from 'tslog'
+import type { ILogObj, Logger } from 'tslog'
 
 import { instances } from '../../Utils/Instances'
 

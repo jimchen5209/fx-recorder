@@ -1,10 +1,10 @@
-import { Logger, ILogObj } from 'tslog'
+import type { Logger, ILogObj } from 'tslog'
 
 import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
 import AbortStream from '../../../Libs/abort'
 
 import { RecordSaver } from './RecordSaver'
-import { DiscordChannel } from '../../../Utils/Config'
+import type { DiscordChannel } from '../../../Utils/Config'
 import { instances } from '../../../Utils/Instances'
 
 export class Recorder {
