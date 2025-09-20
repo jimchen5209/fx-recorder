@@ -17,22 +17,22 @@
   },
   "description": "",
   "dependencies": {
-    "async-wait-until": "^2.0.27",
-    "dayjs": "^1.11.13",
+    "async-wait-until": "^2.0.30",
+    "dayjs": "^1.11.18",
     "eris": "^0.18.0",
     "lodash": "^4.17.21",
     "node-telegram-bot-api": "0.66.0",
     "opusscript": "^0.1.1",
-    "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
+    "status-client": "github:jimchen5209/StatusClient_JS#v2.2.0",
     "tslog": "^4.9.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.3",
     "@types/lodash": "^4.17.20",
-    "@types/node": "^22.17.1",
+    "@types/node": "^22.18.1",
     "@types/node-telegram-bot-api": "^0.64.10",
     "@types/ws": "^8.18.1",
-    "node-gyp": "^11.3.0",
+    "node-gyp": "^11.4.2",
     "typescript": "^5.9.2"
   },
   "optionalDependencies": {
@@ -40,7 +40,7 @@
     "bufferutil": "^4.0.9",
     "erlpack": "^0.1.4",
     "node-addon-api": "^8.5.0",
-    "sodium-native": "^5.0.6"
+    "sodium-native": "^5.0.8"
   },
   "packageManager": "pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef"
 }
