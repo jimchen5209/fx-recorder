@@ -17,7 +17,8 @@ export class Telegram {
     this.bot = new TelegramBot(instances.config.telegram.token, { baseApiUrl: instances.config.telegram.baseApiUrl })
 
 
-    this.bot.onText(/\/ping(?:@\w+)?/, msg => this.bot.sendMessage(msg.chat.id, 'pong', { reply_to_message_id: msg.message_id }))
+    // biome-ignore lint/style/useNamingConvention: Package Specific Format
+    this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_to_message_id: msg.message_id }))
   }
 
   public async sendAudio(chatID: string, file: string, caption: string) {

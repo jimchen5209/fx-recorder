@@ -1,47 +1,48 @@
-import { readFileSync as readFile, existsSync as exists, writeFileSync as writeFile, copyFileSync as copyFile, constants } from 'node:fs'
+import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
 import type { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface FileDestination {
-  type: string,
-  id: string,
-  sendAll: boolean,
+  type: string
+  id: string
+  sendAll: boolean
   sendPerUser: boolean
 }
 
 export interface DiscordChannel {
-  id: string,
-  fileDest: FileDestination[],
-  timeZone: string,
-  sendIntervalSecond: number,
+  id: string
+  fileDest: FileDestination[]
+  timeZone: string
+  sendIntervalSecond: number
   ignoreUsers: string[]
 }
 export interface DiscordConfig {
-  token: string,
-  channels: DiscordChannel[],
-  admins: string[],
+  token: string
+  channels: DiscordChannel[]
+  admins: string[]
   logErrorsToAdmin: boolean
 }
 
 export interface TelegramConfig {
-  token: string,
-  admins: string[],
-  logErrorsToAdmin: boolean,
+  token: string
+  admins: string[]
+  logErrorsToAdmin: boolean
   baseApiUrl: string | undefined
 }
 
 export interface LogConfig {
-  debug: boolean,
+  debug: boolean
   raw: boolean
 }
 
 interface MergeLogConfig extends LogConfig {
-  Debug?: boolean,
+  // biome-ignore lint/style/useNamingConvention: Legacy Config
+  Debug?: boolean
 }
 
 interface ConfigValue {
-  configVersion: string | number,
-  discord: DiscordConfig,
-  telegram: TelegramConfig,
+  configVersion: string | number
+  discord: DiscordConfig
+  telegram: TelegramConfig
   logging: LogConfig
 }
 
@@ -77,8 +78,8 @@ export class Config {
   }
 
   /**
-     * Config Manager Core
-     */
+   * Config Manager Core
+   */
   constructor(mainLogger: Logger<ILogObj>) {
     this.logger = mainLogger.getSubLogger({ name: 'Config' })
     this.logger.info('Loading Config...')
@@ -107,7 +108,7 @@ export class Config {
       // save to make sure config is correct
       this.save()
     } else {
-      this.logger.error('Can\'t load config.json: File not found.')
+      this.logger.error("Can't load config.json: File not found.")
 
       this.logger.info('Generating empty config...')
       this._discord = this.discordDefault
@@ -187,11 +188,10 @@ export class Config {
 
   private mergeLogConfig(config: MergeLogConfig) {
     return {
-      debug: config.Debug ?? (config.debug ?? this.loggingDefault.debug),
+      debug: config.Debug ?? config.debug ?? this.loggingDefault.debug,
       raw: config.raw ?? this.loggingDefault.raw
     } as LogConfig
   }
-
 
   private backupAndQuit(config: ConfigValue) {
     if (!config.configVersion) config.configVersion = 'legacy'
@@ -215,37 +215,41 @@ export class Config {
   }
 
   /**
-     * Configs for logging
-     */
+   * Configs for logging
+   */
   public get discord() {
     return this._discord
   }
 
   /**
-     * Configs for telegram
-     */
+   * Configs for telegram
+   */
   public get telegram() {
     return this._telegram
   }
 
   /**
-     * Configs for logging
-     */
+   * Configs for logging
+   */
   public get logging() {
     return this._logging
   }
 
   /**
-     * Save cached config into file
-     */
+   * Save cached config into file
+   */
   private save() {
-    const json = JSON.stringify({
-      '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
-      configVersion: this.configVersion,
-      discord: this._discord,
-      telegram: this._telegram,
-      logging: this._logging
-    }, null, 4)
+    const json = JSON.stringify(
+      {
+        '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
+        configVersion: this.configVersion,
+        discord: this._discord,
+        telegram: this._telegram,
+        logging: this._logging
+      },
+      null,
+      4
+    )
     writeFile('./config.json', json, 'utf8')
   }
 }
