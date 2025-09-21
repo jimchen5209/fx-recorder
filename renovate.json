@@ -12,6 +12,12 @@
   ],
   "packageRules": [
     {
+      "matchDatasources": [
+        "npm"
+      ],
+      "minimumReleaseAge": "14 days"
+    },
+    {
       "matchUpdateTypes": [
         "minor",
         "patch"
@@ -27,7 +33,6 @@
         "patch"
       ],
       "matchCurrentVersion": "!/^0/",
-      "matchCurrentAge": "> 2 week",
       "automerge": false,
       "addLabels": [
         "status:ready-to-merge"
