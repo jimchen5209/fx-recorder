@@ -15,8 +15,23 @@
       "matchDatasources": [
         "npm"
       ],
+      "matchManagers": [
+        "npm"
+      ],
       "minimumReleaseAge": "14 days",
-      "internalChecksFilter": "strict"
+      "internalChecksFilter": "strict",
+      "addLabels": [
+        "package:npm"
+      ]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "addLabels": [
+        "package:github-actions"
+      ]
     },
     {
       "matchUpdateTypes": [
@@ -50,12 +65,12 @@
     },
     {
       "matchUpdateTypes": [
-        "pin", 
-        "pinDigest", 
-        "digest", 
+        "pin",
+        "pinDigest",
+        "digest",
         "lockFileMaintenance",
-        "rollback", 
-        "bump", 
+        "rollback",
+        "bump",
         "replacement"
       ],
       "automerge": false,
@@ -67,24 +82,8 @@
       "groupName": "definitelyTyped packages",
       "matchPackageNames": [
         "@types/**"
-      ]
-    },
-    {
-      "matchManagers": [
-        "npm"
       ],
-      "addLabels": [
-        "package:npm"
-      ]
-    },
-    {
-      "groupName": "GitHub Actions",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "addLabels": [
-        "package:github-actions"
-      ]
+      "minimumReleaseAge": "14 days"
     }
   ]
 }
