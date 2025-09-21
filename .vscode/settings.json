@@ -23,8 +23,5 @@
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "modificationsIfAvailable",
   "npm.packageManager": "pnpm",
-  "biome.configurationPath": "biome.json",
-  "files.exclude": {
-    "node_modules": true
-  }
+  "biome.configurationPath": "biome.json"
 }
