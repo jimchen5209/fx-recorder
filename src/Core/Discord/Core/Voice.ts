@@ -1,16 +1,15 @@
-import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from 'eris'
-import { ILogObj, Logger } from 'tslog'
-import { EventEmitter } from 'events'
-import { readFileSync as readFile } from 'fs'
-import { waitUntil, TimeoutError }  from 'async-wait-until'
+import { EventEmitter } from 'node:events'
+import { readFileSync as readFile } from 'node:fs'
+import { TimeoutError, waitUntil } from 'async-wait-until'
+import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from 'eris'
 import { debounce } from 'lodash'
-
-import { Silence } from './Silence'
-import { instances } from '../../../Utils/Instances'
-import { DiscordChannel } from '../../../Utils/Config'
-import { Recorder } from '../Recorder/Recorder'
-import { IRecordFile } from '../Recorder/RecordSaver'
+import type { ILogObj, Logger } from 'tslog'
+import type { DiscordChannel } from '../../../Utils/Config'
 import { FailSafe } from '../../../Utils/FailSafe'
+import { instances } from '../../../Utils/Instances'
+import { Recorder } from '../Recorder/Recorder'
+import type { IRecordFile } from '../Recorder/RecordSaver'
+import { Silence } from './Silence'
 
 export class DiscordVoice extends EventEmitter {
   private client: Client
@@ -26,11 +25,7 @@ export class DiscordVoice extends EventEmitter {
   private errorFailSafe = new FailSafe()
   private reconnectFailSafe = new FailSafe()
 
-  constructor(
-    client: Client,
-    channelConfig: DiscordChannel,
-    logger: Logger<ILogObj>
-  ) {
+  constructor(client: Client, channelConfig: DiscordChannel, logger: Logger<ILogObj>) {
     super()
 
     this.client = client
@@ -60,7 +55,7 @@ export class DiscordVoice extends EventEmitter {
 
   private startRecording(connection: VoiceConnection) {
     this._active = true
-    connection.on('userDisconnect', user => {
+    connection.on('userDisconnect', (user) => {
       this.handleUserDisconnect(user)
     })
     this.recorder.startStream()
@@ -77,15 +72,13 @@ export class DiscordVoice extends EventEmitter {
   private updateStatus() {
     const guild = (this.client.getChannel(this.channelConfig.id) as VoiceChannel).guild
 
-    guild.editMember('@me', {nick: this._active ? `🔴 ${this.client.user.username}` : ''})
-      .catch(error => {
-        if (error instanceof DiscordRESTError) {
-          this.logger.warn(`Failed to update nickname: ${error.message}`)
-        }
-        else if (error instanceof Error) {
-          this.logger.error(`Failed to update status: ${error.message}`, error)
-        }
-      })
+    guild.editMember('@me', { nick: this._active ? `🔴 ${this.client.user.username}` : '' }).catch((error) => {
+      if (error instanceof DiscordRESTError) {
+        this.logger.warn(`Failed to update nickname: ${error.message}`)
+      } else if (error instanceof Error) {
+        this.logger.error(`Failed to update status: ${error.message}`, error)
+      }
+    })
     this.emit('status')
   }
 
@@ -139,7 +132,6 @@ export class DiscordVoice extends EventEmitter {
             this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
             const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
             await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
-
           }
         }
       }
@@ -169,7 +161,7 @@ export class DiscordVoice extends EventEmitter {
     }, this.channelConfig.sendIntervalSecond * 1000)
   }
 
-  private stopSession(channelID:string, connection: VoiceConnection) {
+  private stopSession(channelID: string, connection: VoiceConnection) {
     connection.stopPlaying()
 
     clearInterval(this.sendInterval)
@@ -200,7 +192,7 @@ export class DiscordVoice extends EventEmitter {
       if (error instanceof TimeoutError) {
         this.logger.error('Timed out waiting for 30 seconds.', error)
       } else {
-        throw(error)
+        throw error
       }
     }
   }
@@ -230,7 +222,7 @@ export class DiscordVoice extends EventEmitter {
           this.tryReconnect(channelID, connection)
         }
       })
-      connection.on('error', err => {
+      connection.on('error', (err) => {
         this.logger.error(err.message, err)
         if (this._active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
         if (this.errorFailSafe.checkHitExceed()) {
@@ -245,7 +237,7 @@ export class DiscordVoice extends EventEmitter {
         this.errorFailSafe.resetError()
         this.reconnectFailSafe.resetError()
       })
-      connection.once('disconnect', err => {
+      connection.once('disconnect', (err) => {
         this.logger.error(`Error from voice connection: ${err?.message}`, err)
         if (this._active) {
           this.sendAdminMessage(`Error from voice connection ${channelID}: ${err?.message}`)
@@ -272,12 +264,12 @@ export class DiscordVoice extends EventEmitter {
     this.autoLeaveOrJoinChannel()
   }
 
-  private autoLeaveOrJoinChannel= debounce(() => {
+  private autoLeaveOrJoinChannel = debounce(() => {
     const voiceChannel = this.client.getChannel(this.channelConfig.id) as VoiceChannel
     let noUser = true
 
-    this.logger.debug(`Members in channel : ${voiceChannel.voiceMembers?.map(user => user.id).join(', ')}`)
-    voiceChannel.voiceMembers?.forEach(user => {
+    this.logger.debug(`Members in channel : ${voiceChannel.voiceMembers?.map((user) => user.id).join(', ')}`)
+    voiceChannel.voiceMembers?.forEach((user) => {
       if (!this.channelConfig.ignoreUsers.includes(user.id) && user.id !== this.client.user.id) {
         this.logger.debug(`User in channel : ${user.id}`)
         noUser = false
@@ -285,7 +277,7 @@ export class DiscordVoice extends EventEmitter {
     })
     this.logger.debug(`No user in channel : ${noUser}`)
 
-    const connection = this.client.voiceConnections.find(connection => connection.channelID === this.channelConfig.id)
+    const connection = this.client.voiceConnections.find((connection) => connection.channelID === this.channelConfig.id)
     this.logger.debug(`Connection in channel exist : ${connection !== undefined}`)
     if (noUser) {
       if (connection) {

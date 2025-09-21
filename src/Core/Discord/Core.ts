@@ -1,8 +1,8 @@
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Client } from 'eris'
-import { ILogObj, Logger } from 'tslog'
-import { DiscordVoice } from './Core/Voice'
-import { mkdirSync, existsSync, rmSync } from 'fs'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../Utils/Instances'
+import { DiscordVoice } from './Core/Voice'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
@@ -16,10 +16,7 @@ export class Discord {
 
     if (instances.config.discord.token === '') throw ERR_MISSING_TOKEN
 
-    this.client = new Client(
-      instances.config.discord.token,
-      { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
-    )
+    this.client = new Client(instances.config.discord.token, { restMode: true, intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] })
 
     this.client.on('voiceChannelJoin', (member, channel) => {
       if (member.id === this.client.user.id) return
@@ -53,7 +50,7 @@ export class Discord {
 
       this.updateStatus()
 
-      instances.config.discord.channels.forEach(channel => {
+      instances.config.discord.channels.forEach((channel) => {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
         this.audios[channel.id].on('status', () => this.updateStatus())
       })
@@ -61,7 +58,7 @@ export class Discord {
   }
 
   private updateStatus() {
-    const recordingCount = Object.values(this.audios).filter(audio => audio.active).length
+    const recordingCount = Object.values(this.audios).filter((audio) => audio.active).length
     this.logger.debug(`Recording ${recordingCount} channel${recordingCount > 1 ? 's' : ''}`)
 
     if (recordingCount > 0) {

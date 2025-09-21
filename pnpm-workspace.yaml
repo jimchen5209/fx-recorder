@@ -1,0 +1,13 @@
+minimumReleaseAge: 20160
+
+onlyBuiltDependencies:
+  - '@discordjs/opus'
+  - bufferutil
+  - erlpack
+
+overrides:
+  form-data@<2.5.4: '>=2.5.4'
+  tough-cookie@<4.1.3: '>=4.1.3'
+
+patchedDependencies:
+  eris: patches/eris.patch

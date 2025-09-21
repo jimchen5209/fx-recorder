@@ -1,7 +1,6 @@
 import { Status } from 'status-client'
-
-import { Telegram } from './Core/Telegram/Core'
 import { Discord } from './Core/Discord/Core'
+import { Telegram } from './Core/Telegram/Core'
 import { instances } from './Utils/Instances'
 
 let quitting = false
@@ -13,7 +12,8 @@ if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 /
 const status = new Status('fx-recorder')
 
 // Initialize the bot
-const discord = (instances.discord = new Discord())
+const discord = new Discord()
+instances.discord = discord
 instances.telegram = new Telegram()
 
 discord.start()
@@ -24,9 +24,9 @@ process.on('warning', (e) => {
 })
 
 setInterval(() => {
-  Object.entries(process.memoryUsage()).forEach((item) =>
+  Object.entries(process.memoryUsage()).forEach((item) => {
     logger.debug(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`)
-  )
+  })
 }, 30 * 1000)
 
 // Graceful shutdown

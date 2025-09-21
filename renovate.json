@@ -23,6 +23,18 @@
     },
     {
       "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "matchCurrentAge": "> 2 week",
+      "automerge": false,
+      "addLabels": [
+        "status:ready-to-merge"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
         "major"
       ],
       "automerge": false,
@@ -43,12 +55,6 @@
       "automerge": false,
       "addLabels": [
         "update:misc"
-      ]
-    },
-    {
-      "groupName": "eslint packages",
-      "matchPackageNames": [
-        "/.*eslint.*/"
       ]
     },
     {
