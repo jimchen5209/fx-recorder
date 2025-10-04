@@ -50,7 +50,7 @@ importers:
         version: 4.17.20
       '@types/node':
         specifier: ^22.18.1
-        version: 22.18.3
+        version: 22.18.6
       '@types/node-telegram-bot-api':
         specifier: ^0.64.10
         version: 0.64.11
@@ -186,8 +186,8 @@ packages:
   '@types/node-telegram-bot-api@0.64.11':
     resolution: {integrity: sha512-htUhp3/Zt6cB8crxVUNKWIOLPFdEF+P8StznbWGJXDgENfBtporBQZ8HJQG1/dx41uBRkJLaXH+xeRGNh6vCjg==}
 
-  '@types/node@22.18.3':
-    resolution: {integrity: sha512-gTVM8js2twdtqM+AE2PdGEe9zGQY4UvmFjan9rZcVb6FGdStfjWoWejdmy4CfWVO9rh5MiYQGZloKAGkJt8lMw==}
+  '@types/node@22.18.6':
+    resolution: {integrity: sha512-r8uszLPpeIWbNKtvWRt/DbVi5zbqZyj1PTmhRMqBMvDnaz1QpmSKujUtJLrqGZeoM8v72MfYggDceY4K1itzWQ==}
 
   '@types/request@2.48.13':
     resolution: {integrity: sha512-FGJ6udDNUCjd19pp0Q3iTiDkwhYup7J8hpMW9c4k53NrccQFFWKRho6hvtPPEhnXWKvukfwAlB6DbDz4yhH5Gg==}
@@ -1570,17 +1570,17 @@ snapshots:
 
   '@types/node-telegram-bot-api@0.64.11':
     dependencies:
-      '@types/node': 22.18.3
+      '@types/node': 22.18.6
       '@types/request': 2.48.13
 
-  '@types/node@22.18.3':
+  '@types/node@22.18.6':
     dependencies:
       undici-types: 6.21.0
 
   '@types/request@2.48.13':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.18.3
+      '@types/node': 22.18.6
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.5
 
@@ -1588,7 +1588,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.18.3
+      '@types/node': 22.18.6
 
   abbrev@1.1.1:
     optional: true
