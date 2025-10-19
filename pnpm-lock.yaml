@@ -40,7 +40,7 @@ importers:
         version: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/86ad74fed1caa9d12a571d183fd8d64881e14b9b
       tslog:
         specifier: ^4.9.3
-        version: 4.9.3
+        version: 4.10.2
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.5
@@ -1298,8 +1298,8 @@ packages:
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
-  tslog@4.9.3:
-    resolution: {integrity: sha512-oDWuGVONxhVEBtschLf2cs/Jy8i7h1T+CpdkTNWQgdAF7DhRo2G8vMCgILKe7ojdEkLhICWgI1LYSSKaJsRgcw==}
+  tslog@4.10.2:
+    resolution: {integrity: sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g==}
     engines: {node: '>=16'}
 
   tunnel-agent@0.6.0:
@@ -2921,7 +2921,7 @@ snapshots:
   tr46@0.0.3:
     optional: true
 
-  tslog@4.9.3: {}
+  tslog@4.10.2: {}
 
   tunnel-agent@0.6.0:
     dependencies:
