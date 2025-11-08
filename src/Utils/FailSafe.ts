@@ -1,5 +1,5 @@
 export class FailSafe {
-  private _maxTimes = 10
+  private _maxTimes = 5
   private hitCount = 0
   private hitResetTimer: NodeJS.Timeout | undefined
   private exceededHit = false
