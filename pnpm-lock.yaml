@@ -10,23 +10,23 @@ overrides:
   tough-cookie@<4.1.3: '>=4.1.3'
 
 patchedDependencies:
-  eris:
-    hash: 5f33ea4a5f2d03400c44accb841ff0465225a7aa0986f241412f7e70c61008bb
-    path: patches/eris.patch
+  '@projectdysnomia/dysnomia@0.2.3':
+    hash: ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763
+    path: patches/@projectdysnomia__dysnomia@0.2.3.patch
 
 importers:
 
   .:
     dependencies:
+      '@projectdysnomia/dysnomia':
+        specifier: github:CraigChat/dysnomia#fix/dave-failure-tolerance
+        version: https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
       dayjs:
         specifier: ^1.11.18
         version: 1.11.18
-      eris:
-        specifier: ^0.18.0
-        version: 0.18.0(patch_hash=5f33ea4a5f2d03400c44accb841ff0465225a7aa0986f241412f7e70c61008bb)(bufferutil@4.0.9)
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -158,6 +158,15 @@ packages:
     resolution: {integrity: sha512-HHEnSNrSPmFEyndRdQBJN2YE6egyXS9JUnJWyP6jficK0Y+qKMEZXyYTgmzpjrxXP1exM/hKaNP7BRBUEWkU5w==}
     engines: {node: '>=12.0.0'}
 
+  '@emnapi/core@1.6.0':
+    resolution: {integrity: sha512-zq/ay+9fNIJJtJiZxdTnXS20PllcYMX3OE23ESc4HK/bdYu3cOWYVhsOhVnXALfU/uqJIxn5NBPd9z4v+SfoSg==}
+
+  '@emnapi/runtime@1.6.0':
+    resolution: {integrity: sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==}
+
+  '@emnapi/wasi-threads@1.1.0':
+    resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
+
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
@@ -165,6 +174,9 @@ packages:
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
+
+  '@napi-rs/wasm-runtime@1.0.7':
+    resolution: {integrity: sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw==}
 
   '@npmcli/agent@3.0.0':
     resolution: {integrity: sha512-S79NdEgDQd/NGCay6TCoVzXSj74skRZIKJcpJjC5lOq34SZzyI6MqtiiWoiVWoVrTcGjNeC4ipbh1VIHlpfF5Q==}
@@ -177,6 +189,155 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@projectdysnomia/dysnomia@https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651':
+    resolution: {tarball: https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651}
+    version: 0.2.3
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@discordjs/opus': ^0.9.0
+      erlpack: github:discord/erlpack
+      eventemitter3: ^5.0.1
+      pako: ^2.1.0
+      sodium-native: ^4.1.1
+      zlib-sync: ^0.1.9
+    peerDependenciesMeta:
+      '@discordjs/opus':
+        optional: true
+      erlpack:
+        optional: true
+      eventemitter3:
+        optional: true
+      pako:
+        optional: true
+      sodium-native:
+        optional: true
+      zlib-sync:
+        optional: true
+
+  '@snazzah/davey-android-arm-eabi@0.1.7':
+    resolution: {integrity: sha512-GxkEpfFtaS8xZHN42NkTQhLFdYCQ9qxJvmG+qwYDL+wdv3s7Dl44o2lg5gwGOtQU8EZw9/lZkYi9TenYkStbFg==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+
+  '@snazzah/davey-android-arm64@0.1.7':
+    resolution: {integrity: sha512-EkC1Wz3IMBZfbaCE82+peV+vEFVCRL3HxTRKGIY5AXzkKGQSJJ7Est/6h9vTcQbBEbMj2RAXRbwcydukWJR2vg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+
+  '@snazzah/davey-darwin-arm64@0.1.7':
+    resolution: {integrity: sha512-Iov5NUjhl5Q9XZHIuGLzd9PgQPm8ELI9NPiNt3r6VtSVHLp9/ktOgzaeEji0WnvvirrSb9MdpfTuyHnJjEXuRQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@snazzah/davey-darwin-x64@0.1.7':
+    resolution: {integrity: sha512-P7WqV/9ttSW2kHlC1WME8ykMeo0LJBzqbC9lZ2aYH4IEdb5mp4lCzb82mcEc99Nxi8878c0k5Qaza6z4KeSdIA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@snazzah/davey-freebsd-x64@0.1.7':
+    resolution: {integrity: sha512-O8QxS4jGPCvvHa5EJIvP0Dm2JkMqe1RnfDU0qnIcSwzJseqQqwpM5vXSMt9E2Mi58RiUGwTRefr0I9+ttCrDzg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@snazzah/davey-linux-arm-gnueabihf@0.1.7':
+    resolution: {integrity: sha512-30Gzhbg7kBbbg/Vdb75c5DUvHrwRglIXtTK0L3paxo5TCNXNFdfnSX5oLGjV4s1pyoFL8nWyq3/IzCcUIcHx5Q==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@snazzah/davey-linux-arm64-gnu@0.1.7':
+    resolution: {integrity: sha512-kDpbZEb24bn84yDG7gG8KTLL1sTl+UHPEt83qD5G3Sm7L37DN+uABN4nw51wst1JzxWphq7tvSSjfqz9NES4Xg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@snazzah/davey-linux-arm64-musl@0.1.7':
+    resolution: {integrity: sha512-J+6CnJ34OaoFYq9f8BQPSXWMF3HRjKg5UCEb0E64Q7wMz5+6o7hACd7kVjKnG3as7IjGMcgp6/SNtrht79ntjQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@snazzah/davey-linux-x64-gnu@0.1.7':
+    resolution: {integrity: sha512-7+I6LN43WkALjrQGm/pp1fQg84pSnwicsLPZKthlEi1L2UP2d9k8JEtnhHXJ4pymLuPsAZu5nC8QMDoIJy+exw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@snazzah/davey-linux-x64-musl@0.1.7':
+    resolution: {integrity: sha512-N17vBRkU401w8EOvHVem2di/zAqv3CDgm7LAnONm8S/CNpAeLQWrhbHdN6RHZEyhQk2trnfPh4+wiZbAoXek0A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@snazzah/davey-wasm32-wasi@0.1.7':
+    resolution: {integrity: sha512-BhtNJpqmP69sdSf5eyDqlIsZSjkHo6FebaXaYVH0qf3V9YYQdEbbjep3MrcIL2F0STfpceSi2v+vZTTwlZBbKw==}
+    engines: {node: '>=14.0.0'}
+    cpu: [wasm32]
+
+  '@snazzah/davey-win32-arm64-msvc@0.1.7':
+    resolution: {integrity: sha512-oj/F1eQRQggMwqXNq6CY4UTqcFcCi/Wug99jWH8LepLVsYUdFxQUNTqkp51qarT+lbuX4L/ZZqZX4y4dhz6Lvg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@snazzah/davey-win32-ia32-msvc@0.1.7':
+    resolution: {integrity: sha512-T1qPP/pQm0qDaM7QGCYMzeXE1Xes0b3ckAQS2m27dt3FkD1Ki8FX2g77dcGOWqGkzDlNJj1drw/9QlgCt3Tcrw==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@snazzah/davey-win32-x64-msvc@0.1.7':
+    resolution: {integrity: sha512-Z2NhImUYeApi/lNn7MBcn14dPa2dtgnp5taz43JDaPpl+2cinDm9kYjpFzJE9SZMlfsa//p2dhE9B8TEVi9bHQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@snazzah/davey@0.1.7':
+    resolution: {integrity: sha512-qBWp9sHf9vvKqDhg2AGOgWjB9q7MZat2CAPIcaXe+XFWl7nCmriRnDcdIRy7CwKWK+ECiuO29/RSxxKuulo28w==}
+    engines: {node: '>= 10'}
+
+  '@stablelib/aead@1.0.1':
+    resolution: {integrity: sha512-q39ik6sxGHewqtO0nP4BuSe3db5G1fEJE8ukvngS2gLkBXyy6E7pLubhbYgnkDFv6V8cWaxcE4Xn0t6LWcJkyg==}
+
+  '@stablelib/binary@1.0.1':
+    resolution: {integrity: sha512-ClJWvmL6UBM/wjkvv/7m5VP3GMr9t0osr4yVgLZsLCOz4hGN9gIAFEqnJ0TsSMAN+n840nf2cHZnA5/KFqHC7Q==}
+
+  '@stablelib/chacha20poly1305@1.0.1':
+    resolution: {integrity: sha512-MmViqnqHd1ymwjOQfghRKw2R/jMIGT3wySN7cthjXCBdO+qErNPUBnRzqNpnvIwg7JBCg3LdeCZZO4de/yEhVA==}
+
+  '@stablelib/chacha@1.0.1':
+    resolution: {integrity: sha512-Pmlrswzr0pBzDofdFuVe1q7KdsHKhhU24e8gkEwnTGOmlC7PADzLVxGdn2PoNVBBabdg0l/IfLKg6sHAbTQugg==}
+
+  '@stablelib/constant-time@1.0.1':
+    resolution: {integrity: sha512-tNOs3uD0vSJcK6z1fvef4Y+buN7DXhzHDPqRLSXUel1UfqMB1PWNsnnAezrKfEwTLpN0cGH2p9NNjs6IqeD0eg==}
+
+  '@stablelib/int@1.0.1':
+    resolution: {integrity: sha512-byr69X/sDtDiIjIV6m4roLVWnNNlRGzsvxw+agj8CIEazqWGOQp2dTYgQhtyVXV9wpO6WyXRQUzLV/JRNumT2w==}
+
+  '@stablelib/poly1305@1.0.1':
+    resolution: {integrity: sha512-1HlG3oTSuQDOhSnLwJRKeTRSAdFNVB/1djy2ZbS35rBSJ/PFqx9cf9qatinWghC2UbfOYD8AcrtbUQl8WoxabA==}
+
+  '@stablelib/wipe@1.0.1':
+    resolution: {integrity: sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==}
+
+  '@stablelib/xchacha20@1.0.1':
+    resolution: {integrity: sha512-1YkiZnFF4veUwBVhDnDYwo6EHeKzQK4FnLiO7ezCl/zu64uG0bCCAUROJaBkaLH+5BEsO3W7BTXTguMbSLlWSw==}
+
+  '@stablelib/xchacha20poly1305@1.0.1':
+    resolution: {integrity: sha512-B1Abj0sMJ8h3HNmGnJ7vHBrAvxuNka6cJJoZ1ILN7iuacXp7sUYcgOVEOTLWj+rtQMpspY9tXSCRLPmN1mQNWg==}
+
+  '@tybys/wasm-util@0.10.1':
+    resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
   '@types/caseless@0.12.5':
     resolution: {integrity: sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg==}
@@ -473,10 +634,6 @@ packages:
   env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
-
-  eris@0.18.0:
-    resolution: {integrity: sha512-zv2hjAfs4SYjR/EHUwBGNoKClctbqki1jPMed4SiQ4KKfafV1MIBLqKodQSGDgT9qkSUI5+MQ4EQW/8MkbAPkg==}
-    engines: {node: '>=10.4.0'}
 
   erlpack@0.1.4:
     resolution: {integrity: sha512-CJYbkEvsB5FqCCu2tLxF1eYKi28PvemC12oqzJ9oO6mDFrFO9G9G7nNJUHhiAyyL9zfXTOJx/tOcrQk+ncD65w==}
@@ -996,9 +1153,6 @@ packages:
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
-  opusscript@0.0.8:
-    resolution: {integrity: sha512-VSTi1aWFuCkRCVq+tx/BQ5q9fMnQ9pVZ3JU4UHKqTkf0ED3fKEPdr+gKAAl3IA2hj9rrP6iyq3hlcJq3HELtNQ==}
-
   opusscript@0.1.1:
     resolution: {integrity: sha512-mL0fZZOUnXdZ78woRXp18lApwpp0lF5tozJOD1Wut0dgrA9WuQTgSels/CSmFleaAZrJi/nci5KOVtbuxeWoQA==}
 
@@ -1298,6 +1452,9 @@ packages:
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
   tslog@4.10.2:
     resolution: {integrity: sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g==}
     engines: {node: '>=16'}
@@ -1307,9 +1464,6 @@ packages:
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
-
-  tweetnacl@1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
 
   typed-array-buffer@1.0.3:
     resolution: {integrity: sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw==}
@@ -1534,6 +1688,22 @@ snapshots:
       - supports-color
     optional: true
 
+  '@emnapi/core@1.6.0':
+    dependencies:
+      '@emnapi/wasi-threads': 1.1.0
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/runtime@1.6.0':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/wasi-threads@1.1.0':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
@@ -1546,6 +1716,13 @@ snapshots:
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.2
+
+  '@napi-rs/wasm-runtime@1.0.7':
+    dependencies:
+      '@emnapi/core': 1.6.0
+      '@emnapi/runtime': 1.6.0
+      '@tybys/wasm-util': 0.10.1
+    optional: true
 
   '@npmcli/agent@3.0.0':
     dependencies:
@@ -1562,6 +1739,142 @@ snapshots:
       semver: 7.7.3
 
   '@pkgjs/parseargs@0.11.0':
+    optional: true
+
+  '@projectdysnomia/dysnomia@https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)':
+    dependencies:
+      ws: 8.18.3(bufferutil@4.0.9)
+    optionalDependencies:
+      '@discordjs/opus': 0.10.0(encoding@0.1.13)
+      '@snazzah/davey': 0.1.7
+      '@stablelib/xchacha20poly1305': 1.0.1
+      erlpack: 0.1.4
+      opusscript: 0.1.1
+      sodium-native: 5.0.9
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@snazzah/davey-android-arm-eabi@0.1.7':
+    optional: true
+
+  '@snazzah/davey-android-arm64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-darwin-arm64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-darwin-x64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-freebsd-x64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm-gnueabihf@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm64-gnu@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm64-musl@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-x64-gnu@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-x64-musl@0.1.7':
+    optional: true
+
+  '@snazzah/davey-wasm32-wasi@0.1.7':
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.0.7
+    optional: true
+
+  '@snazzah/davey-win32-arm64-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey-win32-ia32-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey-win32-x64-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey@0.1.7':
+    optionalDependencies:
+      '@snazzah/davey-android-arm-eabi': 0.1.7
+      '@snazzah/davey-android-arm64': 0.1.7
+      '@snazzah/davey-darwin-arm64': 0.1.7
+      '@snazzah/davey-darwin-x64': 0.1.7
+      '@snazzah/davey-freebsd-x64': 0.1.7
+      '@snazzah/davey-linux-arm-gnueabihf': 0.1.7
+      '@snazzah/davey-linux-arm64-gnu': 0.1.7
+      '@snazzah/davey-linux-arm64-musl': 0.1.7
+      '@snazzah/davey-linux-x64-gnu': 0.1.7
+      '@snazzah/davey-linux-x64-musl': 0.1.7
+      '@snazzah/davey-wasm32-wasi': 0.1.7
+      '@snazzah/davey-win32-arm64-msvc': 0.1.7
+      '@snazzah/davey-win32-ia32-msvc': 0.1.7
+      '@snazzah/davey-win32-x64-msvc': 0.1.7
+    optional: true
+
+  '@stablelib/aead@1.0.1':
+    optional: true
+
+  '@stablelib/binary@1.0.1':
+    dependencies:
+      '@stablelib/int': 1.0.1
+    optional: true
+
+  '@stablelib/chacha20poly1305@1.0.1':
+    dependencies:
+      '@stablelib/aead': 1.0.1
+      '@stablelib/binary': 1.0.1
+      '@stablelib/chacha': 1.0.1
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/poly1305': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/chacha@1.0.1':
+    dependencies:
+      '@stablelib/binary': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/constant-time@1.0.1':
+    optional: true
+
+  '@stablelib/int@1.0.1':
+    optional: true
+
+  '@stablelib/poly1305@1.0.1':
+    dependencies:
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/wipe@1.0.1':
+    optional: true
+
+  '@stablelib/xchacha20@1.0.1':
+    dependencies:
+      '@stablelib/binary': 1.0.1
+      '@stablelib/chacha': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/xchacha20poly1305@1.0.1':
+    dependencies:
+      '@stablelib/aead': 1.0.1
+      '@stablelib/chacha20poly1305': 1.0.1
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/wipe': 1.0.1
+      '@stablelib/xchacha20': 1.0.1
+    optional: true
+
+  '@tybys/wasm-util@0.10.1':
+    dependencies:
+      tslib: 2.8.1
     optional: true
 
   '@types/caseless@0.12.5': {}
@@ -1885,16 +2198,6 @@ snapshots:
       once: 1.4.0
 
   env-paths@2.2.1: {}
-
-  eris@0.18.0(patch_hash=5f33ea4a5f2d03400c44accb841ff0465225a7aa0986f241412f7e70c61008bb)(bufferutil@4.0.9):
-    dependencies:
-      ws: 8.18.3(bufferutil@4.0.9)
-    optionalDependencies:
-      opusscript: 0.0.8
-      tweetnacl: 1.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   erlpack@0.1.4:
     dependencies:
@@ -2537,9 +2840,6 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  opusscript@0.0.8:
-    optional: true
-
   opusscript@0.1.1: {}
 
   own-keys@1.0.1:
@@ -2921,6 +3221,9 @@ snapshots:
   tr46@0.0.3:
     optional: true
 
+  tslib@2.8.1:
+    optional: true
+
   tslog@4.10.2: {}
 
   tunnel-agent@0.6.0:
@@ -2928,9 +3231,6 @@ snapshots:
       safe-buffer: 5.2.1
 
   tweetnacl@0.14.5: {}
-
-  tweetnacl@1.0.3:
-    optional: true
 
   typed-array-buffer@1.0.3:
     dependencies:

@@ -17,9 +17,9 @@
   },
   "description": "",
   "dependencies": {
+    "@projectdysnomia/dysnomia": "github:CraigChat/dysnomia#fix/dave-failure-tolerance",
     "async-wait-until": "^2.0.30",
     "dayjs": "^1.11.18",
-    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=b8c155f49d5fdc011c1a803a61a3a40b469ffc9e#~/.yarn/patches/@projectdysnomia-dysnomia-https-0f7a4a947b.patch",
     "lodash": "^4.17.21",
     "node-telegram-bot-api": "0.66.0",
     "opusscript": "^0.1.1",
