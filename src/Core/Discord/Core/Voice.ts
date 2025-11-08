@@ -1,7 +1,7 @@
-import { Client, VoiceConnection, VoiceChannel, DiscordRESTError } from '@projectdysnomia/dysnomia'
-import { readFileSync as readFile } from 'fs'
-import { waitUntil, TimeoutError }  from 'async-wait-until'
 import { EventEmitter } from 'node:events'
+import { readFileSync as readFile } from 'node:fs'
+import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from '@projectdysnomia/dysnomia'
+import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { DiscordChannel } from '../../../Utils/Config'
@@ -141,7 +141,7 @@ export class DiscordVoice extends EventEmitter {
             this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
             const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
             await this.client.createMessage(element.id, {
-              content: caption, 
+              content: caption,
               attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
             })
           }
@@ -150,7 +150,7 @@ export class DiscordVoice extends EventEmitter {
               this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
               const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
               await this.client.createMessage(element.id, {
-                content: caption, 
+                content: caption,
                 attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
               })
             }

@@ -16,7 +16,10 @@ export class Discord {
 
     if (instances.config.discord.token === '') throw ERR_MISSING_TOKEN
 
-    this.client = new Client(instances.config.discord.token, { restMode: true, gateway: { intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] } })
+    this.client = new Client(instances.config.discord.token, {
+      restMode: true,
+      gateway: { intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
+    })
 
     this.client.on('voiceChannelJoin', (member, channel) => {
       if (member.id === this.client.user.id) return
