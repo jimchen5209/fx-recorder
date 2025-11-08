@@ -11,7 +11,7 @@ overrides:
 
 patchedDependencies:
   '@projectdysnomia/dysnomia@0.2.3':
-    hash: ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763
+    hash: f32cb00782b9dfa784b0ba29d9d1c4e76f99d0a3d458440673f3cd5a2b0e27e4
     path: patches/@projectdysnomia__dysnomia@0.2.3.patch
 
 importers:
@@ -20,7 +20,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: github:CraigChat/dysnomia#fix/dave-failure-tolerance
-        version: https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)
+        version: https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=f32cb00782b9dfa784b0ba29d9d1c4e76f99d0a3d458440673f3cd5a2b0e27e4)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
@@ -1741,7 +1741,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@projectdysnomia/dysnomia@https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=ef89ff9d372b0cb9bf99994c7fa4e3a02348c15be9c451a04f8e3dd62b4ab763)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)':
+  '@projectdysnomia/dysnomia@https://codeload.github.com/CraigChat/dysnomia/tar.gz/59bd85239534ccb4e905880307cf20c1c590c651(patch_hash=f32cb00782b9dfa784b0ba29d9d1c4e76f99d0a3d458440673f3cd5a2b0e27e4)(@discordjs/opus@0.10.0(encoding@0.1.13))(bufferutil@4.0.9)(erlpack@0.1.4)(sodium-native@5.0.9)':
     dependencies:
       ws: 8.18.3(bufferutil@4.0.9)
     optionalDependencies:
