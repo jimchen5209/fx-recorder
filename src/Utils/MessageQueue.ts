@@ -8,11 +8,11 @@ export declare interface MessageQueue {
 
 /**
  * A message queue that batches messages and processes them after a debounce period
- * 
+ *
  * @event process - Emitted when the queue is processed
  *   @param messages - Array of messages in the queue
  *   @param queueTime - Time in milliseconds between the oldest message and processing time
- * 
+ *
  * @example
  * ```typescript
  * const queue = new MessageQueue(1000); // 1 second debounce
@@ -22,6 +22,7 @@ export declare interface MessageQueue {
  * queue.addMessage('test');
  * ```
  */
+// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: initialized in EventEmitter
 export class MessageQueue extends EventEmitter {
   private queue: Array<{ message: string; timestamp: number }> = []
   private readonly debounceTime: number = 1000
@@ -51,10 +52,14 @@ export class MessageQueue extends EventEmitter {
     if (this.queue.length === 0) return
 
     const now = Date.now()
-    const oldestMessageTime = Math.min(...this.queue.map(item => item.timestamp))
+    const oldestMessageTime = Math.min(...this.queue.map((item) => item.timestamp))
     const queueTime = now - oldestMessageTime
 
-    this.emit('process', this.queue.map(item => item.message), queueTime)
+    this.emit(
+      'process',
+      this.queue.map((item) => item.message),
+      queueTime
+    )
     this.queue = []
   }
 }
