@@ -36,13 +36,13 @@ export class DiscordVoice extends EventEmitter {
     this.recorder = new Recorder(channelConfig)
 
     this.warningQueue.on('process', (messages, queueTime) => {
-      const combinedMessage = `${messages.length} warnings from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`${messages.slice(-10).join('\n')}\`\`\``
+      const combinedMessage = `${messages.length} warnings from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
 
       this.sendAdminMessage(combinedMessage)
     })
 
     this.errorQueue.on('process', (messages, queueTime) => {
-      const combinedMessage = `${messages.length} errors from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`${messages.slice(-10).join('\n')}\`\`\``
+      const combinedMessage = `${messages.length} errors from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
       this.sendAdminMessage(combinedMessage)
     })
 

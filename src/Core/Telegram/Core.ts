@@ -35,7 +35,8 @@ export class Telegram {
 
   public async sendMessage(chatID: string, text: string) {
     try {
-      await this.bot.sendMessage(chatID, text)
+      // biome-ignore lint/style/useNamingConvention: api library naming
+      await this.bot.sendMessage(chatID, text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
       if (err instanceof Error) {
         this.logger.error(`Message ${text} send failed:${err.message}`)
