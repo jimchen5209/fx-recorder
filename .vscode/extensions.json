@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "vivaxy.vscode-conventional-commits",
+    "biomejs.biome",
+    "mhutchie.git-graph",
+    "redhat.vscode-yaml"
+  ]
+}

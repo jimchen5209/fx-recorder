@@ -1,16 +1,14 @@
-import { createWriteStream, mkdirSync as mkDir, unlinkSync as deleteFile, existsSync as exists, rmSync as rmDir, WriteStream } from 'fs'
-import { Logger, ILogObj } from 'tslog'
-
+import { createWriteStream, unlinkSync as deleteFile, existsSync as exists, mkdirSync as mkDir, rmSync as rmDir, type WriteStream } from 'node:fs'
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
-import timezone from 'dayjs/plugin/timezone'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-
-import LicsonMixer, { Readable } from '../../../Libs/LicsonMixer/mixer'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
+import type { ILogObj, Logger } from 'tslog'
 import AudioUtils from '../../../Libs/audio'
-
+import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
+import type { Readable } from '../../../Libs/LicsonMixer/mixer'
+import type { DiscordChannel } from '../../../Utils/Config'
 import { instances } from '../../../Utils/Instances'
-import { DiscordChannel } from '../../../Utils/Config'
 
 export interface IUserRecordFile {
   user: string
@@ -36,7 +34,6 @@ export class RecordSaver {
   private logger: Logger<ILogObj>
   private mp3Stream?: Readable
   private perUserMp3Stream: { [key: string]: Readable } = {}
-
 
   private mp3Start = ''
   private finalMp3Start = ''
@@ -89,9 +86,7 @@ export class RecordSaver {
 
       this.finalMp3Start = this.mp3Start
       this.mp3Start = ''
-    }
-    else
-    {
+    } else {
       this.logger.debug(`End recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
       if (this.perUserMp3Stream[user]) this.perUserMp3Stream[user].unpipe()
       if (this.perUserWriteStream[user]) this.perUserWriteStream[user].end()
@@ -114,8 +109,7 @@ export class RecordSaver {
         this.perUserWriteStream[element] = createWriteStream(`temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
         this.perUserMp3Stream[element].pipe(this.perUserWriteStream[element])
       }
-    }
-    else {
+    } else {
       if (!this.perUserMp3Stream[user]) return
       this.logger.debug(`Start recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
       this.perUserWriteStream[user] = createWriteStream(`temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
@@ -144,17 +138,19 @@ export class RecordSaver {
       tags: [`#Date${time.format('YYYYMMDD')}`, `#Time${time.format('HHmm')}`, `#Year${time.format('YYYY')}`],
       audioFilePath: `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`,
       audioFileName: `${mp3StartToSend}.mp3`,
-      perUserFiles: this.userMixers ? Object.keys(this.userMixers)
-        .filter(user => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
-        .map(user => {
-          this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)
-          return {
-            user,
-            audioFilePath: `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`,
-            audioFileName: `${user}-${mp3StartToSend}.mp3`,
-            tag: `#User${user}`
-          }
-        }): []
+      perUserFiles: this.userMixers
+        ? Object.keys(this.userMixers)
+            .filter((user) => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
+            .map((user) => {
+              this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)
+              return {
+                user,
+                audioFilePath: `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`,
+                audioFileName: `${user}-${mp3StartToSend}.mp3`,
+                tag: `#User${user}`
+              }
+            })
+        : []
     } as IRecordFile
   }
 

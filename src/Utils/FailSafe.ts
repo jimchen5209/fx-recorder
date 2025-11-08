@@ -5,9 +5,9 @@ export class FailSafe {
   private exceededHit = false
 
   /*
-    * Check if hit count exceed max times.
-    * On exceed, it will only return once until reset.
-  */
+   * Check if hit count exceed max times.
+   * On exceed, it will only return once until reset.
+   */
   public checkHitExceed() {
     if (this.hitResetTimer) {
       clearTimeout(this.hitResetTimer)
