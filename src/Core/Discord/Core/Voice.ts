@@ -21,7 +21,6 @@ export class DiscordVoice extends EventEmitter {
   private _active = false
   private readyToDelete = false
 
-  private warningFailSafe = new FailSafe()
   private errorFailSafe = new FailSafe()
   private reconnectFailSafe = new FailSafe()
 
@@ -227,12 +226,6 @@ export class DiscordVoice extends EventEmitter {
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
         if (this._active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
-        if (this.warningFailSafe.checkHitExceed()) {
-          this.logger.error(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
-          if (this._active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
-          this._active = false
-          this.tryReconnect(channelID, connection)
-        }
       })
       connection.on('error', (err) => {
         this.logger.error(err.message, err)
@@ -247,7 +240,6 @@ export class DiscordVoice extends EventEmitter {
       connection.on('debug', (message) => this.logger.debug(message))
       connection.on('ready', () => {
         this.logger.warn('Voice connection reconnected.')
-        this.warningFailSafe.resetError()
         this.errorFailSafe.resetError()
         this.reconnectFailSafe.resetError()
       })
