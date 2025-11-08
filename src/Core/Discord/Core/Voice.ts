@@ -7,6 +7,7 @@ import type { ILogObj, Logger } from 'tslog'
 import type { DiscordChannel } from '../../../Utils/Config'
 import { FailSafe } from '../../../Utils/FailSafe'
 import { instances } from '../../../Utils/Instances'
+import { MessageQueue } from '../../../Utils/MessageQueue'
 import { Recorder } from '../Recorder/Recorder'
 import type { IRecordFile } from '../Recorder/RecordSaver'
 import { Silence } from './Silence'
@@ -21,6 +22,8 @@ export class DiscordVoice extends EventEmitter {
   private _active = false
   private readyToDelete = false
 
+  private warningQueue = new MessageQueue(1000)
+  private errorQueue = new MessageQueue(1000)
   private errorFailSafe = new FailSafe()
   private reconnectFailSafe = new FailSafe()
 
@@ -31,6 +34,17 @@ export class DiscordVoice extends EventEmitter {
     this.channelConfig = channelConfig
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     this.recorder = new Recorder(channelConfig)
+
+    this.warningQueue.on('process', (messages, queueTime) => {
+      const combinedMessage = `${messages.length} warnings from ${this.channelConfig.id} in ${queueTime/1000} seconds:\n\`\`\`${messages.slice(-10).join('\n')}\`\`\``
+
+      this.sendAdminMessage(combinedMessage)
+    })
+
+    this.errorQueue.on('process', (messages, queueTime) => {
+      const combinedMessage = `${messages.length} errors from ${this.channelConfig.id} in ${queueTime/1000} seconds:\n\`\`\`${messages.slice(-10).join('\n')}\`\`\``
+      this.sendAdminMessage(combinedMessage)
+    })
 
     this.autoLeaveOrJoinChannel()
   }
@@ -225,11 +239,11 @@ export class DiscordVoice extends EventEmitter {
       const connection = await this.client.joinVoiceChannel(channelID)
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
-        if (this._active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
+        if (this._active) this.warningQueue.addMessage(message)
       })
       connection.on('error', (err) => {
         this.logger.error(err.message, err)
-        if (this._active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
+        if (this._active) this.errorQueue.addMessage(err.message)
         if (this.errorFailSafe.checkHitExceed()) {
           this.logger.error(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
           if (this._active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
