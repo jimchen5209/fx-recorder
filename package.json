@@ -16,7 +16,7 @@
   },
   "description": "",
   "dependencies": {
-    "@projectdysnomia/dysnomia": "github:CraigChat/dysnomia#fix/dave-failure-tolerance",
+    "@projectdysnomia/dysnomia": "github:projectdysnomia/dysnomia#0114e58",
     "async-wait-until": "^2.0.30",
     "dayjs": "^1.11.18",
     "lodash": "^4.17.21",
