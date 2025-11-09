@@ -122,7 +122,7 @@ export class DiscordVoice extends EventEmitter {
     if (instances.config.telegram.logErrorsToAdmin && instances.telegram) {
       for (const admin of instances.config.telegram.admins) {
         try {
-          await instances.telegram.sendMessage(admin, message)
+          await instances.telegram.sendMessage(admin, message, true)
         } catch (error) {
           if (error instanceof Error) {
             this.logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error)
