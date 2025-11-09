@@ -8,10 +8,9 @@
   "scripts": {
     "start": "node dist",
     "install": "cd Libs/LicsonMixer && node-gyp configure build",
-    "lint": "biome lint --write src/",
-    "lint:unsafe": "biome lint --write --unsafe src/",
-    "format": "biome format --write src/",
-    "biome:ci": "biome ci src/",
+    "lint": "biome check --write",
+    "lint:unsafe": "biome check --write --unsafe",
+    "biome:ci": "biome ci",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty ---inlineSourceMap false"
   },
