@@ -34,7 +34,7 @@ const stop = () => {
   console.log()
   if (quitting) {
     logger.warn('Force quitting...')
-    process.exit(0)
+    process.exit(1)
   }
 
   logger.info('Shutting down...')
