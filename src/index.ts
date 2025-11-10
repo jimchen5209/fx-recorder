@@ -23,7 +23,7 @@ process.on('warning', (e) => {
   logger.warn(e.message)
 })
 
-setInterval(() => {
+const debugMemoryInterval = setInterval(() => {
   Object.entries(process.memoryUsage()).forEach((item) => {
     logger.debug(`${item[0]}: ${(item[1] / 1024 / 1024).toFixed(4)} MiB`)
   })
@@ -40,13 +40,8 @@ const stop = () => {
   logger.info('Shutting down...')
   instances.discord?.disconnect()
   instances.telegram?.disconnect()
+  clearInterval(debugMemoryInterval)
   quitting = true
-
-  // Wait for 120 seconds before force quitting
-  setTimeout(() => {
-    logger.warn('Force quitting...')
-    process.exit(0)
-  }, 120 * 1000)
 }
 
 process.on('SIGINT', () => stop())
