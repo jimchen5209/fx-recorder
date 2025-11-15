@@ -4,6 +4,7 @@ queue_rules:
       - and:
           - base=dev
           - check-success=build
+          - check-success=security-scan
           - 'label!=status:blocked'
 
 pull_request_rules:
@@ -15,6 +16,7 @@ pull_request_rules:
       - 'label=status:ready-to-merge'
       - '#commits-behind<5'
       - check-success=build
+      - check-success=security-scan
     actions:
       merge:
 
@@ -25,6 +27,7 @@ pull_request_rules:
       - author!=renovate[bot]
       - 'label=status:ready-to-merge'
       - check-success=build
+      - check-success=security-scan
     actions:
       queue:
         name: dev-queue
