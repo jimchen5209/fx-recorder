@@ -51,10 +51,10 @@ importers:
         version: 4.17.20
       '@types/node':
         specifier: ^24.0.0
-        version: 24.9.1
+        version: 24.9.2
       '@types/node-telegram-bot-api':
         specifier: ^0.64.10
-        version: 0.64.11
+        version: 0.64.12
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
@@ -184,11 +184,11 @@ packages:
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
-  '@types/node-telegram-bot-api@0.64.11':
-    resolution: {integrity: sha512-htUhp3/Zt6cB8crxVUNKWIOLPFdEF+P8StznbWGJXDgENfBtporBQZ8HJQG1/dx41uBRkJLaXH+xeRGNh6vCjg==}
+  '@types/node-telegram-bot-api@0.64.12':
+    resolution: {integrity: sha512-R2g/aJQxcRIOn5nYiuFQid4L/yFbIRsdrhxtijESa1cwAmJq7J+l1ZwXTCNaYyZg+WURd3eLF+htux8Hvwqu2w==}
 
-  '@types/node@24.9.1':
-    resolution: {integrity: sha512-QoiaXANRkSXK6p0Duvt56W208du4P9Uye9hWLWgGMDTEoKPhuenzNcC4vGUmrNkiOKTlIrBoyNQYNpSwfEZXSg==}
+  '@types/node@24.9.2':
+    resolution: {integrity: sha512-uWN8YqxXxqFMX2RqGOrumsKeti4LlmIMIyV0lgut4jx7KQBcBiW6vkDtIBvHnHIquwNfJhk8v2OtmO8zXWHfPA==}
 
   '@types/request@2.48.13':
     resolution: {integrity: sha512-FGJ6udDNUCjd19pp0Q3iTiDkwhYup7J8hpMW9c4k53NrccQFFWKRho6hvtPPEhnXWKvukfwAlB6DbDz4yhH5Gg==}
@@ -1568,19 +1568,19 @@ snapshots:
 
   '@types/lodash@4.17.20': {}
 
-  '@types/node-telegram-bot-api@0.64.11':
+  '@types/node-telegram-bot-api@0.64.12':
     dependencies:
-      '@types/node': 24.9.1
+      '@types/node': 24.9.2
       '@types/request': 2.48.13
 
-  '@types/node@24.9.1':
+  '@types/node@24.9.2':
     dependencies:
       undici-types: 7.16.0
 
   '@types/request@2.48.13':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 24.9.1
+      '@types/node': 24.9.2
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.5
 
@@ -1588,7 +1588,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.9.1
+      '@types/node': 24.9.2
 
   abbrev@1.1.1:
     optional: true
