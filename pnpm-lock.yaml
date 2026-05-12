@@ -31,8 +31,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       node-telegram-bot-api:
-        specifier: 0.66.0
-        version: 0.66.0(request@2.88.2)
+        specifier: 0.67.0
+        version: 0.67.0(request@2.88.2)
       opusscript:
         specifier: ^0.1.1
         version: 0.1.1
@@ -956,8 +956,8 @@ packages:
     engines: {node: ^18.17.0 || >=20.5.0}
     hasBin: true
 
-  node-telegram-bot-api@0.66.0:
-    resolution: {integrity: sha512-s4Hrg5q+VPl4/tJVG++pImxF6eb8tNJNj4KnDqAOKL6zGU34lo9RXmyAN158njwGN+v8hdNf8s9fWIYW9hPb5A==}
+  node-telegram-bot-api@0.67.0:
+    resolution: {integrity: sha512-gO7o/dPcdFSUuFuPiAYBxV7bcN+vQL3pfaHN8P4z8fPtFstN05xVmhMFOth57DANGDKBpzW3rMRo7debOlUI1w==}
     engines: {node: '>=0.12'}
 
   nopt@5.0.0:
@@ -1362,11 +1362,12 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   verror@1.10.0:
@@ -2483,7 +2484,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  node-telegram-bot-api@0.66.0(request@2.88.2):
+  node-telegram-bot-api@0.67.0(request@2.88.2):
     dependencies:
       '@cypress/request': 3.0.9
       '@cypress/request-promise': 5.0.0(@cypress/request@3.0.9)(request@2.88.2)
