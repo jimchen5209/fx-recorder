@@ -12,3 +12,6 @@ overrides:
 
 patchedDependencies:
   eris: patches/eris.patch
+minimumReleaseAgeExclude:
+  # Renovate security update: lodash@4.18.1
+  - lodash@4.18.1
