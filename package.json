@@ -31,8 +31,8 @@
     "@types/node": "^24.13.2",
     "@types/node-telegram-bot-api": "^0.64.15",
     "@types/ws": "^8.18.1",
-    "node-gyp": "^11.4.2",
-    "typescript": "^5.9.2"
+    "node-gyp": "^13.0.0",
+    "typescript": "^6.0.3"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.10.0",
