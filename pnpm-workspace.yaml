@@ -11,4 +11,4 @@ overrides:
   tough-cookie@<4.1.3: '>=4.1.3'
 
 patchedDependencies:
-  '@projectdysnomia/dysnomia@0.2.3': patches/@projectdysnomia__dysnomia@0.2.3.patch
+  '@projectdysnomia/dysnomia@0.2.4': patches/@projectdysnomia__dysnomia@0.2.4.patch
