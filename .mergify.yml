@@ -31,3 +31,5 @@ pull_request_rules:
     actions:
       queue:
         name: dev-queue
+merge_protections_settings:
+  reporting_method: check-runs
