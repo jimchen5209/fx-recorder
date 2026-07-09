@@ -17,7 +17,7 @@ export class Telegram {
     this.bot = new TelegramBot(instances.config.telegram.token, { baseApiUrl: instances.config.telegram.baseApiUrl })
 
     // biome-ignore lint/style/useNamingConvention: Package Specific Format
-    this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_to_message_id: msg.message_id }))
+    this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_parameters: { message_id: msg.message_id } }))
   }
 
   public async sendAudio(chatID: string, file: string, caption: string) {
@@ -33,9 +33,10 @@ export class Telegram {
     return file
   }
 
-  public async sendMessage(chatID: string, text: string) {
+  public async sendMessage(chatID: string, text: string, useMarkdown: boolean = false) {
     try {
-      await this.bot.sendMessage(chatID, text)
+      // biome-ignore lint/style/useNamingConvention: api library naming
+      await this.bot.sendMessage(chatID, text, { parse_mode: useMarkdown ? 'Markdown' : undefined })
     } catch (err) {
       if (err instanceof Error) {
         this.logger.error(`Message ${text} send failed:${err.message}`)

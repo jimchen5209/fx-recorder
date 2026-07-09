@@ -130,13 +130,12 @@ class MixerStream extends Stream.Readable {
         if (!this.started) {
             this._startPolling();
             this._startLoop();
-            this.startTime = Date.now();
-            this.started = true;
         }
     }
 
     stop() {
         this._stopLoop()
+        this.started = false;
         this.sources = []
         this.push(null)
     }
@@ -160,10 +159,13 @@ class MixerStream extends Stream.Readable {
             });
 
             this._startMerge(this.sampleRate * this.sampleSize / this.fps);
-            this.loopId = setTimeout(fn, this.startTime + 1000 / this.fps * this.frame - Date.now());
+            if (this.started) {
+                this.loopId = setTimeout(fn, this.startTime + 1000 / this.fps * this.frame - Date.now());
+            }
         };
 
         this.loopId = setTimeout(fn, 1000 / this.fps);
+        this.started = true;
         fn();
     }
 

@@ -55,6 +55,7 @@ export class Recorder {
     for (const user of Object.keys(this.userMixers)) {
       if (this.userMixers[user]?.getSources(user).length === 0) {
         this.logger.info(`Remove unused per user mixer ${user}`)
+        this.userMixers[user].stop()
         delete this.userMixers[user]
       }
     }

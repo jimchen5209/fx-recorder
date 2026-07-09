@@ -1,12 +1,13 @@
 import { EventEmitter } from 'node:events'
-import { readFileSync as readFile } from 'node:fs'
+import { readdirSync, readFileSync as readFile, statSync, unlinkSync } from 'node:fs'
+import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from '@projectdysnomia/dysnomia'
 import { TimeoutError, waitUntil } from 'async-wait-until'
-import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from 'eris'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { DiscordChannel } from '../../../Utils/Config'
 import { FailSafe } from '../../../Utils/FailSafe'
 import { instances } from '../../../Utils/Instances'
+import { MessageQueue } from '../../../Utils/MessageQueue'
 import { Recorder } from '../Recorder/Recorder'
 import type { IRecordFile } from '../Recorder/RecordSaver'
 import { Silence } from './Silence'
@@ -17,11 +18,13 @@ export class DiscordVoice extends EventEmitter {
   private logger: Logger<ILogObj>
   private recorder: Recorder
   private sendInterval: NodeJS.Timeout | undefined
+  private cleanupInterval: NodeJS.Timeout | undefined
 
   private _active = false
   private readyToDelete = false
 
-  private warningFailSafe = new FailSafe()
+  private warningQueue = new MessageQueue(1000)
+  private errorQueue = new MessageQueue(1000)
   private errorFailSafe = new FailSafe()
   private reconnectFailSafe = new FailSafe()
 
@@ -33,7 +36,41 @@ export class DiscordVoice extends EventEmitter {
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     this.recorder = new Recorder(channelConfig)
 
+    this.warningQueue.on('process', (messages, queueTime) => {
+      const combinedMessage = `${messages.length} warning${messages.length > 1 ? 's' : ''} from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
+
+      this.sendAdminMessage(combinedMessage)
+    })
+
+    this.errorQueue.on('process', (messages, queueTime) => {
+      const combinedMessage = `${messages.length} error${messages.length > 1 ? 's' : ''} from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
+      this.sendAdminMessage(combinedMessage)
+    })
+
     this.autoLeaveOrJoinChannel()
+    this.startStaleCleanup()
+  }
+
+  private startStaleCleanup() {
+    const maxAge = 24 * 60 * 60 * 1000 // 24 hours
+    this.cleanupInterval = setInterval(
+      () => {
+        try {
+          const dir = `temp/${this.channelConfig.id}`
+          for (const f of readdirSync(dir)) {
+            if (!f.endsWith('.mp3')) continue
+            const p = `${dir}/${f}`
+            if (Date.now() - statSync(p).mtimeMs > maxAge) {
+              unlinkSync(p)
+              this.logger.warn(`Cleaned up stale recording: ${f}`)
+            }
+          }
+        } catch {
+          // temp dir may not exist yet
+        }
+      },
+      60 * 60 * 1000
+    )
   }
 
   private async startAudioSession(channelID: string) {
@@ -109,7 +146,7 @@ export class DiscordVoice extends EventEmitter {
     if (instances.config.telegram.logErrorsToAdmin && instances.telegram) {
       for (const admin of instances.config.telegram.admins) {
         try {
-          await instances.telegram.sendMessage(admin, message)
+          await instances.telegram.sendMessage(admin, message, true)
         } catch (error) {
           if (error instanceof Error) {
             this.logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error)
@@ -120,34 +157,53 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private async sendRecord(file: IRecordFile) {
-    for (const element of this.channelConfig.fileDest) {
-      if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
-        if (element.sendAll) {
-          this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-          const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-          await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
-        }
-        if (element.sendPerUser) {
-          for (const userFile of file.perUserFiles) {
-            this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-            await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
+    const maxRetries = 3
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        for (const element of this.channelConfig.fileDest) {
+          if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
+            if (element.sendAll) {
+              this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
+              const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
+              await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
+            }
+            if (element.sendPerUser) {
+              for (const userFile of file.perUserFiles) {
+                this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
+                const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+                await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
+              }
+            }
+          }
+          if (element.type === 'discord' && element.id !== '') {
+            if (element.sendAll) {
+              this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
+              const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
+              await this.client.createMessage(element.id, {
+                content: caption,
+                attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
+              })
+            }
+            if (element.sendPerUser) {
+              for (const userFile of file.perUserFiles) {
+                this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
+                const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+                await this.client.createMessage(element.id, {
+                  content: caption,
+                  attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
+                })
+              }
+            }
           }
         }
-      }
-      if (element.type === 'discord' && element.id !== '') {
-        if (element.sendAll) {
-          this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-          const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-          await this.client.createMessage(element.id, caption, { name: file.audioFileName, file: readFile(file.audioFilePath) })
+        return // success
+      } catch (error) {
+        this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
+        if (attempt === maxRetries) {
+          if (this._active) this.sendAdminMessage(`Failed to send ${file.audioFileName} after ${maxRetries} attempts`)
+          throw error
         }
-        if (element.sendPerUser) {
-          for (const userFile of file.perUserFiles) {
-            this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-            await this.client.createMessage(element.id, caption, { name: userFile.audioFileName, file: readFile(userFile.audioFilePath) })
-          }
-        }
+        await new Promise((resolve) => setTimeout(resolve, 5000))
       }
     }
   }
@@ -165,6 +221,7 @@ export class DiscordVoice extends EventEmitter {
     connection.stopPlaying()
 
     clearInterval(this.sendInterval)
+    clearInterval(this.cleanupInterval)
 
     this.logger.info('Sending rest of recording...')
     const file = this.recorder.stop()
@@ -215,25 +272,23 @@ export class DiscordVoice extends EventEmitter {
       const connection = await this.client.joinVoiceChannel(channelID)
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
-        if (this._active) this.sendAdminMessage(`Warning from ${channelID}: ${message}`)
-        if (this.warningFailSafe.checkHitExceed()) {
-          this.logger.error(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
-          if (this._active) this.sendAdminMessage(`Warning count exceeded ${this.warningFailSafe.maxTimes}. Reconnecting...`)
-          this.tryReconnect(channelID, connection)
-        }
+        if (this._active) this.warningQueue.addMessage(message)
       })
       connection.on('error', (err) => {
         this.logger.error(err.message, err)
-        if (this._active) this.sendAdminMessage(`Error from voice connection ${channelID}: ${err.message}`)
+        if (this._active) this.errorQueue.addMessage(err.message)
         if (this.errorFailSafe.checkHitExceed()) {
           this.logger.error(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
           if (this._active) this.sendAdminMessage(`Error count exceeded ${this.errorFailSafe.maxTimes}. Reconnecting...`)
+          this._active = false
           this.tryReconnect(channelID, connection)
         }
       })
+      if (instances.config.logging.debug) {
+        connection.on('debug', (message) => this.logger.debug(message))
+      }
       connection.on('ready', () => {
         this.logger.warn('Voice connection reconnected.')
-        this.warningFailSafe.resetError()
         this.errorFailSafe.resetError()
         this.reconnectFailSafe.resetError()
       })
