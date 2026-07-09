@@ -7,7 +7,8 @@ export declare interface MessageQueue {
 }
 
 /**
- * A message queue that batches messages and processes them after a debounce period
+ * A message queue that batches messages and processes them after a debounce period.
+ * Forces a flush when maxSize is reached to prevent unbounded queue growth.
  *
  * @event process - Emitted when the queue is processed
  *   @param messages - Array of messages in the queue
@@ -15,7 +16,7 @@ export declare interface MessageQueue {
  *
  * @example
  * ```typescript
- * const queue = new MessageQueue(1000); // 1 second debounce
+ * const queue = new MessageQueue(1000, 100); // 1 second debounce, flush at 100 messages
  * queue.on('process', (messages, queueTime) => {
  *   console.log(`Processing ${messages.length} messages after ${queueTime}ms`);
  * });
@@ -26,14 +27,18 @@ export declare interface MessageQueue {
 export class MessageQueue extends EventEmitter {
   private queue: Array<{ message: string; timestamp: number }> = []
   private readonly debounceTime: number = 1000
+  private readonly maxSize: number = 100
 
-  constructor(debounceTime: number = 1000) {
+  constructor(debounceTime: number = 1000, maxSize: number = 100) {
     super()
     this.debounceTime = debounceTime
+    this.maxSize = maxSize
   }
 
   /**
-   * Add a message to the queue
+   * Add a message to the queue.
+   * Automatically flushes the queue if maxSize is reached to prevent unbounded growth
+   * when messages arrive faster than the debounce interval.
    * @param message The message to add
    */
   public addMessage(message: string): void {
@@ -41,7 +46,11 @@ export class MessageQueue extends EventEmitter {
       message,
       timestamp: Date.now()
     })
-    this.scheduleProcess()
+    if (this.queue.length >= this.maxSize) {
+      this.scheduleProcess.flush()
+    } else {
+      this.scheduleProcess()
+    }
   }
 
   private scheduleProcess = debounce(() => {
