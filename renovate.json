@@ -20,6 +20,7 @@
       ],
       "minimumReleaseAge": "14 days",
       "internalChecksFilter": "strict",
+      "prCreation": "not-pending",
       "addLabels": [
         "package:npm"
       ]

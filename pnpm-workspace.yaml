@@ -1,8 +1,5 @@
 minimumReleaseAge: 20160
 
-minimumReleaseAgeExclude:
-  - tar
-
 onlyBuiltDependencies:
   - '@discordjs/opus'
   - bufferutil
