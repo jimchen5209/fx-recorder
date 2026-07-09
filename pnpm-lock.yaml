@@ -687,7 +687,7 @@ packages:
     engines: {bare: '>=1.16.0'}
 
   status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/86ad74fed1caa9d12a571d183fd8d64881e14b9b:
-    resolution: {tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/86ad74fed1caa9d12a571d183fd8d64881e14b9b}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/86ad74fed1caa9d12a571d183fd8d64881e14b9b}
     version: 2.2.0
 
   streamx@2.28.0:
