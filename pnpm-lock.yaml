@@ -83,7 +83,7 @@ importers:
         version: 0.1.4
       node-addon-api:
         specifier: ^8.8.0
-        version: 8.8.0
+        version: 8.9.0
       sodium-native:
         specifier: ^5.1.0
         version: 5.1.0(bare-events@2.9.1)
@@ -581,8 +581,8 @@ packages:
   nan@2.23.0:
     resolution: {integrity: sha512-1UxuyYGdoQHcGg87Lkqm3FzefucTa0NAiOcuRsDmysep3c1LVCRK2krrUDafMWtjSG04htvAmvg96+SDknOmgQ==}
 
-  node-addon-api@8.8.0:
-    resolution: {integrity: sha512-c5Ko1fZJIJmzhFIkhRN76WTq+fC6tWnGy9CXA0fA+XygsWZmEwG8vmbkNqxMyoaa0Tin4djul49NzdVcJJcjeA==}
+  node-addon-api@8.9.0:
+    resolution: {integrity: sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q==}
     engines: {node: ^18 || ^20 || >= 21}
 
   node-fetch@2.7.0:
@@ -835,7 +835,7 @@ snapshots:
   '@discordjs/opus@0.10.0(encoding@0.1.13)':
     dependencies:
       '@discordjs/node-pre-gyp': 0.4.5(encoding@0.1.13)
-      node-addon-api: 8.8.0
+      node-addon-api: 8.9.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -1285,7 +1285,7 @@ snapshots:
   nan@2.23.0:
     optional: true
 
-  node-addon-api@8.8.0:
+  node-addon-api@8.9.0:
     optional: true
 
   node-fetch@2.7.0(encoding@0.1.13):
