@@ -22,7 +22,7 @@
     "lodash": "^4.18.1",
     "node-telegram-bot-api": "1.1.2",
     "opusscript": "^0.1.1",
-    "status-client": "github:jimchen5209/StatusClient_JS#v2.2.0",
+    "status-client": "github:jimchen5209/StatusClient_JS#v2.3.0",
     "tslog": "^4.9.3"
   },
   "devDependencies": {
