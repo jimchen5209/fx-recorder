@@ -23,7 +23,7 @@
     "node-telegram-bot-api": "1.1.2",
     "opusscript": "^0.1.1",
     "status-client": "github:jimchen5209/StatusClient_JS#v2.3.0",
-    "tslog": "^4.9.3"
+    "tslog": "^5.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.2",
