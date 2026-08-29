@@ -20,9 +20,7 @@ overrides:
   tough-cookie@<4.1.3: '>=4.1.3'
 
 patchedDependencies:
-  '@projectdysnomia/dysnomia@0.2.4':
-    hash: 6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2
-    path: patches/@projectdysnomia__dysnomia@0.2.4.patch
+  '@projectdysnomia/dysnomia@0.2.4': 6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2
 
 importers:
 
