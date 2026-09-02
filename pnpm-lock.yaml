@@ -83,7 +83,7 @@ importers:
         version: 0.1.4
       node-addon-api:
         specifier: ^8.8.0
-        version: 8.9.0
+        version: 8.9.2
       sodium-native:
         specifier: ^5.1.0
         version: 5.1.0(bare-events@2.9.1)
@@ -581,8 +581,8 @@ packages:
   nan@2.23.0:
     resolution: {integrity: sha512-1UxuyYGdoQHcGg87Lkqm3FzefucTa0NAiOcuRsDmysep3c1LVCRK2krrUDafMWtjSG04htvAmvg96+SDknOmgQ==}
 
-  node-addon-api@8.9.0:
-    resolution: {integrity: sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q==}
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
     engines: {node: ^18 || ^20 || >= 21}
 
   node-fetch@2.7.0:
@@ -687,7 +687,7 @@ packages:
     engines: {bare: '>=1.16.0'}
 
   status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac:
-    resolution: {gitHosted: true, integrity: sha512-Qr/Vp+SqwxeJBpUOn9Y6WOFU9WrI2vjMC34LpQCQyNzpyb37dktaJszKTz/qDeMNwrK5A6r44epDDajIRDDujw==, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
     version: 2.3.0
 
   streamx@2.28.0:
@@ -839,7 +839,7 @@ snapshots:
   '@discordjs/opus@0.10.0(encoding@0.1.13)':
     dependencies:
       '@discordjs/node-pre-gyp': 0.4.5(encoding@0.1.13)
-      node-addon-api: 8.9.0
+      node-addon-api: 8.9.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -1289,7 +1289,7 @@ snapshots:
   nan@2.23.0:
     optional: true
 
-  node-addon-api@8.9.0:
+  node-addon-api@8.9.2:
     optional: true
 
   node-fetch@2.7.0(encoding@0.1.13):
