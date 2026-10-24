@@ -18,27 +18,33 @@
   "dependencies": {
     "@projectdysnomia/dysnomia": "0.2.4",
     "async-wait-until": "^2.0.30",
-    "dayjs": "^1.11.21",
+    "dayjs": "^1.11.23",
     "lodash": "^4.18.1",
     "node-telegram-bot-api": "1.1.2",
     "opusscript": "^0.1.1",
     "status-client": "github:jimchen5209/StatusClient_JS#v2.3.0",
-    "tslog": "^4.9.3"
+    "tslog": "^4.11.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.2",
-    "@types/lodash": "^4.17.24",
-    "@types/node": "^24.13.2",
-    "@types/ws": "^8.18.1",
-    "node-gyp": "^13.0.0",
-    "typescript": "^6.0.3"
+    "@biomejs/biome": "2.5.15",
+    "@types/lodash": "^4.17.26",
+    "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
+    "node-gyp": "^13.1.0",
+    "typescript": "^7.0.2"
   },
   "optionalDependencies": {
     "@discordjs/opus": "0.10.0",
     "bufferutil": "^4.1.0",
     "erlpack": "^0.1.4",
-    "node-addon-api": "^8.8.0",
+    "node-addon-api": "^8.9.2",
     "sodium-native": "^5.1.0"
   },
-  "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.11.2",
+      "onFail": "download"
+    }
+  }
 }

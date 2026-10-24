@@ -1,9 +1,9 @@
-minimumReleaseAge: 20160
+allowBuilds:
+  '@discordjs/opus': true
+  bufferutil: true
+  erlpack: true
 
-onlyBuiltDependencies:
-  - '@discordjs/opus'
-  - bufferutil
-  - erlpack
+minimumReleaseAge: 20160
 
 overrides:
   brace-expansion@<1.1.13: '>=1.1.13'
