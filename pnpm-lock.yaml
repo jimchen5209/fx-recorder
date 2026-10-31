@@ -186,7 +186,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: 0.2.4
-        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.1.0(bare-events@2.9.1))
+        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
@@ -242,7 +242,7 @@ importers:
         version: 8.9.2
       sodium-native:
         specifier: ^5.1.0
-        version: 5.1.0(bare-events@2.9.1)
+        version: 5.2.0(bare-events@2.9.1)
 
 packages:
 
@@ -958,8 +958,8 @@ packages:
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
-  sodium-native@5.1.0:
-    resolution: {integrity: sha512-3RxgyWyJlhTsABPnJVpCI5CoTDANZTqqFrEPqr+kjfnRaBihpVtMUE3yTF40ukdoB1APXeoBNKF3MzZAIHg39g==}
+  sodium-native@5.2.0:
+    resolution: {integrity: sha512-ntJqNSc9bWmWqcJkx8NA5eS0HUwQnmDlluUzoKCOQUWey8i7LXptk+E/qo2T2RPO9uK2br+3N0zYQme8qPXG+g==}
     engines: {bare: '>=1.16.0'}
 
   status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac:
@@ -1148,7 +1148,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.1.0(bare-events@2.9.1))':
+  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))':
     dependencies:
       ws: 8.21.0(bufferutil@4.1.0)
     optionalDependencies:
@@ -1157,7 +1157,7 @@ snapshots:
       '@stablelib/xchacha20poly1305': 1.0.1
       erlpack: 0.1.4
       opusscript: 0.1.1
-      sodium-native: 5.1.0(bare-events@2.9.1)
+      sodium-native: 5.2.0(bare-events@2.9.1)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -1725,7 +1725,7 @@ snapshots:
   signal-exit@3.0.7:
     optional: true
 
-  sodium-native@5.1.0(bare-events@2.9.1):
+  sodium-native@5.2.0(bare-events@2.9.1):
     dependencies:
       bare-assert: 1.2.0(bare-events@2.9.1)
       require-addon: 1.1.0
