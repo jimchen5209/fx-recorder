@@ -12,10 +12,13 @@
     "lint:unsafe": "biome check --write --unsafe",
     "biome:ci": "biome ci",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty ---inlineSourceMap false"
+    "build:prod": "tsc --pretty ---inlineSourceMap false",
+    "spike:fluxer": "node dist/Spike/FluxerReceiveSpike.js"
   },
   "description": "",
   "dependencies": {
+    "@fluxerjs/core": "3.3.0",
+    "@livekit/protocol": "1.53.0",
     "@projectdysnomia/dysnomia": "0.2.4",
     "async-wait-until": "^2.0.30",
     "dayjs": "^1.11.23",
@@ -23,7 +26,9 @@
     "node-telegram-bot-api": "1.2.0",
     "opusscript": "^0.1.1",
     "status-client": "github:jimchen5209/StatusClient_JS#v2.3.0",
-    "tslog": "^4.11.0"
+    "tslog": "^4.11.0",
+    "werift": "0.25.2",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
