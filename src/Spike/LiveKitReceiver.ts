@@ -1,10 +1,12 @@
-// P0 spike: one LiveKit signaling session (the /rtc websocket) that only subscribes, never publishes.
+// P0 spike: one LiveKit signaling session (the /rtc websocket) that subscribes to audio and publishes no media.
 // Adapted from jimchen5209/Discord-Voice-log (branch fluxer/f4-voice @ 155dd56, src/Fluxer/Voice/LiveKitSession.ts, AGPL-3.0-only),
 // itself adapted from james58899/MusicBot (branch fluxer, Component/FluxerVoice.ts, MIT, Copyright (c) 2017 鄭仁翔).
 // Receiving is new here: both references answer the subscriber offer but consume no track.
 
 import { EventEmitter } from 'node:events'
 import {
+  DataPacket,
+  DataPacket_Kind,
   DisconnectReason,
   LeaveRequest,
   LeaveRequest_Action,
@@ -18,12 +20,53 @@ import {
   TrackSource,
   TrackType,
   TrickleRequest,
-  UpdateSubscription
+  UpdateSubscription,
+  UserPacket
 } from '@livekit/protocol'
 import { type MediaStreamTrack, RTCPeerConnection, RTCRtpCodecParameters } from 'werift'
 import WebSocket from 'ws'
 
 const STEP_TIMEOUT_MS = 20 * 1000
+
+// Fluxer clients only screen share in h264/vp9/vp8 while any participant has not advertised what it can decode.
+// The bot subscribes to no video, so it claims every codec (payload types/priorities are the client's fixed table).
+// From james58899/MusicBot@8d00269 (MIT, Copyright (c) 2017 鄭仁翔), unchanged.
+const CODEC_ADVERTISEMENT = new DataPacket({
+  kind: DataPacket_Kind.RELIABLE,
+  value: {
+    case: 'user',
+    value: new UserPacket({
+      topic: 'fluxer.rtc.codec-negotiation.v1',
+      payload: Buffer.from(
+        JSON.stringify({
+          op: 1,
+          d: {
+            protocol: 'livekit',
+            data: { mode: 'livekit-sfu' },
+            codecs: [
+              // biome-ignore lint/style/useNamingConvention: Fluxer field names
+              { name: 'opus', type: 'audio', payload_type: 120, priority: 1000, encode: true, decode: true },
+              ...['AV1', 'H265', 'H264', 'VP9', 'VP8'].map((name, i) => ({
+                name,
+                type: 'video',
+                // biome-ignore lint/style/useNamingConvention: Fluxer field name
+                payload_type: [101, 105, 103, 109, 107][i],
+                // biome-ignore lint/style/useNamingConvention: Fluxer field name
+                rtx_payload_type: [102, 106, 104, 110, 108][i],
+                priority: 5000 - i * 1000,
+                encode: false,
+                decode: true
+              }))
+            ],
+            // biome-ignore lint/style/useNamingConvention: Fluxer field name
+            rtc_connection_id: null,
+            experiments: []
+          }
+        })
+      )
+    })
+  }
+}).toBinary()
 
 // LiveKit's websocket URL for an endpoint from Voice Server Update; the path is kept (self-hosted: e.g. /livekit)
 function parseEndpoint(endpoint: string) {
@@ -95,6 +138,9 @@ export class LiveKitReceiver extends EventEmitter {
   public readonly tracks = new Map<string, RemoteTrackInfo>()
   private ws: WebSocket | undefined
   private sub: RTCPeerConnection | undefined
+  // Publisher peer with no media: it only carries the data channel for the codec advertisement
+  private pub: RTCPeerConnection | undefined
+  private data: ReturnType<RTCPeerConnection['createDataChannel']> | undefined
   private selfIdentity: string | undefined
   private subscribed = new Set<string>()
   private ssrcToSid = new Map<number, string>()
@@ -139,6 +185,12 @@ export class LiveKitReceiver extends EventEmitter {
     this.ws?.removeAllListeners('close')
     this.ws?.close()
     this.sub?.close().catch(() => undefined)
+    this.pub?.close().catch(() => undefined)
+  }
+
+  // Data messages are not replayed to late joiners, so this is resent on every participant update
+  private advertiseCodecs() {
+    if (this.data?.readyState === 'open') this.data.send(Buffer.from(CODEC_ADVERTISEMENT))
   }
 
   private markLost(reason: string) {
@@ -193,6 +245,20 @@ export class LiveKitReceiver extends EventEmitter {
     this.send({ case: 'subscription', value: new UpdateSubscription({ trackSids: toSubscribe, subscribe: true }) })
   }
 
+  // Not fatal when it fails: recording only needs the subscriber
+  private async openPublisher(config: ConstructorParameters<typeof RTCPeerConnection>[0]) {
+    const pub = new RTCPeerConnection(config)
+    this.pub = pub
+    pub.onIceCandidate.subscribe((candidate) => {
+      if (candidate) this.send({ case: 'trickle', value: new TrickleRequest({ candidateInit: JSON.stringify(candidate.toJSON()), target: SignalTarget.PUBLISHER }) })
+    })
+    pub.connectionStateChange.subscribe((state) => this.emit('event', 'publisher-state', { state }))
+    this.data = pub.createDataChannel('_reliable')
+    this.data.onopen = () => this.advertiseCodecs()
+    await pub.setLocalDescription(await pub.createOffer())
+    this.send({ case: 'offer', value: new SessionDescription({ type: 'offer', sdp: pub.localDescription?.sdp ?? '', id: 1 }) })
+  }
+
   // werift leaves msid off the track (random id, no streamId), so the track sid comes from the offer by SSRC
   private findTrack(track: MediaStreamTrack) {
     const sid = track.ssrc === undefined ? undefined : this.ssrcToSid.get(track.ssrc)
@@ -237,9 +303,11 @@ export class LiveKitReceiver extends EventEmitter {
         })
         this.emit('joined')
         this.onParticipants(join.otherParticipants)
+        this.openPublisher({ iceServers, codecs }).catch((error) => this.emit('event', 'publisher-error', { message: String(error) }))
         break
       }
       case 'update':
+        this.advertiseCodecs()
         this.onParticipants(message.value.participants)
         break
       // The server's subscriber offer, again after each subscription change
@@ -258,10 +326,14 @@ export class LiveKitReceiver extends EventEmitter {
         this.send({ case: 'answer', value: new SessionDescription({ type: 'answer', sdp: sub.localDescription?.sdp ?? '', id: message.value.id }) })
         break
       }
-      case 'trickle':
-        // No publisher peer: its candidates are not needed
-        if (message.value.target === SignalTarget.SUBSCRIBER) await this.sub?.addIceCandidate(JSON.parse(message.value.candidateInit))
+      case 'answer':
+        await this.pub?.setRemoteDescription({ type: 'answer', sdp: message.value.sdp })
         break
+      case 'trickle': {
+        const peer = message.value.target === SignalTarget.PUBLISHER ? this.pub : this.sub
+        await peer?.addIceCandidate(JSON.parse(message.value.candidateInit))
+        break
+      }
       case 'mute':
         this.emit('event', 'mute', { sid: message.value.sid, muted: message.value.muted })
         break
