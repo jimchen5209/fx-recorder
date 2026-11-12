@@ -12,3 +12,37 @@
 8. Fill `config.json`
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `npm run start` or `pm2 reload ecosystem.config.js`
+
+## Fluxer (official or self-hosted)
+
+Add one entry per Fluxer instance to `fluxer` in `config.json`. Each instance needs its own bot token. A new or upgraded `config.json` has the official instance (`"id": "official"`, `https://fluxer.com`) turned off; set `enabled` to `true` and fill it in to use it.
+
+```json
+"fluxer": [
+    {
+        "id": "main",
+        "enabled": true,
+        "origin": "https://chat.example.com",
+        "botToken": "",
+        "admins": [],
+        "logErrorsToAdmin": false,
+        "channels": [
+            {
+                "id": "<voice channel id>",
+                "guildId": "<guild id>",
+                "fileDest": [{ "type": "telegram", "id": "<chat id>", "sendAll": true, "sendPerUser": true }],
+                "timeZone": "Asia/Taipei",
+                "sendIntervalSecond": 60,
+                "ignoreUsers": []
+            }
+        ]
+    }
+]
+```
+
+- `id`: a name for the instance, using only `a-z`, `0-9` and `-`. It names the instance's folders under `temp/`, so do not change it once used.
+- `origin`: the instance's https:// address. The bot token is only sent to this host or its subdomains; the voice server may be on another host.
+- `fileDest` can also be `{ "type": "fluxer", "instance": "main", "id": "<text channel id>", ... }` to post recordings to a Fluxer text channel, from Discord or Fluxer channels.
+- Bot permissions: View Channel and Connect on the voice channel; View Channel, Send Messages and Attach Files on any Fluxer text channel in `fileDest`.
+- To run Fluxer only, leave `discord.token` empty. Any `discord` destination is then an error.
+- Tell the people in the channel that it is recorded, and do not record where the law requires consent you do not have.

@@ -17,11 +17,14 @@ if (existsSync('temp')) rmSync('temp', { recursive: true })
 mkdirSync('temp')
 
 // Initialize the bot
-const discord = new Discord()
-instances.discord = discord
 instances.telegram = new Telegram()
-
-discord.start()
+// Off only when its token is empty and a Fluxer instance is enabled
+if (instances.config.discordEnabled) {
+  instances.discord = new Discord()
+  instances.discord.start()
+} else {
+  logger.info('Discord is off: no discord.token')
+}
 status.set_status()
 
 process.on('warning', (e) => {
