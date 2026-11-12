@@ -1,4 +1,3 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../Utils/Instances'
@@ -47,9 +46,6 @@ export class Discord {
 
     this.client.once('ready', async () => {
       this.logger.info(`Logged in as ${this.client.user.username} (${this.client.user.id})`)
-
-      if (existsSync('temp')) rmSync('temp', { recursive: true })
-      mkdirSync('temp')
 
       this.updateStatus()
 

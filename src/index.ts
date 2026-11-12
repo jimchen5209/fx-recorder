@@ -1,3 +1,4 @@
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Status } from 'status-client'
 import { Discord } from './Core/Discord/Core'
 import { Telegram } from './Core/Telegram/Core'
@@ -10,6 +11,10 @@ logger.info('Starting...')
 if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('fx-recorder')
+
+// Recordings left from the last run, cleared once before any platform starts recording
+if (existsSync('temp')) rmSync('temp', { recursive: true })
+mkdirSync('temp')
 
 // Initialize the bot
 const discord = new Discord()

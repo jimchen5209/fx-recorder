@@ -1,32 +1,36 @@
 import type { ILogObj, Logger } from 'tslog'
 import AbortStream from '../../../Libs/abort'
 import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
-import type { DiscordChannel } from '../../../Utils/Config'
 import { instances } from '../../../Utils/Instances'
+import type { RecordingChannel } from '../../Recording/Types'
 import { RecordSaver } from './RecordSaver'
 
 export class Recorder {
-  private channelConfig: DiscordChannel
+  private channelConfig: RecordingChannel
   private logger: Logger<ILogObj>
   private _saver: RecordSaver
 
   // Mixer
   private recvMixer?: LicsonMixer
   private userMixers?: { [key: string]: LicsonMixer }
+  // Sources each user still has open; the user's file ends with the last one (see endSource)
+  private userSources: { [user: string]: Set<string> } = {}
 
-  constructor(channelConfig: DiscordChannel) {
+  constructor(channelConfig: RecordingChannel) {
     this.channelConfig = channelConfig
     this.logger = instances.mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
 
     this._saver = new RecordSaver(channelConfig)
   }
-  public storeBuffer(data: Buffer, user: string) {
+  // sourceId tells apart one user's streams (Fluxer: one per connection and track); Discord has one per user
+  public storeBuffer(data: Buffer, user: string, sourceId = user) {
     if (!user || this.channelConfig.ignoreUsers.includes(user)) return
     if (this.recvMixer) {
-      let source = this.recvMixer.getSources(user)[0]
+      let source = this.recvMixer.getSources(sourceId)[0]
       if (!source) {
         this.logger.info(`Add new user ${user} to record mixer`)
-        source = this.recvMixer.addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
+        // Labeled by both, so a user's sources can be found by user too
+        source = this.recvMixer.addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), [sourceId, user])
       }
       source.stream.write(data)
     }
@@ -34,10 +38,24 @@ export class Recorder {
     if (this.userMixers) {
       if (!this.userMixers[user]) this.newPerUserMixer(user)
 
-      let perUserSource = this.userMixers[user].getSources(user)[0]
-      if (!perUserSource) perUserSource = this.userMixers[user].addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), user)
+      let perUserSource = this.userMixers[user].getSources(sourceId)[0]
+      if (!perUserSource) perUserSource = this.userMixers[user].addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), sourceId)
       perUserSource.stream.write(data)
+      if (!this.userSources[user]) this.userSources[user] = new Set()
+      this.userSources[user].add(sourceId)
     }
+  }
+
+  // Ends one source; the user's per-user file ends only with their last source, as endStream does
+  public endSource(user: string, sourceId: string) {
+    const sources = this.userSources[user]
+    if (sources) sources.delete(sourceId)
+    if (!sources || sources.size === 0) {
+      this.endStream(user)
+      return
+    }
+    this.recvMixer?.getSources(sourceId)[0]?.stream.end()
+    this.userMixers?.[user]?.getSources(sourceId)[0]?.stream.end()
   }
 
   private newPerUserMixer(user: string) {
@@ -73,7 +91,8 @@ export class Recorder {
   }
 
   public endStream(user: string) {
-    this.recvMixer?.getSources(user)[0]?.stream.end()
+    delete this.userSources[user]
+    for (const source of this.recvMixer?.getSources(user) ?? []) source.stream.end()
     if (this.userMixers) this.userMixers[user]?.stop()
     this._saver.removeUser(user)
   }
@@ -85,6 +104,7 @@ export class Recorder {
     const restFiles = this._saver.endSession()
 
     this.recvMixer = undefined
+    this.userSources = {}
 
     if (this.userMixers) {
       for (const key of Object.keys(this.userMixers)) {
