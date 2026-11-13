@@ -42,6 +42,8 @@ export class FluxerVoice {
   private cleanupInterval: NodeJS.Timeout | undefined
   private _active = false
   private readyToDelete = true
+  // Set on shutdown: the bot's own leave is a change in the channel, which must not join again
+  private stopped = false
 
   constructor(instanceId: string, channelConfig: FluxerChannel, manager: FluxerVoiceManager, tracker: VoicePresenceTracker, selfId: () => string, logger: Logger<ILogObj>) {
     this.channelConfig = channelConfig
@@ -64,6 +66,7 @@ export class FluxerVoice {
 
   // Someone entered or left the channel, or the guild's voice states were reloaded
   public update = debounce(() => {
+    if (this.stopped) return
     const users = this.tracker.usersIn(this.channelConfig.guildId, this.channelConfig.id)
     // The guild is not known yet (no snapshot) or was lost: wait for the next snapshot
     if (!users) return
@@ -86,6 +89,7 @@ export class FluxerVoice {
 
   // Ends the recording, sends the rest, and waits up to 30 s for it, as DiscordVoice.stop
   public async stop() {
+    this.stopped = true
     this.update.cancel()
     clearInterval(this.cleanupInterval)
     if (!this.connection) return
