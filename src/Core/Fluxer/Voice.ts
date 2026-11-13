@@ -46,7 +46,7 @@ export class FluxerVoice {
       this.connection = connection
       connection.on('grant', (grant: VoiceGrant) => this.openSession(connection, grant))
       connection.once('closed', () => {
-        // Not joined again right away (e.g. after a kick): the next change in the channel does it
+        // After a kick or a lost session the bot's own leave changes the channel, so update() joins again while someone is there, as Discord reconnects
         if (this.connection === connection) this.connection = undefined
         this.session?.close()
         this.session = undefined
