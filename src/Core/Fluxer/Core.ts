@@ -1,6 +1,7 @@
 // One Fluxer instance, official or self-hosted. Gateway handling follows jimchen5209/Discord-Voice-log
 // (branch fluxer/f4-voice @ 155dd56, src/Fluxer/Fluxer.ts, AGPL-3.0-only).
 
+import { readFileSync } from 'node:fs'
 import { Client, Events, type Guild, Routes } from '@fluxerjs/core'
 import type { ILogObj, Logger } from 'tslog'
 import type { FluxerInstanceConfig } from '../../Utils/Config'
@@ -93,12 +94,20 @@ export class Fluxer {
     const client = this.client
     if (!client) return
     this.logger.info('Shutting down...')
-    this.client = undefined
-    for (const voice of this.voices.values()) voice.stop()
+    // The rest of each recording is sent first; a fluxer destination still needs the client
+    await Promise.all([...this.voices.values()].map((voice) => voice.stop()))
     this.voices.clear()
+    this.client = undefined
     this.manager?.dispose()
     this.manager = undefined
     await client.destroy().catch(() => undefined)
+  }
+
+  // For a fluxer destination: a message, with a file when given. Throws when the instance is not connected or the upload fails.
+  public async send(channelId: string, content: string, file?: { name: string; path: string }) {
+    const client = this.client
+    if (!client?.isReady()) throw new Error(`Fluxer instance ${this.instance.id} is not connected`)
+    await client.channels.send(channelId, file ? { content, files: [{ name: file.name, data: readFileSync(file.path) }] } : content)
   }
 
   private listen(client: Client, manager: FluxerVoiceManager) {
@@ -106,7 +115,7 @@ export class Fluxer {
       this.logger.info(`Logged in as ${client.user?.username} (${client.user?.id})`)
       if (this.voices.size === 0) {
         for (const channel of this.instance.channels) {
-          this.voices.set(channel.id, new FluxerVoice(channel, manager, this.tracker, () => client.user?.id ?? '', this.logger))
+          this.voices.set(channel.id, new FluxerVoice(this.instance.id, channel, manager, this.tracker, () => client.user?.id ?? '', this.logger))
         }
       }
       for (const voice of this.voices.values()) voice.update()

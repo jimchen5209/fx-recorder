@@ -8,6 +8,13 @@ import type { IRecordFile } from '../Discord/Recorder/RecordSaver'
 // Delivery to a channel's fileDest, moved out of DiscordVoice as it was, known defects included (plan §8: S1/S4 fix them).
 // discord: the Discord client for discord destinations and admins; without it they are skipped.
 
+// A fluxer destination goes through the running instance it names
+async function sendToFluxer(dest: FileDestination, content: string, file?: { name: string; path: string }) {
+  const fluxer = instances.fluxer.find((instance) => instance.instance.id === dest.instance)
+  if (!fluxer) throw new Error(`Fluxer instance ${dest.instance} is not running`)
+  await fluxer.send(dest.id, content, file)
+}
+
 export async function sendMessage(fileDest: FileDestination[], discord: Client | undefined, message: string) {
   for (const element of fileDest) {
     if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
@@ -15,6 +22,12 @@ export async function sendMessage(fileDest: FileDestination[], discord: Client |
     }
     if (element.type === 'discord' && element.id !== '' && discord) {
       await discord.createMessage(element.id, message)
+    }
+    // Logged, not thrown: callers send messages without waiting, and a throw there would crash the bot
+    if (element.type === 'fluxer' && element.id !== '') {
+      await sendToFluxer(element, message).catch((error) =>
+        instances.mainLogger.error(`Message to fluxer ${element.instance}/${element.id} failed: ${error instanceof Error ? error.message : error}`)
+      )
     }
   }
 }
@@ -45,8 +58,10 @@ export async function sendAdminMessage(discord: Client | undefined, logger: Logg
   }
 }
 
-// One attempt at every destination; the caller retries
+// One attempt at every destination; the caller retries.
+// A failed fluxer destination does not hold back the others: its error is thrown once they are done.
 export async function sendRecord(fileDest: FileDestination[], discord: Client | undefined, logger: Logger<ILogObj>, channelId: string, file: IRecordFile) {
+  let fluxerError: unknown
   for (const element of fileDest) {
     if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
       if (element.sendAll) {
@@ -82,5 +97,25 @@ export async function sendRecord(fileDest: FileDestination[], discord: Client | 
         }
       }
     }
+    if (element.type === 'fluxer' && element.id !== '') {
+      try {
+        if (element.sendAll) {
+          logger.info(`Sending ${file.audioFileName} of ${channelId} to fluxer ${element.instance}/${element.id}`)
+          const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
+          await sendToFluxer(element, caption, { name: file.audioFileName, path: file.audioFilePath })
+        }
+        if (element.sendPerUser) {
+          for (const userFile of file.perUserFiles) {
+            logger.info(`Sending ${userFile.audioFileName} of ${channelId} to fluxer ${element.instance}/${element.id}`)
+            const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
+            await sendToFluxer(element, caption, { name: userFile.audioFileName, path: userFile.audioFilePath })
+          }
+        }
+      } catch (error) {
+        logger.error(`Sending ${file.audioFileName} to fluxer ${element.instance}/${element.id} failed: ${error instanceof Error ? error.message : error}`)
+        fluxerError ??= error
+      }
+    }
   }
+  if (fluxerError) throw fluxerError
 }

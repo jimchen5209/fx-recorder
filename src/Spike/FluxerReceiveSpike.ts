@@ -252,7 +252,7 @@ async function main() {
       else if (!info.userId) log('warning', { message: `no user id for ${info.identity}` })
       recorders.push(new TrackRecorder(track, info))
     })
-    receiver.once('lost', (reason: string) => void finish(`error: LiveKit session lost: ${reason}`))
+    receiver.once('lost', (_fatal: boolean, reason: string) => void finish(`error: LiveKit session lost: ${reason}`))
     await receiver.open()
   } catch (error) {
     // Leave the channel on the way out; messages name URLs and codes, never a token

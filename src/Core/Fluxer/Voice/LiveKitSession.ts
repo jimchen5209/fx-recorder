@@ -117,11 +117,14 @@ export function parseIdentity(identity: string, metadata: string) {
 /**
  * @emits event(type: string, data: object) - anything worth logging; never carries a token
  * @emits track(track: MediaStreamTrack, info: RemoteTrackInfo | undefined) - a subscribed track arrived on the subscriber peer
- * @emits lost(reason: string) - the session ended (once)
+ * @emits trackEnded(info: RemoteTrackInfo) - a known audio track was unpublished, or its participant left
+ * @emits lost(fatal: boolean, reason: string) - the session ended (once); fatal when the server removed the bot for good
  */
 export class LiveKitSession extends EventEmitter {
   public lost = false
   public tokenRefreshes = 0
+  // The latest access token (refreshed by the server), for reconnecting; a secret: never log it
+  public token: string
   public readonly tracks = new Map<string, RemoteTrackInfo>()
   private ws: WebSocket | undefined
   private sub: RTCPeerConnection | undefined
@@ -132,16 +135,13 @@ export class LiveKitSession extends EventEmitter {
   private subscribed = new Set<string>()
   private ssrcToSid = new Map<number, string>()
   private pingTimer: NodeJS.Timeout | undefined
+  private lastPong = Date.now()
   private endpoint: string
-  private token: string
-  // false: only joins the room, which makes the bot show up in the channel; tracks are left alone
-  private subscribe: boolean
 
-  constructor(endpoint: string, token: string, subscribe = true) {
+  constructor(endpoint: string, token: string) {
     super()
     this.endpoint = endpoint
     this.token = token
-    this.subscribe = subscribe
   }
 
   // Resolves on the join response; tracks arrive later through 'track'
@@ -155,7 +155,7 @@ export class LiveKitSession extends EventEmitter {
         clearTimeout(timer)
         resolve()
       })
-      this.once('lost', (reason: string) => {
+      this.once('lost', (_fatal: boolean, reason: string) => {
         clearTimeout(timer)
         reject(new Error(`LiveKit: ${reason}`))
       })
@@ -163,7 +163,7 @@ export class LiveKitSession extends EventEmitter {
     ws.on('message', (data: Buffer) => {
       this.onSignal(SignalResponse.fromBinary(data)).catch((error) => this.emit('event', 'signal-error', { message: String(error) }))
     })
-    ws.on('close', (code, reason) => this.markLost(`signal socket closed (${code} ${reason.toString()})`))
+    ws.on('close', (code, reason) => this.markLost(false, `signal socket closed (${code} ${reason.toString()})`))
     ws.on('error', (error) => this.emit('event', 'socket-error', { message: error.message }))
     await joined
   }
@@ -183,11 +183,11 @@ export class LiveKitSession extends EventEmitter {
     if (this.data?.readyState === 'open') this.data.send(Buffer.from(CODEC_ADVERTISEMENT))
   }
 
-  private markLost(reason: string) {
+  private markLost(fatal: boolean, reason: string) {
     if (this.lost) return
     this.lost = true
     clearInterval(this.pingTimer)
-    this.emit('lost', reason)
+    this.emit('lost', fatal, reason)
   }
 
   private send(message: SignalRequest['message']) {
@@ -210,7 +210,7 @@ export class LiveKitSession extends EventEmitter {
         tracks: participant.tracks.map((t) => ({ sid: t.sid, type: TrackType[t.type], source: TrackSource[t.source], muted: t.muted }))
       })
       for (const [sid, info] of this.tracks) {
-        if (info.participantSid === participant.sid && (gone || !participant.tracks.some((t) => t.sid === sid))) this.tracks.delete(sid)
+        if (info.participantSid === participant.sid && (gone || !participant.tracks.some((t) => t.sid === sid))) this.endTrack(sid)
       }
       if (gone) continue
       for (const track of participant.tracks) {
@@ -230,7 +230,7 @@ export class LiveKitSession extends EventEmitter {
         }
       }
     }
-    if (toSubscribe.length === 0 || !this.subscribe) return
+    if (toSubscribe.length === 0) return
     this.emit('event', 'subscribe', { trackSids: toSubscribe })
     this.send({ case: 'subscription', value: new UpdateSubscription({ trackSids: toSubscribe, subscribe: true }) })
   }
@@ -247,6 +247,13 @@ export class LiveKitSession extends EventEmitter {
     this.data.onopen = () => this.advertiseCodecs()
     await pub.setLocalDescription(await pub.createOffer())
     this.send({ case: 'offer', value: new SessionDescription({ type: 'offer', sdp: pub.localDescription?.sdp ?? '', id: 1 }) })
+  }
+
+  private endTrack(sid: string) {
+    const info = this.tracks.get(sid)
+    if (!info) return
+    this.tracks.delete(sid)
+    this.emit('trackEnded', info)
   }
 
   // werift leaves msid off the track (random id, no streamId), so the track sid comes from the offer by SSRC
@@ -272,7 +279,7 @@ export class LiveKitSession extends EventEmitter {
         })
         sub.connectionStateChange.subscribe((state) => {
           this.emit('event', 'subscriber-state', { state })
-          if (state === 'failed' || state === 'closed') this.markLost(`subscriber peer ${state}`)
+          if (state === 'failed' || state === 'closed') this.markLost(false, `subscriber peer ${state}`)
         })
         // Per transceiver, not sub.onTrack: LiveKit reuses a freed m-line for the next track with a new SSRC, and werift's peer-level
         // onTrack then repeats the old track (receiver.tracks[0]) while the new SSRC's packets go to a new track only the transceiver reports
@@ -283,7 +290,19 @@ export class LiveKitSession extends EventEmitter {
             this.emit('track', track, info)
           })
         )
-        this.pingTimer = setInterval(() => this.send({ case: 'pingReq', value: new Ping({ timestamp: BigInt(Date.now()) }) }), (join.pingInterval || 5) * 1000)
+        // A half-open socket never fires "close"; missing pongs are the only sign it is dead (from MusicBot 02d55fb)
+        const pingTimeout = (join.pingTimeout || 15) * 1000
+        this.lastPong = Date.now()
+        this.pingTimer = setInterval(
+          () => {
+            if (Date.now() - this.lastPong > pingTimeout) {
+              this.markLost(false, 'signal ping timeout')
+              return
+            }
+            this.send({ case: 'pingReq', value: new Ping({ timestamp: BigInt(Date.now()) }) })
+          },
+          (join.pingInterval || 5) * 1000
+        )
         this.emit('event', 'join', {
           identity: this.selfIdentity,
           subscriberPrimary: join.subscriberPrimary,
@@ -329,6 +348,10 @@ export class LiveKitSession extends EventEmitter {
         break
       case 'trackUnpublished':
         this.emit('event', 'track-unpublished', { sid: message.value.trackSid })
+        this.endTrack(message.value.trackSid)
+        break
+      case 'pongResp':
+        this.lastPong = Date.now()
         break
       case 'refreshToken':
         this.token = message.value
@@ -341,7 +364,11 @@ export class LiveKitSession extends EventEmitter {
           reason: DisconnectReason[message.value.reason],
           canReconnect: message.value.canReconnect
         })
-        this.markLost(`server leave (action ${LeaveRequest_Action[message.value.action]}, reason ${DisconnectReason[message.value.reason]})`)
+        // DISCONNECT without canReconnect: removed for good (kicked, room closed); otherwise reconnect
+        this.markLost(
+          message.value.action === LeaveRequest_Action.DISCONNECT && !message.value.canReconnect,
+          `server leave (action ${LeaveRequest_Action[message.value.action]}, reason ${DisconnectReason[message.value.reason]})`
+        )
         break
     }
   }

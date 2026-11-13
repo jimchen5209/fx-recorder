@@ -29,13 +29,16 @@ if (instances.config.discordEnabled) {
 const fluxerInstances = instances.config.fluxer.filter((instance) => instance.enabled)
 if (fluxerInstances.length > 0) {
   // Loaded only when used, so the Fluxer and LiveKit packages stay out otherwise
-  import('./Core/Fluxer/Core').then(({ Fluxer }) => {
-    for (const config of fluxerInstances) {
-      const fluxer = new Fluxer(config)
-      instances.fluxer.push(fluxer)
-      fluxer.start().catch((error) => logger.error(`Fluxer instance ${config.id} failed to start:`, error))
-    }
-  })
+  import('./Core/Fluxer/Core').then(
+    ({ Fluxer }) => {
+      for (const config of fluxerInstances) {
+        const fluxer = new Fluxer(config)
+        instances.fluxer.push(fluxer)
+        fluxer.start().catch((error) => logger.error(`Fluxer instance ${config.id} failed to start:`, error))
+      }
+    },
+    (error) => logger.error('Fluxer support failed to load (is @discordjs/opus installed?):', error)
+  )
 }
 status.set_status()
 

@@ -6,7 +6,7 @@ import { DiscordVoice } from './Core/Voice'
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
 export class Discord {
-  private client: Client
+  public readonly client: Client
   private logger: Logger<ILogObj>
   public audios: { [key: string]: DiscordVoice } = {}
 
