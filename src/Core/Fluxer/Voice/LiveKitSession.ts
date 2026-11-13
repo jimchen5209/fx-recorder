@@ -1,4 +1,4 @@
-// P0 spike: one LiveKit signaling session (the /rtc websocket) that subscribes to audio and publishes no media.
+// One LiveKit signaling session (the /rtc websocket) that subscribes to audio and publishes no media.
 // Adapted from jimchen5209/Discord-Voice-log (branch fluxer/f4-voice @ 155dd56, src/Fluxer/Voice/LiveKitSession.ts, AGPL-3.0-only),
 // itself adapted from james58899/MusicBot (branch fluxer, Component/FluxerVoice.ts, MIT, Copyright (c) 2017 鄭仁翔).
 // Receiving is new here: both references answer the subscriber offer but consume no track.
@@ -25,6 +25,7 @@ import {
 } from '@livekit/protocol'
 import { type MediaStreamTrack, RTCPeerConnection, RTCRtpCodecParameters } from 'werift'
 import WebSocket from 'ws'
+import { parseEndpoint } from '../Discovery'
 
 const STEP_TIMEOUT_MS = 20 * 1000
 
@@ -67,20 +68,6 @@ const CODEC_ADVERTISEMENT = new DataPacket({
     })
   }
 }).toBinary()
-
-// LiveKit's websocket URL for an endpoint from Voice Server Update; the path is kept (self-hosted: e.g. /livekit)
-function parseEndpoint(endpoint: string) {
-  return new URL(/^[a-z]+:\/\//i.test(endpoint) ? endpoint : `wss://${endpoint}`)
-}
-
-// A scheme-less endpoint is wss://
-export function isTlsEndpoint(endpoint: string) {
-  try {
-    return ['wss:', 'https:'].includes(parseEndpoint(endpoint).protocol)
-  } catch {
-    return false
-  }
-}
 
 function signalUrl(endpoint: string, token: string) {
   const url = parseEndpoint(endpoint)
@@ -132,7 +119,7 @@ export function parseIdentity(identity: string, metadata: string) {
  * @emits track(track: MediaStreamTrack, info: RemoteTrackInfo | undefined) - a subscribed track arrived on the subscriber peer
  * @emits lost(reason: string) - the session ended (once)
  */
-export class LiveKitReceiver extends EventEmitter {
+export class LiveKitSession extends EventEmitter {
   public lost = false
   public tokenRefreshes = 0
   public readonly tracks = new Map<string, RemoteTrackInfo>()
@@ -147,11 +134,14 @@ export class LiveKitReceiver extends EventEmitter {
   private pingTimer: NodeJS.Timeout | undefined
   private endpoint: string
   private token: string
+  // false: only joins the room, which makes the bot show up in the channel; tracks are left alone
+  private subscribe: boolean
 
-  constructor(endpoint: string, token: string) {
+  constructor(endpoint: string, token: string, subscribe = true) {
     super()
     this.endpoint = endpoint
     this.token = token
+    this.subscribe = subscribe
   }
 
   // Resolves on the join response; tracks arrive later through 'track'
@@ -240,7 +230,7 @@ export class LiveKitReceiver extends EventEmitter {
         }
       }
     }
-    if (toSubscribe.length === 0) return
+    if (toSubscribe.length === 0 || !this.subscribe) return
     this.emit('event', 'subscribe', { trackSids: toSubscribe })
     this.send({ case: 'subscription', value: new UpdateSubscription({ trackSids: toSubscribe, subscribe: true }) })
   }

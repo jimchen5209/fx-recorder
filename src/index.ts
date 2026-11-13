@@ -25,6 +25,18 @@ if (instances.config.discordEnabled) {
 } else {
   logger.info('Discord is off: no discord.token')
 }
+
+const fluxerInstances = instances.config.fluxer.filter((instance) => instance.enabled)
+if (fluxerInstances.length > 0) {
+  // Loaded only when used, so the Fluxer and LiveKit packages stay out otherwise
+  import('./Core/Fluxer/Core').then(({ Fluxer }) => {
+    for (const config of fluxerInstances) {
+      const fluxer = new Fluxer(config)
+      instances.fluxer.push(fluxer)
+      fluxer.start().catch((error) => logger.error(`Fluxer instance ${config.id} failed to start:`, error))
+    }
+  })
+}
 status.set_status()
 
 process.on('warning', (e) => {
@@ -47,6 +59,7 @@ const stop = () => {
 
   logger.info('Shutting down...')
   instances.discord?.disconnect()
+  for (const fluxer of instances.fluxer) fluxer.disconnect()
   instances.telegram?.disconnect()
   clearInterval(debugMemoryInterval)
   quitting = true

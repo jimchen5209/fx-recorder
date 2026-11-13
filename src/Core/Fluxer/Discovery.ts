@@ -1,4 +1,4 @@
-// P0 spike: copied unchanged from jimchen5209/Discord-Voice-log (branch fluxer/f4-voice @ 155dd56, src/Fluxer/Discovery.ts, AGPL-3.0-only).
+// From jimchen5209/Discord-Voice-log (branch fluxer/f4-voice @ 155dd56, src/Fluxer/Discovery.ts and Voice/LiveKitSession.ts, AGPL-3.0-only).
 // Instance discovery (GET /.well-known/fluxer) and the rule for where the bot token may go.
 // Endpoints are used as the document gives them, path included; nothing is built from the origin.
 
@@ -53,5 +53,19 @@ export async function discoverInstance(origin: string): Promise<FluxerEndpoints>
     media: typeof media === 'string' && media.startsWith('https://') ? media : undefined,
     apiCodeVersion: typeof document.api_code_version === 'number' ? document.api_code_version : 0,
     voiceEnabled: features.voice_enabled === true
+  }
+}
+
+// The voice server from Voice Server Update may be on any host: it only gets that connection's grant, never the bot token.
+// It must use TLS; a scheme-less endpoint is wss://, and the path is kept (self-hosted: e.g. /livekit).
+export function parseEndpoint(endpoint: string) {
+  return new URL(/^[a-z]+:\/\//i.test(endpoint) ? endpoint : `wss://${endpoint}`)
+}
+
+export function isTlsEndpoint(endpoint: string) {
+  try {
+    return ['wss:', 'https:'].includes(parseEndpoint(endpoint).protocol)
+  } catch {
+    return false
   }
 }

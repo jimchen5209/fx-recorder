@@ -9,8 +9,8 @@ import { join } from 'node:path'
 import { OpusEncoder } from '@discordjs/opus'
 import { Client, Events, GatewayOpcodes, Routes } from '@fluxerjs/core'
 import type { MediaStreamTrack, RtpPacket } from 'werift'
-import { discoverInstance, isTrustedEndpoint } from './Discovery'
-import { isTlsEndpoint, LiveKitReceiver, type RemoteTrackInfo } from './LiveKitReceiver'
+import { discoverInstance, isTlsEndpoint, isTrustedEndpoint } from '../Core/Fluxer/Discovery'
+import { LiveKitSession as LiveKitReceiver, type RemoteTrackInfo } from '../Core/Fluxer/Voice/LiveKitSession'
 
 const OUT_DIR = 'spike-out'
 const JOIN_TIMEOUT_MS = 20 * 1000
