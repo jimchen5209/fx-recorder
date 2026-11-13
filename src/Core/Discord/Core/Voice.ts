@@ -121,7 +121,7 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, this.client, message)
+    return Destinations.sendMessage(this.channelConfig.fileDest, this.client, `[${this.channelConfig.id}] ${message}`)
   }
 
   private sendAdminMessage(message: string) {

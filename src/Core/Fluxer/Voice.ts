@@ -301,7 +301,7 @@ export class FluxerVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, instances.discord?.client, message).catch((error) =>
+    return Destinations.sendMessage(this.channelConfig.fileDest, instances.discord?.client, `[${this.channelConfig.id}] ${message}`).catch((error) =>
       this.logger.error(`Message "${message}" failed to send:`, error)
     )
   }
