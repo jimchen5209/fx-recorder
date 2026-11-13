@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events'
 import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { TimeoutError, waitUntil } from 'async-wait-until'
@@ -21,12 +22,16 @@ const RECONNECT_ATTEMPTS = 6
 // DiscordVoice on purpose; restructure R3 merges both into one RecordingSession (plan §8).
 // Fluxer shows the bot in the channel only once it is in the LiveKit room. A lost LiveKit session is reconnected while
 // the recording goes on; the recording ends with the gateway connection (left, kicked, moved, or reconnecting failed).
-export class FluxerVoice {
+/**
+ * @emits status - the recording started or stopped
+ */
+export class FluxerVoice extends EventEmitter {
   private channelConfig: FluxerChannel
   private logger: Logger<ILogObj>
   private manager: FluxerVoiceManager
   private tracker: VoicePresenceTracker
   private selfId: () => string
+  private notifyAdmins: (message: string) => Promise<void>
   private recorder: Recorder
   private connection: FluxerVoiceConnection | undefined
   private session: LiveKitSession | undefined
@@ -45,8 +50,18 @@ export class FluxerVoice {
   // Set on shutdown: the bot's own leave is a change in the channel, which must not join again
   private stopped = false
 
-  constructor(instanceId: string, channelConfig: FluxerChannel, manager: FluxerVoiceManager, tracker: VoicePresenceTracker, selfId: () => string, logger: Logger<ILogObj>) {
+  constructor(
+    instanceId: string,
+    channelConfig: FluxerChannel,
+    manager: FluxerVoiceManager,
+    tracker: VoicePresenceTracker,
+    selfId: () => string,
+    notifyAdmins: (message: string) => Promise<void>,
+    logger: Logger<ILogObj>
+  ) {
+    super()
     this.channelConfig = channelConfig
+    this.notifyAdmins = notifyAdmins
     this.manager = manager
     this.tracker = tracker
     this.selfId = selfId
@@ -236,12 +251,14 @@ export class FluxerVoice {
     this.recorder.startStream()
     this.startSendRecord()
     this.sendMessage('Record session started')
+    this.emit('status')
   }
 
   private stopRecording() {
     if (!this._active) return
     this._active = false
     clearInterval(this.sendInterval)
+    this.emit('status')
     this.logger.info('Sending rest of recording...')
     const file = this.recorder.stop()
     this.sendRecord(file)
@@ -289,8 +306,9 @@ export class FluxerVoice {
     )
   }
 
+  // Telegram admins and the instance's Fluxer admins; Discord admins only get Discord channels' messages, as before
   private sendAdminMessage(message: string) {
-    return Destinations.sendAdminMessage(instances.discord?.client, this.logger, message)
+    return Promise.all([Destinations.sendAdminMessage(undefined, this.logger, message), this.notifyAdmins(message)])
   }
 
   private async sendRecord(file: IRecordFile) {

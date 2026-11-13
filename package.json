@@ -12,8 +12,7 @@
     "lint:unsafe": "biome check --write --unsafe",
     "biome:ci": "biome ci",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty ---inlineSourceMap false",
-    "spike:fluxer": "node dist/Spike/FluxerReceiveSpike.js"
+    "build:prod": "tsc --pretty ---inlineSourceMap false"
   },
   "description": "",
   "dependencies": {

@@ -133,5 +133,3 @@ dist
 config*.json
 Libs/LicsonMixer/build/
 temp
-spike-out/
-spike-out*/

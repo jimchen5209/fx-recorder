@@ -110,14 +110,63 @@ export class Fluxer {
     await client.channels.send(channelId, file ? { content, files: [{ name: file.name, data: readFileSync(file.path) }] } : content)
   }
 
+  // As DiscordVoice: a direct message to each admin of the instance when logErrorsToAdmin is on; one failing does not stop the others
+  public async sendAdminMessage(message: string) {
+    const client = this.client
+    if (!this.instance.logErrorsToAdmin || !client?.isReady()) return
+    for (const admin of this.instance.admins) {
+      try {
+        const user = await client.users.fetch(admin)
+        await (await user.createDM()).send(message)
+      } catch (error) {
+        this.logger.error(`Message "${message}" send to fluxer admin ${admin} failed: ${error instanceof Error ? error.message : error}`)
+      }
+    }
+  }
+
+  // As Discord: presence shows how many channels are recorded, and the bot's nickname in a guild gets 🔴 while any of its channels is
+  private updateStatus(guildId?: string) {
+    const client = this.client
+    if (!client?.isReady()) return
+    const voices = [...this.voices.values()]
+    const recording = voices.filter((voice) => voice.active).length
+    this.logger.debug(`Recording ${recording} channel${recording > 1 ? 's' : ''}`)
+    try {
+      client.user.setPresence(
+        recording > 0 ? { status: 'dnd', customStatus: { text: `Recording ${recording} channel${recording > 1 ? 's' : ''}` } } : { status: 'idle', customStatus: { text: 'Idle' } }
+      )
+    } catch (error) {
+      this.logger.warn(`Failed to update presence: ${error instanceof Error ? error.message : error}`)
+    }
+    if (!guildId) return
+    const guild = client.guilds.get(guildId)
+    if (!guild) return
+    const active = voices.some((voice) => voice.guildId === guildId && voice.active)
+    guild.members
+      .fetchMe()
+      .then((me) => me.edit({ nick: active ? `🔴 ${client.user.username}` : null }))
+      .catch((error) => this.logger.warn(`Failed to update nickname: ${error instanceof Error ? error.message : error}`))
+  }
+
   private listen(client: Client, manager: FluxerVoiceManager) {
     client.on(Events.Ready, () => {
       this.logger.info(`Logged in as ${client.user?.username} (${client.user?.id})`)
       if (this.voices.size === 0) {
         for (const channel of this.instance.channels) {
-          this.voices.set(channel.id, new FluxerVoice(this.instance.id, channel, manager, this.tracker, () => client.user?.id ?? '', this.logger))
+          const voice = new FluxerVoice(
+            this.instance.id,
+            channel,
+            manager,
+            this.tracker,
+            () => client.user?.id ?? '',
+            (message) => this.sendAdminMessage(message),
+            this.logger
+          )
+          voice.on('status', () => this.updateStatus(voice.guildId))
+          this.voices.set(channel.id, voice)
         }
       }
+      this.updateStatus()
       for (const voice of this.voices.values()) voice.update()
     })
     client.on(Events.Error, (error) => this.logger.error(error))
