@@ -155,7 +155,7 @@ export class FluxerVoice {
     })
     session.on('track', (track: MediaStreamTrack, info: RemoteTrackInfo | undefined) => this.onTrack(track, info))
     session.on('trackEnded', (info: RemoteTrackInfo) => {
-      if (info.userId && info.connectionId && info.source === 'MICROPHONE') this.recorder.endSource(info.userId, `${info.connectionId}:${info.trackSid}`)
+      if (info.userId && info.connectionId && info.source === 'MICROPHONE') this.recorder.endSource(`${info.userId}-${info.connectionId}`, `${info.connectionId}:${info.trackSid}`)
     })
     session.once('lost', (fatal: boolean, reason: string) => {
       this.logger.warn(`LiveKit session lost: ${reason}`)
@@ -183,8 +183,11 @@ export class FluxerVoice {
       this.logger.warn(`A track could not be matched to a user (${info?.identity ?? `ssrc ${track.ssrc}`}), not recorded`)
       return
     }
+    // Checked here: the Recorder only sees the per-connection name below
+    if (this.channelConfig.ignoreUsers.includes(info.userId)) return
     this.logger.info(`Receiving ${info.userId} (connection ${info.connectionId}, track ${info.trackSid})`)
-    new TrackReceiver(track, { ...info, userId: info.userId }, this.recorder, () => this._active, this.logger)
+    // Per-user files are per connection: <userId>-<connectionId>-<start>.mp3, so one person on two devices gets two files
+    new TrackReceiver(track, { ...info, userId: `${info.userId}-${info.connectionId}` }, this.recorder, () => this._active, this.logger)
   }
 
   // immediate: reconnect without waiting first (a new voice server); fatal: removed by the server, so the recording ends
