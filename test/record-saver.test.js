@@ -8,9 +8,8 @@ const fs = require('node:fs')
 const { PassThrough } = require('node:stream')
 const { spawnSync } = require('node:child_process')
 const { setTimeout: sleep } = require('node:timers/promises')
-const { stubApp, useTempCwd, hasFfmpeg, tone, channel } = require('./helpers')
+const { fakeLogger, useTempCwd, hasFfmpeg, tone, channel } = require('./helpers')
 
-stubApp()
 const skip = !hasFfmpeg && 'ffmpeg/ffprobe not installed'
 const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
 
@@ -43,7 +42,7 @@ const currentFile = (saver, user) => (user ? saver.perUser[user] : saver.mixed).
 // A saver in its own temp cwd with a mixed and a per-user mixer
 function setup(t, storageKey = 'fluxer-test-c1') {
   const tmp = useTempCwd()
-  const saver = new RecordSaver(channel({ id: 'c1', storageKey, timeZone: 'UTC' }))
+  const saver = new RecordSaver(channel({ id: 'c1', storageKey, timeZone: 'UTC' }), fakeLogger(), false)
   const mixed = fakeMixer()
   const u1 = fakeMixer()
   t.after(() => {
@@ -152,7 +151,7 @@ test('a new Recorder makes its folder and nothing else', { skip }, (t) => {
   const children = () => process._getActiveHandles().filter((handle) => handle.constructor.name === 'ChildProcess').length
   const before = children()
   const { Recorder } = require('../dist/Core/Discord/Recorder/Recorder')
-  new Recorder(channel({ storageKey: 'k' }))
+  new Recorder(channel({ storageKey: 'k' }), fakeLogger(), false)
   assert.deepEqual(fs.readdirSync('.'), ['temp'])
   assert.deepEqual(fs.readdirSync('temp'), ['k'])
   assert.equal(children(), before)
@@ -189,7 +188,7 @@ test('an encoder that cannot start fails the session end', { skip }, async (t) =
     process.env.PATH = path
     tmp.cleanup()
   })
-  const saver = new RecordSaver(channel({ timeZone: 'UTC' }))
+  const saver = new RecordSaver(channel({ timeZone: 'UTC' }), fakeLogger(), false)
   saver.setRecvMixer(mixed)
   saver.setUserMixers({})
   process.env.PATH = path

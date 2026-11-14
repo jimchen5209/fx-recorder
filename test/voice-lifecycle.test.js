@@ -49,7 +49,7 @@ function fakeDiscord(members = []) {
 }
 const connection = { stopPlaying: () => undefined }
 const fakeRecorder = () => {
-  const recorder = { periods: 0, saver: { getFilePeriod: async () => (recorder.periods++, undefined) }, stop: async () => undefined }
+  const recorder = { periods: 0, startStream: () => undefined, saver: { getFilePeriod: async () => (recorder.periods++, undefined) }, stop: async () => undefined }
   return recorder
 }
 // stop() waits on mocked timers, so time has to move while it runs
@@ -60,7 +60,7 @@ async function stopVoice(voice) {
 }
 const discordVoice = (client) => {
   const voice = new DiscordVoice(client, config, fakeLogger())
-  voice.recorder = fakeRecorder()
+  voice.recording.recorder = fakeRecorder()
   return voice
 }
 
@@ -76,11 +76,11 @@ test('DiscordVoice: stale cleanup goes on after the channel empties (a pause)', 
 
 test('DiscordVoice: starting the send timer again replaces it instead of adding a second one', async () => {
   const voice = discordVoice(fakeDiscord())
-  voice.startSendRecord()
-  voice.startSendRecord()
+  voice.recording.start()
+  voice.recording.start()
   await runFor(60 * 1000)
-  assert.equal(voice.recorder.periods, 1)
-  clearInterval(voice.sendInterval)
+  assert.equal(voice.recording.recorder.periods, 1)
+  clearInterval(voice.recording.sendInterval)
   await stopVoice(voice)
 })
 
@@ -135,10 +135,10 @@ const watch = (promise) => {
 test('DiscordVoice: shutdown waits for a segment still being sent, also when the channel is paused', async () => {
   const telegram = slowTelegram()
   const voice = new DiscordVoice(fakeDiscord(), sending, fakeLogger())
-  voice.recorder = { saver: { getFilePeriod: async () => segment }, stop: async () => undefined }
-  voice.startSendRecord()
+  voice.recording.recorder = { startStream: () => undefined, saver: { getFilePeriod: async () => segment }, stop: async () => undefined }
+  voice.recording.start()
   await runFor(60 * 1000)
-  clearInterval(voice.sendInterval)
+  clearInterval(voice.recording.sendInterval)
   assert.equal(telegram.uploads, 1)
 
   const stopped = watch(voice.stop())
@@ -156,7 +156,7 @@ test('DiscordVoice: stopping twice sends the rest once', async () => {
   client.voiceConnections = { find: () => connection }
   const voice = new DiscordVoice(client, sending, fakeLogger())
   let stops = 0
-  voice.recorder = { stop: async () => (stops++ === 0 ? segment : undefined) }
+  voice.recording.recorder = { stop: async () => (stops++ === 0 ? segment : undefined) }
   const first = voice.stop()
   const second = voice.stop()
   await runFor(1000)
@@ -171,7 +171,7 @@ test('FluxerVoice: shutdown waits for the rest of the recording that the leave s
   const conn = new EventEmitter()
   conn.leave = () => conn.emit('closed', 'left')
   const voice = new FluxerVoice('official', sending, { join: () => conn }, { usersIn: () => ['u1'] }, () => 'bot', async () => undefined, fakeLogger())
-  voice.recorder = { startStream: () => undefined, saver: {}, stop: async () => segment }
+  voice.recording.recorder = { startStream: () => undefined, saver: {}, stop: async () => segment }
   voice.join()
   voice.startRecording()
 

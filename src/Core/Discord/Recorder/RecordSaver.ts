@@ -6,7 +6,6 @@ import customParseFormat from 'dayjs/plugin/customParseFormat'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import type { ILogObj, Logger } from 'tslog'
-import { getApp } from '../../../App/App'
 import AudioUtils from '../../../Libs/audio'
 import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
 import type { RecordingChannel } from '../../Recording/Types'
@@ -57,6 +56,7 @@ export class RecordSaver {
   private channelConfig: RecordingChannel
   private userMixers?: { [key: string]: LicsonMixer }
   private logger: Logger<ILogObj>
+  private debug: boolean
 
   private mixed?: Output
   private perUser: { [user: string]: Output } = {}
@@ -64,9 +64,11 @@ export class RecordSaver {
   // Files still being written, which exists() may not see yet: a new file never takes the name of one of them
   private usedPaths = new Set<string>()
 
-  constructor(channelConfig: RecordingChannel) {
+  // mainLogger: the app's main logger; debug: config.logging.debug
+  constructor(channelConfig: RecordingChannel, mainLogger: Logger<ILogObj>, debug: boolean) {
     this.channelConfig = channelConfig
-    this.logger = getApp().mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
+    this.logger = mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
+    this.debug = debug
 
     if (exists(`temp/${this.channelConfig.storageKey}`)) rmDir(`temp/${this.channelConfig.storageKey}`, { recursive: true })
     mkDir(`temp/${this.channelConfig.storageKey}`)
@@ -78,7 +80,7 @@ export class RecordSaver {
   }
 
   private encode(mixer: LicsonMixer) {
-    return AudioUtils.generatePCMtoMP3Stream(mixer, getApp().config.logging.debug) as Mp3Stream
+    return AudioUtils.generatePCMtoMP3Stream(mixer, this.debug) as Mp3Stream
   }
 
   private now() {

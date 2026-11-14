@@ -1,9 +1,8 @@
 // Recorder routing: sources per user, ignoreUsers, endSource/endStream. RecordSaver is faked, so no FFmpeg.
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { stubApp, stubModule, channel, tone } = require('./helpers')
+const { stubModule, fakeLogger, channel, tone } = require('./helpers')
 
-stubApp()
 const saverCalls = []
 class FakeSaver {
   constructor(config) {
@@ -32,7 +31,7 @@ test.after(() => {
 
 function started(config = channel()) {
   saverCalls.length = 0
-  const recorder = new Recorder(config)
+  const recorder = new Recorder(config, fakeLogger(), false)
   recorder.startStream()
   return recorder
 }
@@ -99,7 +98,7 @@ test('two sources of one user: the file ends only with the last one', (t) => {
 
 test('the saver gets the storageKey, not the channel id', () => {
   saverCalls.length = 0
-  new Recorder(channel({ id: 'c9', storageKey: 'fluxer-official-c9' }))
+  new Recorder(channel({ id: 'c9', storageKey: 'fluxer-official-c9' }), fakeLogger(), false)
   assert.deepEqual(saverCalls[0], ['new', 'fluxer-official-c9'])
 })
 

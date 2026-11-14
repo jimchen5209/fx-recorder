@@ -1,12 +1,12 @@
 import { EventEmitter } from 'node:events'
-import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
+import { getApp } from '../../App/App'
 import type { FluxerChannel } from '../../Utils/Config'
-import { Recorder } from '../Discord/Recorder/Recorder'
 import * as Destinations from '../Output/Destinations'
+import { RecordingSession } from '../Recording/RecordingSession'
 import type { VoicePresenceTracker } from './Presence'
 import { LiveKitSession, type RemoteTrackInfo } from './Voice/LiveKitSession'
 import type { FluxerVoiceConnection, FluxerVoiceManager, VoiceGrant } from './Voice/Manager'
@@ -15,8 +15,7 @@ import { TrackReceiver } from './Voice/TrackReceiver'
 // Backoff 1 s to 30 s, about a minute in total (as VoiceLog)
 const RECONNECT_ATTEMPTS = 6
 
-// One recorded Fluxer voice channel: joins and records while someone is in it. The recording lifecycle is copied from
-// DiscordVoice on purpose; restructure R3 merges both into one RecordingSession (plan §8).
+// One recorded Fluxer voice channel: joins and records while someone is in it; RecordingSession does the recording.
 // Fluxer shows the bot in the channel only once it is in the LiveKit room. A lost LiveKit session is reconnected while
 // the recording goes on; the recording ends with the gateway connection (left, kicked, moved, or reconnecting failed).
 /**
@@ -29,7 +28,7 @@ export class FluxerVoice extends EventEmitter {
   private tracker: VoicePresenceTracker
   private selfId: () => string
   private notifyAdmins: (message: string) => Promise<void>
-  private recorder: Recorder
+  private recording: RecordingSession
   private delivery: Destinations.Delivery
   private connection: FluxerVoiceConnection | undefined
   private session: LiveKitSession | undefined
@@ -41,13 +40,9 @@ export class FluxerVoice extends EventEmitter {
   private reconnecting = false
   // The first session of a connection is being opened; a grant meanwhile must not open another
   private opening = false
-  private sendInterval: NodeJS.Timeout | undefined
-  private cleanupInterval: NodeJS.Timeout | undefined
   private _active = false
   // Set on shutdown: the bot's own leave is a change in the channel, which must not join again
   private stopped = false
-  // Segments being finished or sent, and messages on their way
-  private pending = new Set<Promise<unknown>>()
 
   constructor(
     instanceId: string,
@@ -65,11 +60,20 @@ export class FluxerVoice extends EventEmitter {
     this.tracker = tracker
     this.selfId = selfId
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
-    const storageKey = `fluxer-${instanceId}-${channelConfig.id}`
-    this.recorder = new Recorder({ ...channelConfig, storageKey })
     // Also after the session ended (DiscordVoice skips it then): the rest of a recording should not fail quietly
     this.delivery = new Destinations.Delivery(channelConfig, this.logger, (message) => this.sendAdminMessage(message))
-    this.startStaleCleanup(`temp/${storageKey}`)
+    const app = getApp()
+    this.recording = new RecordingSession(
+      // The folder name decides where its recordings go under temp/: keep it stable
+      { ...channelConfig, storageKey: `fluxer-${instanceId}-${channelConfig.id}` },
+      {
+        mainLogger: app.mainLogger,
+        logger: this.logger,
+        debug: app.config.logging.debug,
+        deliver: (file, options) => this.delivery.deliver(file, options),
+        announce: (message) => this.sendMessage(message)
+      }
+    )
   }
 
   public get guildId() {
@@ -108,23 +112,15 @@ export class FluxerVoice extends EventEmitter {
   public async stop() {
     this.stopped = true
     this.update.cancel()
-    clearInterval(this.cleanupInterval)
     if (this.connection) {
       this.logger.info('Shutting down...')
       if (this._active) {
-        this.track(this.sendMessage('Recorder shutting down.'))
-        this.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
+        this.recording.track(this.sendMessage('Recorder shutting down.'))
+        this.recording.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
       }
       this.connection.leave()
     }
-    await Promise.all(this.pending)
-  }
-
-  // Shutdown waits for it. Failures are logged where they happen; caught so they do not crash the bot, and a failed
-  // segment's files stay for stale cleanup
-  private track(work: Promise<unknown>) {
-    const tracked: Promise<unknown> = work.catch(() => undefined).finally(() => this.pending.delete(tracked))
-    this.pending.add(tracked)
+    await this.recording.close()
   }
 
   private join() {
@@ -179,7 +175,8 @@ export class FluxerVoice extends EventEmitter {
     })
     session.on('track', (track: MediaStreamTrack, info: RemoteTrackInfo | undefined) => this.onTrack(track, info))
     session.on('trackEnded', (info: RemoteTrackInfo) => {
-      if (info.userId && info.connectionId && info.source === 'MICROPHONE') this.recorder.endSource(`${info.userId}-${info.connectionId}`, `${info.connectionId}:${info.trackSid}`)
+      if (info.userId && info.connectionId && info.source === 'MICROPHONE')
+        this.recording.recorder.endSource(`${info.userId}-${info.connectionId}`, `${info.connectionId}:${info.trackSid}`)
     })
     session.once('lost', (fatal: boolean, reason: string) => {
       this.logger.warn(`LiveKit session lost: ${reason}`)
@@ -211,7 +208,7 @@ export class FluxerVoice extends EventEmitter {
     if (this.channelConfig.ignoreUsers.includes(info.userId)) return
     this.logger.info(`Receiving ${info.userId} (connection ${info.connectionId}, track ${info.trackSid})`)
     // Per-user files are per connection: <userId>-<connectionId>-<start>.mp3, so one person on two devices gets two files
-    new TrackReceiver(track, { ...info, userId: `${info.userId}-${info.connectionId}` }, this.recorder, () => this._active, this.logger)
+    new TrackReceiver(track, { ...info, userId: `${info.userId}-${info.connectionId}` }, this.recording.recorder, () => this._active, this.logger)
   }
 
   // immediate: reconnect without waiting first (a new voice server); fatal: removed by the server, so the recording ends
@@ -252,53 +249,15 @@ export class FluxerVoice extends EventEmitter {
   private startRecording() {
     if (this._active) return
     this._active = true
-    this.recorder.startStream()
-    this.startSendRecord()
-    this.sendMessage('Record session started')
+    this.recording.start()
     this.emit('status')
   }
 
   private stopRecording() {
     if (!this._active) return
     this._active = false
-    clearInterval(this.sendInterval)
     this.emit('status')
-    this.logger.info('Sending rest of recording...')
-    this.track(
-      this.recorder
-        .stop()
-        // The last segment stays on disk after it is sent, as before
-        .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
-        .then(() => this.sendMessage('The record session has ended.'))
-    )
-  }
-
-  private startSendRecord() {
-    clearInterval(this.sendInterval)
-    this.sendInterval = setInterval(() => {
-      this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.delivery.deliver(file)))
-    }, this.channelConfig.sendIntervalSecond * 1000)
-  }
-
-  private startStaleCleanup(dir: string) {
-    const maxAge = 24 * 60 * 60 * 1000 // 24 hours
-    this.cleanupInterval = setInterval(
-      () => {
-        try {
-          for (const f of readdirSync(dir)) {
-            if (!f.endsWith('.mp3')) continue
-            const p = `${dir}/${f}`
-            if (Date.now() - statSync(p).mtimeMs > maxAge) {
-              unlinkSync(p)
-              this.logger.warn(`Cleaned up stale recording: ${f}`)
-            }
-          }
-        } catch {
-          // temp dir may not exist yet
-        }
-      },
-      60 * 60 * 1000
-    )
+    this.recording.stop()
   }
 
   private sendMessage(message: string) {

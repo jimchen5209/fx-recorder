@@ -1,5 +1,4 @@
 import type { ILogObj, Logger } from 'tslog'
-import { getApp } from '../../../App/App'
 import AbortStream from '../../../Libs/abort'
 import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
 import type { RecordingChannel } from '../../Recording/Types'
@@ -16,11 +15,12 @@ export class Recorder {
   // Sources each user still has open; the user's file ends with the last one (see endSource)
   private userSources: { [user: string]: Set<string> } = {}
 
-  constructor(channelConfig: RecordingChannel) {
+  // mainLogger: the app's main logger; debug: config.logging.debug
+  constructor(channelConfig: RecordingChannel, mainLogger: Logger<ILogObj>, debug: boolean) {
     this.channelConfig = channelConfig
-    this.logger = getApp().mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
+    this.logger = mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
 
-    this._saver = new RecordSaver(channelConfig)
+    this._saver = new RecordSaver(channelConfig, mainLogger, debug)
   }
   // sourceId tells apart one user's streams (Fluxer: one per connection and track); Discord has one per user
   public storeBuffer(data: Buffer, user: string, sourceId = user) {
