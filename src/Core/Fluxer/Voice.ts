@@ -260,10 +260,11 @@ export class FluxerVoice extends EventEmitter {
     clearInterval(this.sendInterval)
     this.emit('status')
     this.logger.info('Sending rest of recording...')
-    const file = this.recorder.stop()
-    this.sendRecord(file)
+    this.recorder
+      .stop()
+      .then((file) => file && this.sendRecord(file))
       .then(() => this.sendMessage('The record session has ended.'))
-      // Logged in sendRecord; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
+      // Logged where it failed; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
       .catch(() => undefined)
       .finally(() => {
         if (!this._active) this.readyToDelete = true
@@ -272,9 +273,9 @@ export class FluxerVoice extends EventEmitter {
 
   private startSendRecord() {
     this.sendInterval = setInterval(() => {
-      const file = this.recorder.saver.getFilePeriod()
-      this.sendRecord(file)
-        .then(() => this.recorder.saver.removeRecordFile(file.start))
+      this.recorder.saver
+        .getFilePeriod()
+        .then((file) => file && this.sendRecord(file).then(() => this.recorder.saver.removeRecordFile(file)))
         .catch(() => undefined)
     }, this.channelConfig.sendIntervalSecond * 1000)
   }

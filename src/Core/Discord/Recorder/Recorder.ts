@@ -99,13 +99,8 @@ export class Recorder {
 
   public stop() {
     this.logger.info('Stop recording and saving file')
+    // Every mixer stops before the session ends, so each encoder flushes into the last segment
     this.recvMixer?.stop()
-
-    const restFiles = this._saver.endSession()
-
-    this.recvMixer = undefined
-    this.userSources = {}
-
     if (this.userMixers) {
       for (const key of Object.keys(this.userMixers)) {
         if (!this.userMixers[key]) continue
@@ -114,6 +109,11 @@ export class Recorder {
       }
       this.userMixers = undefined
     }
+
+    const restFiles = this._saver.endSession()
+
+    this.recvMixer = undefined
+    this.userSources = {}
 
     return restFiles
   }

@@ -1,4 +1,5 @@
-// RecordSaver with the real FFmpeg encoder: files under temp/<storageKey>, rotation, per-user files, decodable output.
+// RecordSaver with the real FFmpeg encoder: files under temp/<storageKey>, rotation, per-user files, decodable output,
+// segments handed over only when complete, name collisions, and failures that must not count as a finished segment.
 // The mixers are PassThroughs fed at once (the real mixer paces on Date.now), so this takes seconds, not minutes.
 // Skipped without ffmpeg/ffprobe.
 const test = require('node:test')
@@ -11,6 +12,7 @@ const { stubInstances, useTempCwd, hasFfmpeg, tone, channel } = require('./helpe
 
 stubInstances()
 const skip = !hasFfmpeg && 'ffmpeg/ffprobe not installed'
+const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
 
 const durationOf = (file) => Number(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file]).stdout.toString()) || 0
 function peakOf(file) {
@@ -36,17 +38,17 @@ function fakeMixer() {
   mixer.getSources = () => [{}]
   return mixer
 }
+const currentFile = (saver, user) => (user ? saver.perUser[user] : saver.mixed).file.path
 
-// One session: 30 s of PCM, rotate, 30 s more, end. Returns both segments and the saver.
-async function session(t) {
+// A saver in its own temp cwd with a mixed and a per-user mixer
+function setup(t, storageKey = 'fluxer-test-c1') {
   const tmp = useTempCwd()
-  const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
-  const saver = new RecordSaver(channel({ id: 'c1', storageKey: 'fluxer-test-c1', timeZone: 'UTC' }))
+  const saver = new RecordSaver(channel({ id: 'c1', storageKey, timeZone: 'UTC' }))
   const mixed = fakeMixer()
   const u1 = fakeMixer()
   t.after(() => {
-    // Leftover encoders whose stdout nobody reads any more would keep the test alive (see the short-session test)
-    for (const stream of [saver.mp3Stream, ...Object.values(saver.perUserMp3Stream)]) stream?.resume()
+    mixed.end()
+    u1.end()
     tmp.cleanup()
   })
   saver.setRecvMixer(mixed)
@@ -56,25 +58,26 @@ async function session(t) {
     mixed.write(tone(seconds * 1000, { channels: 'left' }))
     u1.write(tone(seconds * 1000, { channels: 'left' }))
   }
-
-  feed(30)
-  await settled(`temp/fluxer-test-c1/${saver.mp3Start}.mp3`)
-  // The visible name has one-second resolution: wait so the next segment gets its own
-  await sleep(1100)
-  const first = saver.getFilePeriod()
-  feed(30)
-  await settled(`temp/fluxer-test-c1/${first.start}.mp3`)
-  await sleep(1100)
-  const last = saver.endSession()
-  // As Recorder.stop: the mixers end after the session
-  mixed.end()
-  u1.end()
-  await sleep(1500)
-  return { saver, first, last }
+  // As Recorder.stop: the mixers end, then the session
+  const stop = () => {
+    mixed.end()
+    u1.end()
+    return saver.endSession()
+  }
+  return { saver, feed, stop }
 }
 
 test('rotation writes decodable mixed and per-user files under temp/<storageKey>', { skip }, async (t) => {
-  const { saver, first, last } = await session(t)
+  const { saver, feed, stop } = setup(t)
+  assert.ok(fs.existsSync('temp/fluxer-test-c1'), 'saver makes temp/<storageKey>')
+  feed(30)
+  await settled(currentFile(saver))
+  // The visible name has one-second resolution: wait so the next segment gets its own
+  await sleep(1100)
+  const first = await saver.getFilePeriod()
+  feed(30)
+  await sleep(1100)
+  const last = await stop()
 
   assert.notEqual(first.start, last.start)
   assert.match(first.start, /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}$/)
@@ -85,59 +88,84 @@ test('rotation writes decodable mixed and per-user files under temp/<storageKey>
     ['#DateN', '#TimeN', '#YearN']
   )
   assert.deepEqual(first.perUserFiles, [{ user: 'u1', audioFilePath: `temp/fluxer-test-c1/u1-${first.start}.mp3`, audioFileName: `u1-${first.start}.mp3`, tag: '#Useru1' }])
+  assert.ok(Object.isFrozen(first) && Object.isFrozen(first.perUserFiles), 'a handed-over segment cannot be changed')
 
-  assert.ok(durationOf(first.audioFilePath) > 1, 'first segment has audio')
   assert.ok(peakOf(first.audioFilePath) > 2000, 'first segment has the tone')
   assert.ok(peakOf(first.perUserFiles[0].audioFilePath) > 2000, 'per-user file has the tone')
-  assert.ok(durationOf(last.audioFilePath) > 1, 'last segment has audio')
+  // Nothing fed is lost across the cut or at the end
+  const total = durationOf(first.audioFilePath) + durationOf(last.audioFilePath)
+  assert.ok(total > 59.5 && total < 61, `mixed: ${total.toFixed(2)} s of 60 s`)
 
-  saver.removeRecordFile(first.start)
+  saver.removeRecordFile(first)
   assert.ok(!fs.existsSync(first.audioFilePath))
   assert.ok(!fs.existsSync(first.perUserFiles[0].audioFilePath))
   assert.ok(fs.existsSync(last.audioFilePath), 'removing one segment leaves the other')
 })
 
-// Fails for now: endSession returns the file while its writer is still open, so a caller can send a partial file
-test('endSession returns a fully written segment', { skip, todo: true }, async (t) => {
-  const tmp = useTempCwd()
-  const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
-  const saver = new RecordSaver(channel({ timeZone: 'UTC' }))
-  const mixed = fakeMixer()
-  t.after(() => {
-    saver.mp3Stream?.resume()
-    tmp.cleanup()
-  })
-  saver.setRecvMixer(mixed)
-  saver.setUserMixers({})
-  saver.startSession()
-  mixed.write(tone(10 * 1000))
-  await sleep(1000)
-  const writer = saver.writeStream
-  saver.endSession()
-  mixed.end()
-  assert.ok(writer.writableFinished, 'writer finished when the segment is handed over')
+test('endSession resolves only when the last segment is fully written', { skip }, async (t) => {
+  const { feed, stop } = setup(t)
+  feed(10)
+  const last = await stop()
+  const size = fs.statSync(last.audioFilePath).size
+  await sleep(500)
+  assert.equal(fs.statSync(last.audioFilePath).size, size, 'nothing written after it resolved')
+  assert.ok(Math.abs(durationOf(last.audioFilePath) - 10) < 0.5)
 })
 
-// Fails for now: FFmpeg reads about 5 s of input (analyzeduration) before it outputs anything. A shorter session ends
-// with its audio still inside FFmpeg; endSession has unpiped stdout by then, so the file stays empty.
-test('a 3 s session keeps its audio', { skip, todo: true }, async (t) => {
-  const tmp = useTempCwd()
-  const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
-  const saver = new RecordSaver(channel({ timeZone: 'UTC' }))
-  const mixed = fakeMixer()
-  t.after(() => {
-    saver.mp3Stream?.resume()
-    tmp.cleanup()
-  })
-  saver.setRecvMixer(mixed)
-  saver.setUserMixers({})
-  saver.startSession()
-  mixed.write(tone(3 * 1000))
-  await sleep(1000)
-  const last = saver.endSession()
-  mixed.end()
-  await sleep(1500)
-  assert.ok(durationOf(last.audioFilePath) > 2.5, `got ${fs.statSync(last.audioFilePath).size} bytes`)
+// FFmpeg reads about 5 s of input before it outputs anything; a shorter session still keeps its audio
+test('a 3 s session keeps its audio', { skip }, async (t) => {
+  const { feed, stop } = setup(t)
+  feed(3)
+  const last = await stop()
+  assert.ok(Math.abs(durationOf(last.audioFilePath) - 3) < 0.5, `got ${durationOf(last.audioFilePath)} s`)
+  assert.ok(peakOf(last.perUserFiles[0].audioFilePath) > 2000)
 })
 
-test('two rotations in the same second do not overwrite or delete the other segment', { todo: 'not written yet' })
+test('a second endSession or a rotation without a session resolves to nothing', { skip }, async (t) => {
+  const { saver, stop } = setup(t)
+  await stop()
+  assert.equal(await saver.endSession(), undefined)
+  assert.equal(await saver.getFilePeriod(), undefined)
+})
+
+test('two rotations in the same second do not overwrite or delete the other segment', { skip }, async (t) => {
+  const { saver, feed, stop } = setup(t)
+  feed(6)
+  const [a, b] = await Promise.all([saver.getFilePeriod(), saver.getFilePeriod()])
+  const c = await stop()
+  const paths = [a, b, c].flatMap((file) => [file.audioFilePath, ...file.perUserFiles.map((f) => f.audioFilePath)])
+  assert.equal(new Set(paths).size, paths.length, `distinct files: ${paths.join(', ')}`)
+  if (a.start === b.start) assert.equal(b.audioFileName, `${b.start}-2.mp3`)
+  saver.removeRecordFile(b)
+  assert.ok(fs.existsSync(a.audioFilePath) && fs.existsSync(c.audioFilePath))
+  assert.ok(!fs.existsSync(b.audioFilePath))
+})
+
+test('a file that cannot be written fails its segment instead of handing it over', { skip }, async (t) => {
+  const { saver, feed, stop } = setup(t)
+  feed(1)
+  await sleep(300) // the first segment's files are open by now
+  // The files of the segment the rotation opens cannot be created
+  fs.rmSync('temp/fluxer-test-c1', { recursive: true })
+  assert.ok(await saver.getFilePeriod(), 'the segment opened before is handed over')
+  feed(1)
+  await assert.rejects(stop(), { code: 'ENOENT' })
+})
+
+test('an encoder that cannot start fails the session end', { skip }, async (t) => {
+  const tmp = useTempCwd()
+  const path = process.env.PATH
+  process.env.PATH = tmp.dir // no ffmpeg here
+  const mixed = fakeMixer()
+  t.after(() => {
+    process.env.PATH = path
+    tmp.cleanup()
+  })
+  const saver = new RecordSaver(channel({ timeZone: 'UTC' }))
+  saver.setRecvMixer(mixed)
+  saver.setUserMixers({})
+  process.env.PATH = path
+  saver.startSession()
+  mixed.end()
+  await assert.rejects(saver.endSession(), /ENOENT/)
+})

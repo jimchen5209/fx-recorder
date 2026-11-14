@@ -39,7 +39,7 @@ function telegram(fail) {
     sendMessage: async (_id, text) => messages.push(text)
   }
 }
-const recorder = { saver: { getFilePeriod: () => file, removeRecordFile: (start) => removed.push(start) }, stop: () => file }
+const recorder = { saver: { getFilePeriod: async () => file, removeRecordFile: (segment) => removed.push(segment.start) }, stop: async () => file }
 
 // Moves mocked time on a second at a time, letting promises settle in between
 async function runFor(ms) {

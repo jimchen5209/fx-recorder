@@ -57,7 +57,17 @@ function generatePCMtoMP3Stream(stream, debug) {
     // }
 
     stream.pipe(outputStream.stdin);
-    stream.on('close', () => outputStream.kill("SIGINT"))
+    // Ends the input instead of killing FFmpeg, so it still flushes what it holds to stdout
+    stream.on('close', () => outputStream.stdin.end())
+
+    // stdout.done: resolves when FFmpeg exits cleanly, rejects when it fails or cannot start
+    const done = new Promise((resolve, reject) => {
+        outputStream.on('error', reject);
+        outputStream.stdin.on('error', reject);
+        outputStream.on('close', (code, signal) => code === 0 ? resolve() : reject(new Error(`FFmpeg exited with ${signal ?? code}`)));
+    });
+    done.catch(() => undefined); // awaited by the caller when it needs to know
+    outputStream.stdout.done = done;
 
     return (outputStream.stdout);
 }
