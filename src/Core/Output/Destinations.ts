@@ -1,11 +1,11 @@
 import { readFileSync as readFile } from 'node:fs'
 import type { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../../App/App'
 import type { FileDestination } from '../../Utils/Config'
-import { instances } from '../../Utils/Instances'
 import type { IRecordFile, IUserRecordFile } from '../Discord/Recorder/RecordSaver'
 
-// Delivery to a channel's fileDest, moved out of DiscordVoice as it was, known defects included (plan §8: S1/S4 fix them).
+// Delivery to a channel's fileDest. A destination that partly succeeded is sent again on retry (resending is not fixed yet).
 // discord: the Discord client for discord destinations and admins; without it they are skipped.
 
 // The channel id comes first, so recordings of several channels sent to one place can be told apart
@@ -17,15 +17,15 @@ function recordCaption(channelId: string, file: IRecordFile, userFile?: IUserRec
 
 // A fluxer destination goes through the running instance it names
 async function sendToFluxer(dest: FileDestination, content: string, file?: { name: string; path: string }) {
-  const fluxer = instances.fluxer.find((instance) => instance.instance.id === dest.instance)
+  const fluxer = getApp().fluxer.find((instance) => instance.instance.id === dest.instance)
   if (!fluxer) throw new Error(`Fluxer instance ${dest.instance} is not running`)
   await fluxer.send(dest.id, content, file)
 }
 
 export async function sendMessage(fileDest: FileDestination[], discord: Client | undefined, message: string) {
   for (const element of fileDest) {
-    if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
-      await instances.telegram.sendMessage(element.id, message)
+    if (element.type === 'telegram' && element.id !== '' && getApp().telegram) {
+      await getApp().telegram.sendMessage(element.id, message)
     }
     if (element.type === 'discord' && element.id !== '' && discord) {
       await discord.createMessage(element.id, message)
@@ -33,15 +33,15 @@ export async function sendMessage(fileDest: FileDestination[], discord: Client |
     // Logged, not thrown: callers send messages without waiting, and a throw there would crash the bot
     if (element.type === 'fluxer' && element.id !== '') {
       await sendToFluxer(element, message).catch((error) =>
-        instances.mainLogger.error(`Message to fluxer ${element.instance}/${element.id} failed: ${error instanceof Error ? error.message : error}`)
+        getApp().mainLogger.error(`Message to fluxer ${element.instance}/${element.id} failed: ${error instanceof Error ? error.message : error}`)
       )
     }
   }
 }
 
 export async function sendAdminMessage(discord: Client | undefined, logger: Logger<ILogObj>, message: string) {
-  if (instances.config.discord.logErrorsToAdmin && discord) {
-    for (const admin of instances.config.discord.admins) {
+  if (getApp().config.discord.logErrorsToAdmin && discord) {
+    for (const admin of getApp().config.discord.admins) {
       try {
         const dmChannel = await discord.getDMChannel(admin)
         await discord.createMessage(dmChannel.id, message)
@@ -52,10 +52,10 @@ export async function sendAdminMessage(discord: Client | undefined, logger: Logg
       }
     }
   }
-  if (instances.config.telegram.logErrorsToAdmin && instances.telegram) {
-    for (const admin of instances.config.telegram.admins) {
+  if (getApp().config.telegram.logErrorsToAdmin && getApp().telegram) {
+    for (const admin of getApp().config.telegram.admins) {
       try {
-        await instances.telegram.sendMessage(admin, message, true)
+        await getApp().telegram.sendMessage(admin, message, true)
       } catch (error) {
         if (error instanceof Error) {
           logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error)
@@ -70,17 +70,17 @@ export async function sendAdminMessage(discord: Client | undefined, logger: Logg
 export async function sendRecord(fileDest: FileDestination[], discord: Client | undefined, logger: Logger<ILogObj>, channelId: string, file: IRecordFile) {
   let fluxerError: unknown
   for (const element of fileDest) {
-    if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
+    if (element.type === 'telegram' && element.id !== '' && getApp().telegram) {
       if (element.sendAll) {
         logger.info(`Sending ${file.audioFileName} of ${channelId} to telegram ${element.id}`)
         const caption = recordCaption(channelId, file)
-        await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
+        await getApp().telegram.sendAudio(element.id, file.audioFilePath, caption)
       }
       if (element.sendPerUser) {
         for (const userFile of file.perUserFiles) {
           logger.info(`Sending ${userFile.audioFileName} of ${channelId} to telegram ${element.id}`)
           const caption = recordCaption(channelId, file, userFile)
-          await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
+          await getApp().telegram.sendAudio(element.id, userFile.audioFilePath, caption)
         }
       }
     }

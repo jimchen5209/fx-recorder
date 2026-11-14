@@ -6,9 +6,9 @@ import customParseFormat from 'dayjs/plugin/customParseFormat'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../../../App/App'
 import AudioUtils from '../../../Libs/audio'
 import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
-import { instances } from '../../../Utils/Instances'
 import type { RecordingChannel } from '../../Recording/Types'
 
 export interface IUserRecordFile {
@@ -66,7 +66,7 @@ export class RecordSaver {
 
   constructor(channelConfig: RecordingChannel) {
     this.channelConfig = channelConfig
-    this.logger = instances.mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
+    this.logger = getApp().mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
 
     if (exists(`temp/${this.channelConfig.storageKey}`)) rmDir(`temp/${this.channelConfig.storageKey}`, { recursive: true })
     mkDir(`temp/${this.channelConfig.storageKey}`)
@@ -78,7 +78,7 @@ export class RecordSaver {
   }
 
   private encode(mixer: LicsonMixer) {
-    return AudioUtils.generatePCMtoMP3Stream(mixer, instances.config.logging.debug) as Mp3Stream
+    return AudioUtils.generatePCMtoMP3Stream(mixer, getApp().config.logging.debug) as Mp3Stream
   }
 
   private now() {

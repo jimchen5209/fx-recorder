@@ -1,7 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api'
 import type { ILogObj, Logger } from 'tslog'
-
-import { instances } from '../../Utils/Instances'
+import type { TelegramConfig } from '../../Utils/Config'
 
 const ERR_MISSING_TOKEN = Error('Telegram bot api token not found!')
 
@@ -9,12 +8,13 @@ export class Telegram {
   private bot: TelegramBot
   private logger: Logger<ILogObj>
 
-  constructor() {
-    this.logger = instances.mainLogger.getSubLogger({ name: 'Telegram' })
+  // Made in createApp(), before getApp() works
+  constructor(config: TelegramConfig, mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Telegram' })
 
-    if (instances.config.telegram.token === '') throw ERR_MISSING_TOKEN
+    if (config.token === '') throw ERR_MISSING_TOKEN
 
-    this.bot = new TelegramBot(instances.config.telegram.token, { baseApiUrl: instances.config.telegram.baseApiUrl })
+    this.bot = new TelegramBot(config.token, { baseApiUrl: config.baseApiUrl })
 
     // biome-ignore lint/style/useNamingConvention: Package Specific Format
     this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_parameters: { message_id: msg.message_id } }))

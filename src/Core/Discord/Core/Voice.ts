@@ -4,9 +4,9 @@ import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection 
 import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../../../App/App'
 import type { DiscordChannel } from '../../../Utils/Config'
 import { FailSafe } from '../../../Utils/FailSafe'
-import { instances } from '../../../Utils/Instances'
 import { MessageQueue } from '../../../Utils/MessageQueue'
 import * as Destinations from '../../Output/Destinations'
 import { Recorder } from '../Recorder/Recorder'
@@ -200,7 +200,7 @@ export class DiscordVoice extends EventEmitter {
     if (this.reconnectFailSafe.checkHitExceed()) {
       this.logger.error(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
       if (this._active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
-      instances.discord?.disconnect(true)
+      getApp().discord?.disconnect(true)
     }
     setTimeout(() => {
       this.startAudioSession(channelID)
@@ -225,7 +225,7 @@ export class DiscordVoice extends EventEmitter {
           this.tryReconnect(channelID, connection)
         }
       })
-      if (instances.config.logging.debug) {
+      if (getApp().config.logging.debug) {
         connection.on('debug', (message) => this.logger.debug(message))
       }
       connection.on('ready', () => {

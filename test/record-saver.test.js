@@ -8,9 +8,9 @@ const fs = require('node:fs')
 const { PassThrough } = require('node:stream')
 const { spawnSync } = require('node:child_process')
 const { setTimeout: sleep } = require('node:timers/promises')
-const { stubInstances, useTempCwd, hasFfmpeg, tone, channel } = require('./helpers')
+const { stubApp, useTempCwd, hasFfmpeg, tone, channel } = require('./helpers')
 
-stubInstances()
+stubApp()
 const skip = !hasFfmpeg && 'ffmpeg/ffprobe not installed'
 const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
 
@@ -150,6 +150,19 @@ test('a file that cannot be written fails its segment instead of handing it over
   assert.ok(await saver.getFilePeriod(), 'the segment opened before is handed over')
   feed(1)
   await assert.rejects(stop(), { code: 'ENOENT' })
+})
+
+// Making a Recorder starts nothing: FFmpeg only runs once a session starts
+test('a new Recorder makes its folder and nothing else', { skip }, (t) => {
+  const tmp = useTempCwd()
+  t.after(() => tmp.cleanup())
+  const children = () => process._getActiveHandles().filter((handle) => handle.constructor.name === 'ChildProcess').length
+  const before = children()
+  const { Recorder } = require('../dist/Core/Discord/Recorder/Recorder')
+  new Recorder(channel({ storageKey: 'k' }))
+  assert.deepEqual(fs.readdirSync('.'), ['temp'])
+  assert.deepEqual(fs.readdirSync('temp'), ['k'])
+  assert.equal(children(), before)
 })
 
 test('an encoder that cannot start fails the session end', { skip }, async (t) => {

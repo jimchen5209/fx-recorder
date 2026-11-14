@@ -1,9 +1,9 @@
 // Recorder routing: sources per user, ignoreUsers, endSource/endStream. RecordSaver is faked, so no FFmpeg.
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { stubInstances, stubModule, channel, tone } = require('./helpers')
+const { stubApp, stubModule, channel, tone } = require('./helpers')
 
-stubInstances()
+stubApp()
 const saverCalls = []
 class FakeSaver {
   constructor(config) {

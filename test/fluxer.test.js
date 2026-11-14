@@ -2,9 +2,8 @@
 // No network: TrackReceiver gets a fake track fed with Opus packets encoded here from a synthetic tone.
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { stubInstances, fakeLogger, tone } = require('./helpers')
+const { fakeLogger, tone } = require('./helpers')
 
-stubInstances()
 const { VoicePresenceTracker } = require('../dist/Core/Fluxer/Presence')
 const { isTrustedEndpoint } = require('../dist/Core/Fluxer/Discovery')
 const { parseIdentity } = require('../dist/Core/Fluxer/Voice/LiveKitSession')

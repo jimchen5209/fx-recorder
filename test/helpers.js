@@ -1,5 +1,5 @@
-// Shared setup for the offline tests. They run against dist/ (pnpm build first) and never load the real
-// Utils/Instances: it reads config.json at import time and may call process.exit.
+// Shared setup for the offline tests. They run against dist/ (pnpm build first) and never call the real createApp():
+// it reads config.json and may call process.exit.
 const path = require('node:path')
 const fs = require('node:fs')
 const os = require('node:os')
@@ -14,10 +14,11 @@ function fakeLogger(records = []) {
   return logger
 }
 
-// Puts a fake instances module in require.cache before anything under dist/ requires it; returns the object to tweak per test
-function stubInstances(overrides = {}) {
-  const file = path.join(dist, 'Utils', 'Instances.js')
-  const instances = {
+// Puts a fake App/App module in require.cache before anything under dist/ requires it, so getApp() returns a fake app;
+// returns that app to tweak per test
+function stubApp(overrides = {}) {
+  const file = path.join(dist, 'App', 'App.js')
+  const app = {
     mainLogger: fakeLogger(),
     config: {
       logging: { debug: false, raw: false },
@@ -30,8 +31,8 @@ function stubInstances(overrides = {}) {
     telegram: undefined,
     ...overrides
   }
-  require.cache[file] = { id: file, filename: file, loaded: true, exports: { instances } }
-  return instances
+  require.cache[file] = { id: file, filename: file, loaded: true, exports: { getApp: () => app } }
+  return app
 }
 
 // Replaces a dist module with fake exports, so modules that require it later get the fake
@@ -73,4 +74,4 @@ function channel(overrides = {}) {
   return { id: 'chan1', storageKey: 'chan1', fileDest: [], timeZone: 'Asia/Taipei', sendIntervalSecond: 60, ignoreUsers: [], ...overrides }
 }
 
-module.exports = { dist, noop, fakeLogger, stubInstances, stubModule, useTempCwd, hasFfmpeg, tone, channel }
+module.exports = { dist, noop, fakeLogger, stubApp, stubModule, useTempCwd, hasFfmpeg, tone, channel }

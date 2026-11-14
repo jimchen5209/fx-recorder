@@ -5,8 +5,8 @@ import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
+import { getApp } from '../../App/App'
 import type { FluxerChannel } from '../../Utils/Config'
-import { instances } from '../../Utils/Instances'
 import { Recorder } from '../Discord/Recorder/Recorder'
 import type { IRecordFile } from '../Discord/Recorder/RecordSaver'
 import * as Destinations from '../Output/Destinations'
@@ -302,7 +302,7 @@ export class FluxerVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, instances.discord?.client, `[${this.channelConfig.id}] ${message}`).catch((error) =>
+    return Destinations.sendMessage(this.channelConfig.fileDest, getApp().discord?.client, `[${this.channelConfig.id}] ${message}`).catch((error) =>
       this.logger.error(`Message "${message}" failed to send:`, error)
     )
   }
@@ -316,7 +316,7 @@ export class FluxerVoice extends EventEmitter {
     const maxRetries = 3
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        await Destinations.sendRecord(this.channelConfig.fileDest, instances.discord?.client, this.logger, this.channelConfig.id, file)
+        await Destinations.sendRecord(this.channelConfig.fileDest, getApp().discord?.client, this.logger, this.channelConfig.id, file)
         return // success
       } catch (error) {
         this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)

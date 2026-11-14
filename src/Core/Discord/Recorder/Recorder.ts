@@ -1,7 +1,7 @@
 import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../../../App/App'
 import AbortStream from '../../../Libs/abort'
 import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
-import { instances } from '../../../Utils/Instances'
 import type { RecordingChannel } from '../../Recording/Types'
 import { RecordSaver } from './RecordSaver'
 
@@ -18,7 +18,7 @@ export class Recorder {
 
   constructor(channelConfig: RecordingChannel) {
     this.channelConfig = channelConfig
-    this.logger = instances.mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
+    this.logger = getApp().mainLogger.getSubLogger({ name: 'Recorder', prefix: [`[${channelConfig.id}]`] })
 
     this._saver = new RecordSaver(channelConfig)
   }

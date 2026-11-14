@@ -3,9 +3,9 @@
 // The voice objects skip their constructors (no client, no voice connection); timers are mocked.
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { stubInstances, fakeLogger, channel } = require('./helpers')
+const { stubApp, fakeLogger, channel } = require('./helpers')
 
-const instances = stubInstances()
+const app = stubApp()
 const { DiscordVoice } = require('../dist/Core/Discord/Core/Voice')
 const { FluxerVoice } = require('../dist/Core/Fluxer/Voice')
 
@@ -31,7 +31,7 @@ test.afterEach(() => {
 })
 
 function telegram(fail) {
-  instances.telegram = {
+  app.telegram = {
     sendAudio: async () => {
       uploads++
       if (fail) throw new Error('telegram down')

@@ -1,6 +1,6 @@
 import { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../../Utils/Instances'
+import type { DiscordConfig } from '../../Utils/Config'
 import { DiscordVoice } from './Core/Voice'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
@@ -10,12 +10,13 @@ export class Discord {
   private logger: Logger<ILogObj>
   public audios: { [key: string]: DiscordVoice } = {}
 
-  constructor() {
-    this.logger = instances.mainLogger.getSubLogger({ name: 'Discord' })
+  // Made in createApp(), before getApp() works
+  constructor(config: DiscordConfig, mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Discord' })
 
-    if (instances.config.discord.token === '') throw ERR_MISSING_TOKEN
+    if (config.token === '') throw ERR_MISSING_TOKEN
 
-    this.client = new Client(instances.config.discord.token, {
+    this.client = new Client(config.token, {
       restMode: true,
       gateway: { intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
     })
@@ -49,7 +50,7 @@ export class Discord {
 
       this.updateStatus()
 
-      instances.config.discord.channels.forEach((channel) => {
+      config.channels.forEach((channel) => {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
         this.audios[channel.id].on('status', () => this.updateStatus())
       })

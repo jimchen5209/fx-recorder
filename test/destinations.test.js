@@ -1,12 +1,11 @@
 // Output/Destinations with fake Telegram, Discord and Fluxer clients: captions, order, sendAll/perUser, failure paths.
-// Tests marked todo describe how the code should behave and fail for now.
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
-const { stubInstances, fakeLogger, useTempCwd } = require('./helpers')
+const { stubApp, fakeLogger, useTempCwd } = require('./helpers')
 
-const instances = stubInstances()
+const app = stubApp()
 const Destinations = require('../dist/Core/Output/Destinations')
 
 let calls
@@ -44,8 +43,8 @@ test.beforeEach(() => {
   tmp = useTempCwd()
   fs.writeFileSync('temp/a.mp3', 'mixed')
   fs.writeFileSync('temp/u1-a.mp3', 'u1')
-  instances.telegram = fakeTelegram()
-  instances.fluxer = []
+  app.telegram = fakeTelegram()
+  app.fluxer = []
 })
 test.afterEach(() => tmp.cleanup())
 
@@ -67,7 +66,7 @@ test('sendRecord: destinations in config order, mixed before per-user, exact cap
     { type: 'fluxer', id: 'f1', instance: 'official', sendAll: false, sendPerUser: true },
     { type: 'telegram', id: '', sendAll: true, sendPerUser: true }
   ]
-  instances.fluxer = [fakeFluxer('official')]
+  app.fluxer = [fakeFluxer('official')]
   await Destinations.sendRecord(dests, fakeDiscord(), fakeLogger(), 'c1', file)
   assert.deepEqual(calls, [
     ['telegram.audio', 't1', 'a.mp3', caption],
@@ -100,7 +99,7 @@ test('sendRecord: a fluxer failure (or a missing instance) does not hold back la
     { type: 'fluxer', id: 'f2', instance: 'gone', sendAll: true, sendPerUser: false },
     { type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }
   ]
-  instances.fluxer = [fakeFluxer('official', { fail: true })]
+  app.fluxer = [fakeFluxer('official', { fail: true })]
   await assert.rejects(Destinations.sendRecord(dests, undefined, fakeLogger(), 'c1', file), /fluxer down/)
   assert.deepEqual(
     calls.map((c) => c[0]),
@@ -118,19 +117,19 @@ function realTelegram(sendAudio) {
 }
 
 test('a failed Telegram upload rejects sendRecord', async () => {
-  instances.telegram = realTelegram(async () => Promise.reject(new Error('telegram down')))
+  app.telegram = realTelegram(async () => Promise.reject(new Error('telegram down')))
   await assert.rejects(Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file), /telegram down/)
 })
 
 test('a Telegram upload passes the caption through', async () => {
   const sent = []
-  instances.telegram = realTelegram(async (id, path, options) => sent.push([id, path, options]))
+  app.telegram = realTelegram(async (id, path, options) => sent.push([id, path, options]))
   await Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file)
   assert.deepEqual(sent, [['t1', 'temp/a.mp3', { caption }]])
 })
 
 test('sendMessage: telegram, discord, fluxer in order; a fluxer failure is logged, not thrown', async () => {
-  instances.fluxer = [fakeFluxer('official', { fail: true })]
+  app.fluxer = [fakeFluxer('official', { fail: true })]
   const dests = [
     { type: 'fluxer', id: 'f1', instance: 'official' },
     { type: 'telegram', id: 't1' },
@@ -145,8 +144,8 @@ test('sendMessage: telegram, discord, fluxer in order; a fluxer failure is logge
 })
 
 test('sendAdminMessage: one discord admin failing does not stop the others, then telegram admins (markdown)', async () => {
-  instances.config.discord = { ...instances.config.discord, logErrorsToAdmin: true, admins: ['a1', 'a2'] }
-  instances.config.telegram = { ...instances.config.telegram, logErrorsToAdmin: true, admins: ['ta'] }
+  app.config.discord = { ...app.config.discord, logErrorsToAdmin: true, admins: ['a1', 'a2'] }
+  app.config.telegram = { ...app.config.telegram, logErrorsToAdmin: true, admins: ['ta'] }
   const discord = fakeDiscord()
   discord.getDMChannel = async (admin) => {
     if (admin === 'a1') throw new Error('no dm')

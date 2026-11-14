@@ -1,14 +1,13 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Status } from 'status-client'
-import { Discord } from './Core/Discord/Core'
-import { Telegram } from './Core/Telegram/Core'
-import { instances } from './Utils/Instances'
+import { createApp } from './App/App'
 
 let quitting = false
 
-const logger = instances.mainLogger
+const app = createApp()
+const logger = app.mainLogger
 logger.info('Starting...')
-if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 // Silly
+if (app.config.logging.debug) app.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('fx-recorder')
 
@@ -16,24 +15,21 @@ const status = new Status('fx-recorder')
 if (existsSync('temp')) rmSync('temp', { recursive: true })
 mkdirSync('temp')
 
-// Initialize the bot
-instances.telegram = new Telegram()
-// Off only when its token is empty and a Fluxer instance is enabled
-if (instances.config.discordEnabled) {
-  instances.discord = new Discord()
-  instances.discord.start()
+// Start the bot. Discord is off only when its token is empty and a Fluxer instance is enabled
+if (app.discord) {
+  app.discord.start()
 } else {
   logger.info('Discord is off: no discord.token')
 }
 
-const fluxerInstances = instances.config.fluxer.filter((instance) => instance.enabled)
+const fluxerInstances = app.config.fluxer.filter((instance) => instance.enabled)
 if (fluxerInstances.length > 0) {
   // Loaded only when used, so the Fluxer and LiveKit packages stay out otherwise
   import('./Core/Fluxer/Core').then(
     ({ Fluxer }) => {
       for (const config of fluxerInstances) {
         const fluxer = new Fluxer(config)
-        instances.fluxer.push(fluxer)
+        app.fluxer.push(fluxer)
         fluxer.start().catch((error) => logger.error(`Fluxer instance ${config.id} failed to start:`, error))
       }
     },
@@ -61,9 +57,9 @@ const stop = () => {
   }
 
   logger.info('Shutting down...')
-  instances.discord?.disconnect()
-  for (const fluxer of instances.fluxer) fluxer.disconnect()
-  instances.telegram?.disconnect()
+  app.discord?.disconnect()
+  for (const fluxer of app.fluxer) fluxer.disconnect()
+  app.telegram.disconnect()
   clearInterval(debugMemoryInterval)
   quitting = true
 }
