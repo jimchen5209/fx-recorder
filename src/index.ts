@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Status } from 'status-client'
-import { createApp } from './App/App'
+import { createApp, stopApp } from './App/App'
 
 let quitting = false
 
@@ -48,20 +48,22 @@ const debugMemoryInterval = setInterval(() => {
   })
 }, 30 * 1000)
 
-// Graceful shutdown
+// Graceful shutdown: up to a minute for the recordings to be sent; a second signal quits at once
 const stop = () => {
   console.log()
   if (quitting) {
     logger.warn('Force quitting...')
     process.exit(1)
   }
+  quitting = true
 
   logger.info('Shutting down...')
-  app.discord?.disconnect()
-  for (const fluxer of app.fluxer) fluxer.disconnect()
-  app.telegram.disconnect()
   clearInterval(debugMemoryInterval)
-  quitting = true
+  stopApp(app, 60 * 1000).then((drained) => {
+    if (drained) logger.info('All services shut down gracefully. Exiting.')
+    else logger.warn('Graceful shutdown timed out. Force quitting...')
+    process.exit(drained ? 0 : 1)
+  })
 }
 
 process.on('SIGINT', () => stop())

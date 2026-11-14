@@ -54,7 +54,7 @@ const fakeRecorder = () => {
 }
 // stop() waits on mocked timers, so time has to move while it runs
 async function stopVoice(voice) {
-  const stopped = voice.stop(connection)
+  const stopped = voice.stop()
   await runFor(1000)
   await stopped
 }
@@ -88,7 +88,7 @@ test('DiscordVoice: a join pending when shutdown starts does not happen', async 
   const client = fakeDiscord(['u1'])
   const voice = discordVoice(client)
   // The constructor's own check is debounced; shut down before it runs
-  const stopped = voice.stop(connection)
+  const stopped = voice.stop()
   await runFor(2000)
   await stopped
   assert.equal(client.joins, 0)
@@ -102,10 +102,86 @@ test('DiscordVoice: a reconnect scheduled before shutdown does not join again', 
   voice.tryReconnect('chan1', connection)
   // The debounced reconnect has run and its 5 s rejoin timer is pending
   await runFor(1000)
-  const stopped = voice.stop(connection)
+  const stopped = voice.stop()
   await runFor(10 * 1000)
   await stopped
   assert.equal(client.joins, joinsBefore)
+})
+
+// A telegram sink whose uploads wait until released
+function slowTelegram() {
+  const sink = { uploads: 0, sendMessage: async () => undefined }
+  sink.done = new Promise((resolve) => {
+    sink.release = resolve
+  })
+  sink.sendFile = async () => {
+    sink.uploads++
+    await sink.done
+  }
+  app.telegram = sink
+  return sink
+}
+const segment = { start: 'S', end: 'E', tags: [], audioFilePath: 'temp/S.mp3', audioFileName: 'S.mp3', perUserFiles: [] }
+const sending = channel({ guildId: 'g1', sendIntervalSecond: 60, fileDest: [{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }] })
+// Settles to true once the promise has resolved
+const watch = (promise) => {
+  const state = { done: false }
+  promise.then(() => {
+    state.done = true
+  })
+  return state
+}
+
+test('DiscordVoice: shutdown waits for a segment still being sent, also when the channel is paused', async () => {
+  const telegram = slowTelegram()
+  const voice = new DiscordVoice(fakeDiscord(), sending, fakeLogger())
+  voice.recorder = { saver: { getFilePeriod: async () => segment }, stop: async () => undefined }
+  voice.startSendRecord()
+  await runFor(60 * 1000)
+  clearInterval(voice.sendInterval)
+  assert.equal(telegram.uploads, 1)
+
+  const stopped = watch(voice.stop())
+  await runFor(10 * 1000)
+  assert.equal(stopped.done, false, 'still waiting for the upload')
+  telegram.release()
+  await runFor(0)
+  assert.equal(stopped.done, true)
+})
+
+test('DiscordVoice: stopping twice sends the rest once', async () => {
+  const telegram = slowTelegram()
+  telegram.release()
+  const client = fakeDiscord()
+  client.voiceConnections = { find: () => connection }
+  const voice = new DiscordVoice(client, sending, fakeLogger())
+  let stops = 0
+  voice.recorder = { stop: async () => (stops++ === 0 ? segment : undefined) }
+  const first = voice.stop()
+  const second = voice.stop()
+  await runFor(1000)
+  await Promise.all([first, second])
+  assert.equal(stops, 2)
+  assert.equal(telegram.uploads, 1)
+})
+
+test('FluxerVoice: shutdown waits for the rest of the recording that the leave starts sending', async () => {
+  const telegram = slowTelegram()
+  const { EventEmitter } = require('node:events')
+  const conn = new EventEmitter()
+  conn.leave = () => conn.emit('closed', 'left')
+  const voice = new FluxerVoice('official', sending, { join: () => conn }, { usersIn: () => ['u1'] }, () => 'bot', async () => undefined, fakeLogger())
+  voice.recorder = { startStream: () => undefined, saver: {}, stop: async () => segment }
+  voice.join()
+  voice.startRecording()
+
+  const stopped = watch(voice.stop())
+  await runFor(1000)
+  assert.equal(telegram.uploads, 1)
+  assert.equal(stopped.done, false, 'still waiting for the upload')
+  telegram.release()
+  await runFor(0)
+  assert.equal(stopped.done, true)
 })
 
 test('FluxerVoice: an update after shutdown does not join', async () => {

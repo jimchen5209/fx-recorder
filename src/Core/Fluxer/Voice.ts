@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
@@ -45,9 +44,10 @@ export class FluxerVoice extends EventEmitter {
   private sendInterval: NodeJS.Timeout | undefined
   private cleanupInterval: NodeJS.Timeout | undefined
   private _active = false
-  private readyToDelete = true
   // Set on shutdown: the bot's own leave is a change in the channel, which must not join again
   private stopped = false
+  // Segments being finished or sent, and messages on their way
+  private pending = new Set<Promise<unknown>>()
 
   constructor(
     instanceId: string,
@@ -103,24 +103,28 @@ export class FluxerVoice extends EventEmitter {
     }
   }, 500)
 
-  // Ends the recording, sends the rest, and waits up to 30 s for it, as DiscordVoice.stop
+  // Ends the recording if one is running, and resolves once every segment still being finished or sent is done, as
+  // DiscordVoice.stop. The leave below closes the connection at once, which starts sending the rest.
   public async stop() {
     this.stopped = true
     this.update.cancel()
     clearInterval(this.cleanupInterval)
-    if (!this.connection) return
-    this.logger.info('Shutting down...')
-    if (this._active) {
-      this.sendMessage('Recorder shutting down.')
-      this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`)
+    if (this.connection) {
+      this.logger.info('Shutting down...')
+      if (this._active) {
+        this.track(this.sendMessage('Recorder shutting down.'))
+        this.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
+      }
+      this.connection.leave()
     }
-    this.connection.leave()
-    try {
-      await waitUntil(() => this.readyToDelete, { timeout: 30 * 1000 })
-    } catch (error) {
-      if (error instanceof TimeoutError) this.logger.error('Timed out waiting for 30 seconds.', error)
-      else throw error
-    }
+    await Promise.all(this.pending)
+  }
+
+  // Shutdown waits for it. Failures are logged where they happen; caught so they do not crash the bot, and a failed
+  // segment's files stay for stale cleanup
+  private track(work: Promise<unknown>) {
+    const tracked: Promise<unknown> = work.catch(() => undefined).finally(() => this.pending.delete(tracked))
+    this.pending.add(tracked)
   }
 
   private join() {
@@ -248,7 +252,6 @@ export class FluxerVoice extends EventEmitter {
   private startRecording() {
     if (this._active) return
     this._active = true
-    this.readyToDelete = false
     this.recorder.startStream()
     this.startSendRecord()
     this.sendMessage('Record session started')
@@ -261,24 +264,19 @@ export class FluxerVoice extends EventEmitter {
     clearInterval(this.sendInterval)
     this.emit('status')
     this.logger.info('Sending rest of recording...')
-    this.recorder
-      .stop()
-      // The last segment stays on disk after it is sent, as before
-      .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
-      .then(() => this.sendMessage('The record session has ended.'))
-      // Logged where it failed; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
-      .catch(() => undefined)
-      .finally(() => {
-        if (!this._active) this.readyToDelete = true
-      })
+    this.track(
+      this.recorder
+        .stop()
+        // The last segment stays on disk after it is sent, as before
+        .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
+        .then(() => this.sendMessage('The record session has ended.'))
+    )
   }
 
   private startSendRecord() {
+    clearInterval(this.sendInterval)
     this.sendInterval = setInterval(() => {
-      this.recorder.saver
-        .getFilePeriod()
-        .then((file) => file && this.delivery.deliver(file))
-        .catch(() => undefined)
+      this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.delivery.deliver(file)))
     }, this.channelConfig.sendIntervalSecond * 1000)
   }
 

@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from '@projectdysnomia/dysnomia'
-import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import { getApp } from '../../../App/App'
@@ -23,9 +22,10 @@ export class DiscordVoice extends EventEmitter {
   private rejoinTimer: NodeJS.Timeout | undefined
 
   private _active = false
-  private readyToDelete = false
   // Set on shutdown: nothing joins the channel again
   private stopped = false
+  // Segments being finished or sent, and messages on their way
+  private pending = new Set<Promise<unknown>>()
 
   private warningQueue = new MessageQueue(1000)
   private errorQueue = new MessageQueue(1000)
@@ -138,12 +138,15 @@ export class DiscordVoice extends EventEmitter {
   private startSendRecord() {
     clearInterval(this.sendInterval)
     this.sendInterval = setInterval(() => {
-      this.recorder.saver
-        .getFilePeriod()
-        .then((file) => file && this.delivery.deliver(file))
-        // Logged where it failed; caught so a failed segment does not crash the bot, and the file stays for stale cleanup
-        .catch(() => undefined)
+      this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.delivery.deliver(file)))
     }, this.channelConfig.sendIntervalSecond * 1000)
+  }
+
+  // Shutdown waits for it. Failures are logged where they happen; caught so they do not crash the bot, and a failed
+  // segment's files stay for stale cleanup
+  private track(work: Promise<unknown>) {
+    const tracked: Promise<unknown> = work.catch(() => undefined).finally(() => this.pending.delete(tracked))
+    this.pending.add(tracked)
   }
 
   private stopSession(channelID: string, connection: VoiceConnection) {
@@ -153,43 +156,39 @@ export class DiscordVoice extends EventEmitter {
     clearInterval(this.sendInterval)
 
     this.logger.info('Sending rest of recording...')
-    this.recorder
-      .stop()
-      // The last segment stays on disk after it is sent, as before
-      .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
-      .then(() => this.sendMessage('The record session has ended.'))
-      .catch(() => undefined)
-      .finally(() => {
-        if (!this._active) this.readyToDelete = true
-      })
+    this.track(
+      this.recorder
+        .stop()
+        // The last segment stays on disk after it is sent, as before
+        .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
+        .then(() => this.sendMessage('The record session has ended.'))
+    )
 
     this.client.leaveVoiceChannel(channelID)
   }
 
-  public async stop(connection: VoiceConnection) {
+  // Ends the recording if one is running, and resolves once every segment still being finished or sent is done, also
+  // for a channel that is paused. Calling it again sends nothing twice. The caller sets the deadline.
+  public async stop() {
     this.stopped = true
     this.autoLeaveOrJoinChannel.cancel()
     this.tryReconnect.cancel()
     clearTimeout(this.rejoinTimer)
     clearInterval(this.cleanupInterval)
-    this._active = false
-    this.updateStatus()
 
-    this.logger.info('Shutting down...')
-    this.sendMessage('Recorder shutting down.')
-    this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`)
+    const connection = this.client.voiceConnections.find((connection) => connection.channelID === this.channelConfig.id)
+    if (connection) {
+      this._active = false
+      this.updateStatus()
 
-    this.stopSession(this.channelConfig.id, connection)
+      this.logger.info('Shutting down...')
+      this.track(this.sendMessage('Recorder shutting down.'))
+      this.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
 
-    try {
-      await waitUntil(() => this.readyToDelete, { timeout: 30 * 1000 })
-    } catch (error) {
-      if (error instanceof TimeoutError) {
-        this.logger.error('Timed out waiting for 30 seconds.', error)
-      } else {
-        throw error
-      }
+      this.stopSession(this.channelConfig.id, connection)
     }
+
+    await Promise.all(this.pending)
   }
 
   private tryReconnect = debounce((channelID: string, connection: VoiceConnection) => {

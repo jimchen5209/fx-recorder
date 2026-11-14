@@ -33,3 +33,17 @@ export function getApp(): App {
   if (!app) throw new Error('getApp() called before createApp()')
   return app
 }
+
+// Stops every platform and waits for their recordings to be sent, then Telegram. False when that took longer than
+// deadlineMs; what is not sent by then stays in temp/.
+export async function stopApp(app: App, deadlineMs: number) {
+  let timer: NodeJS.Timeout | undefined
+  const timedOut = new Promise<false>((resolve) => {
+    timer = setTimeout(() => resolve(false), deadlineMs)
+  })
+  const platforms = Promise.allSettled([app.discord?.disconnect(), ...app.fluxer.map((fluxer) => fluxer.disconnect())]).then(() => true)
+  const drained = await Promise.race([platforms, timedOut])
+  clearTimeout(timer)
+  app.telegram.disconnect()
+  return drained
+}

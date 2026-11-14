@@ -123,7 +123,7 @@ for (const [name, make, stop] of voices) {
     assert.equal(uploads, 1)
     assert.ok(messages.includes('[chan1] The record session has ended.'))
     assert.ok(fs.existsSync(file.audioFilePath))
-    assert.equal(voice.readyToDelete, true)
+    assert.equal(voice.pending.size, 0, 'nothing left for shutdown to wait for')
   })
 
   test(`${name}: a failed rest of the session is kept, not announced as ended, and does not hold up shutdown`, async () => {
@@ -135,7 +135,7 @@ for (const [name, make, stop] of voices) {
     assert.equal(uploads, 3)
     assert.ok(!messages.includes('[chan1] The record session has ended.'))
     assert.ok(fs.existsSync(file.audioFilePath))
-    assert.equal(voice.readyToDelete, true)
+    assert.equal(voice.pending.size, 0, 'a failed rest does not hold up shutdown')
     assert.deepEqual(unhandled, [])
     // Discord only tells admins while recording; Fluxer also after the session ended
     assert.deepEqual(adminMessages, name === 'FluxerVoice' ? ['Failed to send S.mp3 after 3 attempts'] : [])

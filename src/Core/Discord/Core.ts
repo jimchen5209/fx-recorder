@@ -111,16 +111,12 @@ export class Discord {
     this.client.disconnect({ reconnect: true })
   }
 
+  // Every channel, recording or paused, ends and sends what it still has; a discord destination still needs the client
   public async disconnect() {
     this.logger.info('Shutting down...')
 
-    for (const connection of this.client.voiceConnections.values()) {
-      if (!connection.channelID) continue
-      if (!this.audios[connection.channelID]) continue
-
-      await this.audios[connection.channelID].stop(connection)
-      delete this.audios[connection.channelID]
-    }
+    await Promise.all(Object.values(this.audios).map((audio) => audio.stop()))
+    this.audios = {}
 
     this.client.removeAllListeners()
 
