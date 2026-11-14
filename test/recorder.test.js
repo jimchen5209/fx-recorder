@@ -103,15 +103,24 @@ test('the saver gets the storageKey, not the channel id', () => {
   assert.deepEqual(saverCalls[0], ['new', 'fluxer-official-c9'])
 })
 
-// Fails for now: after endStream the stopped mixer stays in the map, so a user who comes back writes into it and
-// gets no new per-user file
-test('a returning user gets a new per-user mixer and file', { todo: true }, (t) => {
+// A leaves and comes back while B stays
+test('a returning user gets a new per-user mixer and file, and a new source in the mixed recording', (t) => {
   const recorder = started()
   t.after(() => recorder.stop())
   recorder.storeBuffer(tone(20), 'u1')
+  recorder.storeBuffer(tone(20), 'u2')
   const before = mixers(recorder).users.u1
+  const [oldSource] = mixers(recorder).recv.getSources('u1')
   recorder.endStream('u1')
+  assert.equal(mixers(recorder).users.u1, undefined, 'the stopped mixer is dropped')
+
   recorder.storeBuffer(tone(20), 'u1')
-  assert.notEqual(mixers(recorder).users.u1, before, 'a new per-user mixer for the returning user')
-  assert.equal(saverCalls.filter(([c]) => c === 'addUser').length, 2)
+  const { recv, users } = mixers(recorder)
+  assert.notEqual(users.u1, before, 'a new per-user mixer for the returning user')
+  assert.equal(saverCalls.filter(([c, user]) => c === 'addUser' && user === 'u1').length, 2)
+  // The ended source may still be draining in the mixer; nothing is written into it
+  const live = recv.getSources('u1').filter((source) => !source.stream.writableEnded)
+  assert.equal(live.length, 1)
+  assert.notEqual(live[0], oldSource)
+  assert.ok(users.u2, 'the user who stayed keeps recording')
 })

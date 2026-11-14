@@ -26,7 +26,8 @@ export class Recorder {
   public storeBuffer(data: Buffer, user: string, sourceId = user) {
     if (!user || this.channelConfig.ignoreUsers.includes(user)) return
     if (this.recvMixer) {
-      let source = this.recvMixer.getSources(sourceId)[0]
+      // An ended source stays in the mixer until it drains; one who comes back gets a new one
+      let source = this.recvMixer.getSources(sourceId).find((existing) => !existing.stream.writableEnded)
       if (!source) {
         this.logger.info(`Add new user ${user} to record mixer`)
         // Labeled by both, so a user's sources can be found by user too
@@ -38,7 +39,7 @@ export class Recorder {
     if (this.userMixers) {
       if (!this.userMixers[user]) this.newPerUserMixer(user)
 
-      let perUserSource = this.userMixers[user].getSources(sourceId)[0]
+      let perUserSource = this.userMixers[user].getSources(sourceId).find((existing) => !existing.stream.writableEnded)
       if (!perUserSource) perUserSource = this.userMixers[user].addSource(new AbortStream(64 * 1000 * 8, 64 * 1000 * 4), sourceId)
       perUserSource.stream.write(data)
       if (!this.userSources[user]) this.userSources[user] = new Set()
@@ -68,17 +69,6 @@ export class Recorder {
     this._saver.addUser(user)
   }
 
-  public cleanUpPerUserMixer() {
-    if (!this.userMixers) return
-    for (const user of Object.keys(this.userMixers)) {
-      if (this.userMixers[user]?.getSources(user).length === 0) {
-        this.logger.info(`Remove unused per user mixer ${user}`)
-        this.userMixers[user].stop()
-        delete this.userMixers[user]
-      }
-    }
-  }
-
   public startStream() {
     this.recvMixer = new LicsonMixer(16, 2, 48000)
     this.userMixers = {}
@@ -93,7 +83,9 @@ export class Recorder {
   public endStream(user: string) {
     delete this.userSources[user]
     for (const source of this.recvMixer?.getSources(user) ?? []) source.stream.end()
-    if (this.userMixers) this.userMixers[user]?.stop()
+    // Dropped, so one who comes back gets a new per-user mixer and file
+    this.userMixers?.[user]?.stop()
+    if (this.userMixers) delete this.userMixers[user]
     this._saver.removeUser(user)
   }
 
