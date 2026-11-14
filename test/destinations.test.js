@@ -1,110 +1,170 @@
-// Output/Destinations with fake Telegram, Discord and Fluxer clients: captions, order, sendAll/perUser, failure paths.
+// Output/Destinations: Delivery to fake Telegram, Discord and Fluxer sinks. Captions, order, sendAll/perUser, retries,
+// deleting a segment once sent, failure paths, and admin messages. Timers are mocked.
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
-const path = require('node:path')
-const { stubApp, fakeLogger, useTempCwd } = require('./helpers')
+const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 const app = stubApp()
-const Destinations = require('../dist/Core/Output/Destinations')
+const { Delivery, sendAdminMessage } = require('../dist/Core/Output/Destinations')
 
 let calls
-function fakeTelegram() {
+// A sink that records what it is asked to send; fail(kind, id) decides which calls throw
+function fakeSink(name, fail = () => false) {
   return {
-    sendAudio: async (id, file, caption) => {
-      calls.push(['telegram.audio', id, path.basename(file), caption])
-      return file
+    sendMessage: async (id, text) => {
+      calls.push([name, 'message', id, text])
+      if (fail('message', id)) throw new Error(`${name} down`)
     },
-    sendMessage: async (id, text, markdown) => calls.push(['telegram.message', id, text, !!markdown])
-  }
-}
-function fakeDiscord({ fail = false } = {}) {
-  return {
-    createMessage: async (id, content) => {
-      calls.push(['discord', id, typeof content === 'string' ? content : content.content, content.attachments?.[0]?.filename])
-      if (fail) throw new Error('discord down')
-    },
-    getDMChannel: async (admin) => ({ id: `dm-${admin}` })
-  }
-}
-function fakeFluxer(id, { fail = false } = {}) {
-  return {
-    instance: { id },
-    send: async (channelId, content, file) => {
-      calls.push(['fluxer', id, channelId, content, file?.name])
-      if (fail) throw new Error('fluxer down')
+    sendFile: async (id, caption, file) => {
+      calls.push([name, 'file', id, file.name, caption])
+      if (fail('file', id)) throw new Error(`${name} down`)
     }
   }
 }
+const fakeFluxer = (id, fail) => {
+  const sink = fakeSink(`fluxer:${id}`, fail)
+  return { instance: { id }, send: (channelId, content, file) => (file ? sink.sendFile(channelId, content, file) : sink.sendMessage(channelId, content)) }
+}
 
 let tmp
+let notified
 test.beforeEach(() => {
   calls = []
+  notified = []
   tmp = useTempCwd()
   fs.writeFileSync('temp/a.mp3', 'mixed')
   fs.writeFileSync('temp/u1-a.mp3', 'u1')
-  app.telegram = fakeTelegram()
+  app.telegram = fakeSink('telegram')
+  app.discord = fakeSink('discord')
   app.fluxer = []
+  test.mock.timers.enable({ apis: ['setTimeout'] })
 })
-test.afterEach(() => tmp.cleanup())
+test.afterEach(() => {
+  test.mock.timers.reset()
+  tmp.cleanup()
+})
 
-const file = {
+// Moves mocked time on a second at a time, letting promises settle in between
+async function runFor(ms) {
+  for (let t = 0; t < ms; t += 1000) {
+    await new Promise(setImmediate)
+    test.mock.timers.tick(1000)
+  }
+  await new Promise(setImmediate)
+}
+
+const delivery = (fileDest) => new Delivery(channel({ id: 'c1', fileDest }), fakeLogger(), (message) => notified.push(message))
+const dest = (type, id, extra = {}) => ({ type, id, sendAll: true, sendPerUser: false, ...extra })
+const segment = (name = 'a') => ({
   start: '2026-11-14 10-00-00',
   end: '2026-11-14 10-01-00',
   tags: ['#Date20261114', '#Time1000', '#Year2026'],
-  audioFilePath: 'temp/a.mp3',
-  audioFileName: 'a.mp3',
-  perUserFiles: [{ user: 'u1', audioFilePath: 'temp/u1-a.mp3', audioFileName: 'u1-a.mp3', tag: '#Useru1' }]
-}
+  audioFilePath: `temp/${name}.mp3`,
+  audioFileName: `${name}.mp3`,
+  perUserFiles: [{ user: 'u1', audioFilePath: `temp/u1-${name}.mp3`, audioFileName: `u1-${name}.mp3`, tag: '#Useru1' }]
+})
 const caption = 'Channel:c1\nStart:2026-11-14 10-00-00\nEnd:2026-11-14 10-01-00\n\n#Date20261114 #Time1000 #Year2026'
 const userCaption = 'Channel:c1\nStart:2026-11-14 10-00-00\nEnd:2026-11-14 10-01-00\nUser:u1\n\n#Date20261114 #Time1000 #Year2026 #Useru1'
+const files = () => fs.readdirSync('temp').sort()
 
-test('sendRecord: destinations in config order, mixed before per-user, exact captions', async () => {
-  const dests = [
-    { type: 'telegram', id: 't1', sendAll: true, sendPerUser: true },
-    { type: 'discord', id: 'd1', sendAll: true, sendPerUser: false },
-    { type: 'fluxer', id: 'f1', instance: 'official', sendAll: false, sendPerUser: true },
-    { type: 'telegram', id: '', sendAll: true, sendPerUser: true }
-  ]
+test('deliver: destinations in config order, mixed before per-user, exact captions, then the files are deleted', async () => {
   app.fluxer = [fakeFluxer('official')]
-  await Destinations.sendRecord(dests, fakeDiscord(), fakeLogger(), 'c1', file)
+  await delivery([
+    dest('telegram', 't1', { sendPerUser: true }),
+    dest('discord', 'd1'),
+    dest('fluxer', 'f1', { instance: 'official', sendAll: false, sendPerUser: true }),
+    dest('telegram', '', { sendPerUser: true })
+  ]).deliver(segment())
   assert.deepEqual(calls, [
-    ['telegram.audio', 't1', 'a.mp3', caption],
-    ['telegram.audio', 't1', 'u1-a.mp3', userCaption],
-    ['discord', 'd1', caption, 'a.mp3'],
-    ['fluxer', 'official', 'f1', userCaption, 'u1-a.mp3']
+    ['telegram', 'file', 't1', 'a.mp3', caption],
+    ['telegram', 'file', 't1', 'u1-a.mp3', userCaption],
+    ['discord', 'file', 'd1', 'a.mp3', caption],
+    ['fluxer:official', 'file', 'f1', 'u1-a.mp3', userCaption]
   ])
+  assert.deepEqual(files(), [])
 })
 
-test('sendRecord: discord destinations are skipped without a client', async () => {
-  await Destinations.sendRecord([{ type: 'discord', id: 'd1', sendAll: true, sendPerUser: true }], undefined, fakeLogger(), 'c1', file)
+test('deliver with keepFiles sends and leaves the files', async () => {
+  await delivery([dest('telegram', 't1')]).deliver(segment(), { keepFiles: true })
+  assert.equal(calls.length, 1)
+  assert.deepEqual(files(), ['a.mp3', 'u1-a.mp3'])
+})
+
+test('deliver: discord destinations are skipped when Discord is off', async () => {
+  app.discord = undefined
+  await delivery([dest('discord', 'd1', { sendPerUser: true })]).deliver(segment())
   assert.deepEqual(calls, [])
 })
 
-test('sendRecord: a discord failure rejects and stops the rest', async () => {
-  const dests = [
-    { type: 'discord', id: 'd1', sendAll: true, sendPerUser: false },
-    { type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }
-  ]
-  await assert.rejects(Destinations.sendRecord(dests, fakeDiscord({ fail: true }), fakeLogger(), 'c1', file), /discord down/)
-  assert.deepEqual(
-    calls.map((c) => c[0]),
-    ['discord']
-  )
+test('deliver: a failure is retried 3 times 5 s apart, then admins are told, the files stay and it rejects', async () => {
+  app.telegram = fakeSink('telegram', (kind) => kind === 'file')
+  const result = delivery([dest('telegram', 't1')]).deliver(segment())
+  result.catch(() => undefined)
+  await runFor(0)
+  assert.equal(calls.length, 1)
+  await runFor(5000)
+  assert.equal(calls.length, 2)
+  await runFor(5000)
+  assert.equal(calls.length, 3)
+  await assert.rejects(result, /telegram down/)
+  assert.deepEqual(notified, ['Failed to send a.mp3 after 3 attempts'])
+  assert.deepEqual(files(), ['a.mp3', 'u1-a.mp3'])
 })
 
-test('sendRecord: a fluxer failure (or a missing instance) does not hold back later destinations, then rejects', async () => {
-  const dests = [
-    { type: 'fluxer', id: 'f1', instance: 'official', sendAll: true, sendPerUser: false },
-    { type: 'fluxer', id: 'f2', instance: 'gone', sendAll: true, sendPerUser: false },
-    { type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }
-  ]
-  app.fluxer = [fakeFluxer('official', { fail: true })]
-  await assert.rejects(Destinations.sendRecord(dests, undefined, fakeLogger(), 'c1', file), /fluxer down/)
+test('deliver: a discord failure stops the destinations after it', async () => {
+  app.discord = fakeSink('discord', () => true)
+  const result = delivery([dest('discord', 'd1'), dest('telegram', 't1')]).deliver(segment())
+  result.catch(() => undefined)
+  await runFor(10 * 1000)
+  await assert.rejects(result, /discord down/)
+  assert.deepEqual([...new Set(calls.map((c) => c[0]))], ['discord'])
+})
+
+test('deliver: a failed or missing fluxer instance does not hold back later destinations, then it rejects', async () => {
+  app.fluxer = [fakeFluxer('official', () => true)]
+  const result = delivery([dest('fluxer', 'f1', { instance: 'official' }), dest('fluxer', 'f2', { instance: 'gone' }), dest('telegram', 't1')]).deliver(segment())
+  result.catch(() => undefined)
+  await runFor(0)
   assert.deepEqual(
     calls.map((c) => c[0]),
-    ['fluxer', 'telegram.audio']
+    ['fluxer:official', 'telegram']
   )
+  await runFor(10 * 1000)
+  await assert.rejects(result, /fluxer:official down/)
+})
+
+// Resending is not fixed yet: the retry goes through every destination again
+test('deliver: a destination that succeeded is not sent again when another one is retried', { todo: true }, async () => {
+  app.discord = fakeSink('discord', () => true)
+  const result = delivery([dest('telegram', 't1'), dest('discord', 'd1')]).deliver(segment())
+  result.catch(() => undefined)
+  await runFor(10 * 1000)
+  assert.equal(calls.filter((c) => c[0] === 'telegram').length, 1)
+})
+
+test('deliver: a slow upload does not hold back the next segment, and each deletes only its own files', async () => {
+  fs.writeFileSync('temp/b.mp3', 'mixed')
+  fs.writeFileSync('temp/u1-b.mp3', 'u1')
+  let release
+  const slow = new Promise((resolve) => {
+    release = resolve
+  })
+  app.telegram = {
+    sendMessage: async () => undefined,
+    sendFile: async (_id, _caption, file) => {
+      calls.push(file.name)
+      if (file.name === 'a.mp3') await slow
+    }
+  }
+  const channelDelivery = delivery([dest('telegram', 't1')])
+  const first = channelDelivery.deliver(segment('a'))
+  await channelDelivery.deliver(segment('b'))
+  assert.deepEqual(files(), ['a.mp3', 'u1-a.mp3'], 'the second segment is sent and deleted while the first is still uploading')
+  release()
+  await first
+  assert.deepEqual(files(), [])
+  assert.deepEqual(calls, ['a.mp3', 'b.mp3'])
 })
 
 // The real Telegram class with a fake bot, so its error handling is what gets tested
@@ -116,44 +176,45 @@ function realTelegram(sendAudio) {
   return telegram
 }
 
-test('a failed Telegram upload rejects sendRecord', async () => {
-  app.telegram = realTelegram(async () => Promise.reject(new Error('telegram down')))
-  await assert.rejects(Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file), /telegram down/)
-})
-
-test('a Telegram upload passes the caption through', async () => {
+test('Telegram.sendFile uploads the path with the caption and throws when the upload fails', async () => {
   const sent = []
-  app.telegram = realTelegram(async (id, path, options) => sent.push([id, path, options]))
-  await Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file)
-  assert.deepEqual(sent, [['t1', 'temp/a.mp3', { caption }]])
+  await realTelegram(async (id, path, options) => sent.push([id, path, options])).sendFile('t1', 'cap', { name: 'a.mp3', path: 'temp/a.mp3' })
+  assert.deepEqual(sent, [['t1', 'temp/a.mp3', { caption: 'cap' }]])
+  await assert.rejects(realTelegram(async () => Promise.reject(new Error('telegram down'))).sendFile('t1', 'cap', { name: 'a.mp3', path: 'temp/a.mp3' }), /telegram down/)
 })
 
-test('sendMessage: telegram, discord, fluxer in order; a fluxer failure is logged, not thrown', async () => {
-  app.fluxer = [fakeFluxer('official', { fail: true })]
-  const dests = [
-    { type: 'fluxer', id: 'f1', instance: 'official' },
-    { type: 'telegram', id: 't1' },
-    { type: 'discord', id: 'd1' }
-  ]
-  await Destinations.sendMessage(dests, fakeDiscord(), '[c1] hi')
+test('sendMessage: prefixed with the channel, in config order; a fluxer failure is logged on the main logger, not thrown', async () => {
+  const records = []
+  app.mainLogger = fakeLogger(records)
+  app.fluxer = [fakeFluxer('official', () => true)]
+  await delivery([dest('fluxer', 'f1', { instance: 'official' }), dest('telegram', 't1'), dest('discord', 'd1')]).sendMessage('hi')
   assert.deepEqual(calls, [
-    ['fluxer', 'official', 'f1', '[c1] hi', undefined],
-    ['telegram.message', 't1', '[c1] hi', false],
-    ['discord', 'd1', '[c1] hi', undefined]
+    ['fluxer:official', 'message', 'f1', '[c1] hi'],
+    ['telegram', 'message', 't1', '[c1] hi'],
+    ['discord', 'message', 'd1', '[c1] hi']
   ])
+  assert.deepEqual(records, [['error', 'Message to fluxer official/f1 failed: fluxer:official down']])
+})
+
+test('sendMessage: a discord failure is thrown', async () => {
+  app.discord = fakeSink('discord', () => true)
+  await assert.rejects(delivery([dest('discord', 'd1')]).sendMessage('hi'), /discord down/)
 })
 
 test('sendAdminMessage: one discord admin failing does not stop the others, then telegram admins (markdown)', async () => {
   app.config.discord = { ...app.config.discord, logErrorsToAdmin: true, admins: ['a1', 'a2'] }
   app.config.telegram = { ...app.config.telegram, logErrorsToAdmin: true, admins: ['ta'] }
-  const discord = fakeDiscord()
-  discord.getDMChannel = async (admin) => {
-    if (admin === 'a1') throw new Error('no dm')
-    return { id: `dm-${admin}` }
+  app.telegram = { sendMessage: async (id, text, markdown) => calls.push(['telegram', id, text, markdown]) }
+  const discord = {
+    getDMChannel: async (admin) => {
+      if (admin === 'a1') throw new Error('no dm')
+      return { id: `dm-${admin}` }
+    },
+    createMessage: async (id, text) => calls.push(['discord', id, text])
   }
-  await Destinations.sendAdminMessage(discord, fakeLogger(), 'boom')
+  await sendAdminMessage(discord, fakeLogger(), 'boom')
   assert.deepEqual(calls, [
-    ['discord', 'dm-a2', 'boom', undefined],
-    ['telegram.message', 'ta', 'boom', true]
+    ['discord', 'dm-a2', 'boom'],
+    ['telegram', 'ta', 'boom', true]
   ])
 })

@@ -10,7 +10,6 @@ import { FailSafe } from '../../../Utils/FailSafe'
 import { MessageQueue } from '../../../Utils/MessageQueue'
 import * as Destinations from '../../Output/Destinations'
 import { Recorder } from '../Recorder/Recorder'
-import type { IRecordFile } from '../Recorder/RecordSaver'
 import { Silence } from './Silence'
 
 export class DiscordVoice extends EventEmitter {
@@ -18,6 +17,7 @@ export class DiscordVoice extends EventEmitter {
   private channelConfig: DiscordChannel
   private logger: Logger<ILogObj>
   private recorder: Recorder
+  private delivery: Destinations.Delivery
   private sendInterval: NodeJS.Timeout | undefined
   private cleanupInterval: NodeJS.Timeout | undefined
 
@@ -36,6 +36,10 @@ export class DiscordVoice extends EventEmitter {
     this.channelConfig = channelConfig
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     this.recorder = new Recorder({ ...channelConfig, storageKey: channelConfig.id })
+    // Admins hear of a recording that could not be sent only while recording
+    this.delivery = new Destinations.Delivery(channelConfig, this.logger, (message) => {
+      if (this._active) this.sendAdminMessage(message)
+    })
 
     this.warningQueue.on('process', (messages, queueTime) => {
       const combinedMessage = `${messages.length} warning${messages.length > 1 ? 's' : ''} from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
@@ -121,35 +125,18 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, this.client, `[${this.channelConfig.id}] ${message}`)
+    return this.delivery.sendMessage(message)
   }
 
   private sendAdminMessage(message: string) {
     return Destinations.sendAdminMessage(this.client, this.logger, message)
   }
 
-  private async sendRecord(file: IRecordFile) {
-    const maxRetries = 3
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await Destinations.sendRecord(this.channelConfig.fileDest, this.client, this.logger, this.channelConfig.id, file)
-        return // success
-      } catch (error) {
-        this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
-        if (attempt === maxRetries) {
-          if (this._active) this.sendAdminMessage(`Failed to send ${file.audioFileName} after ${maxRetries} attempts`)
-          throw error
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5000))
-      }
-    }
-  }
-
   private startSendRecord() {
     this.sendInterval = setInterval(() => {
       this.recorder.saver
         .getFilePeriod()
-        .then((file) => file && this.sendRecord(file).then(() => this.recorder.saver.removeRecordFile(file)))
+        .then((file) => file && this.delivery.deliver(file))
         // Logged where it failed; caught so a failed segment does not crash the bot, and the file stays for stale cleanup
         .catch(() => undefined)
     }, this.channelConfig.sendIntervalSecond * 1000)
@@ -164,7 +151,8 @@ export class DiscordVoice extends EventEmitter {
     this.logger.info('Sending rest of recording...')
     this.recorder
       .stop()
-      .then((file) => file && this.sendRecord(file))
+      // The last segment stays on disk after it is sent, as before
+      .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
       .then(() => this.sendMessage('The record session has ended.'))
       .catch(() => undefined)
       .finally(() => {

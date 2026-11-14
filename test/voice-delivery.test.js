@@ -1,45 +1,51 @@
-// How DiscordVoice and FluxerVoice hand recordings to delivery: a file is deleted only after it was sent, a failed upload
-// is retried 3 times 5 s apart and then given up without crashing the bot, and the end of a session is not held up.
-// The voice objects skip their constructors (no client, no voice connection); timers are mocked.
+// How DiscordVoice and FluxerVoice hand recordings to delivery: a segment is deleted once sent, a failed one is retried
+// and kept without crashing the bot, admins hear of it (Discord only while recording), and the end of a session is not
+// held up. The voices are made with their real constructors and fake clients; the recorder is faked; timers are mocked.
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { stubApp, fakeLogger, channel } = require('./helpers')
+const fs = require('node:fs')
+const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 const app = stubApp()
 const { DiscordVoice } = require('../dist/Core/Discord/Core/Voice')
 const { FluxerVoice } = require('../dist/Core/Fluxer/Voice')
 
 const file = { start: 'S', end: 'E', tags: [], audioFilePath: 'temp/S.mp3', audioFileName: 'S.mp3', perUserFiles: [] }
-const config = channel({ sendIntervalSecond: 60, fileDest: [{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }] })
+const config = channel({ guildId: 'g1', sendIntervalSecond: 60, fileDest: [{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }] })
 
 let uploads
 let messages
-let removed
+let adminMessages
 let unhandled
+let tmp
 const onUnhandled = (error) => unhandled.push(error)
 test.beforeEach(() => {
   uploads = 0
   messages = []
-  removed = []
+  adminMessages = []
   unhandled = []
+  tmp = useTempCwd()
+  fs.writeFileSync('temp/S.mp3', 'mp3')
+  app.config.telegram = { ...app.config.telegram, logErrorsToAdmin: true, admins: ['admin'] }
   process.on('unhandledRejection', onUnhandled)
   test.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] })
 })
 test.afterEach(() => {
   test.mock.timers.reset()
   process.off('unhandledRejection', onUnhandled)
+  tmp.cleanup()
 })
 
 function telegram(fail) {
   app.telegram = {
-    sendAudio: async () => {
+    sendFile: async () => {
       uploads++
       if (fail) throw new Error('telegram down')
     },
-    sendMessage: async (_id, text) => messages.push(text)
+    sendMessage: async (id, text) => (id === 'admin' ? adminMessages : messages).push(text)
   }
 }
-const recorder = { saver: { getFilePeriod: async () => file, removeRecordFile: (segment) => removed.push(segment.start) }, stop: async () => file }
+const recorder = { saver: { getFilePeriod: async () => file }, stop: async () => file }
 
 // Moves mocked time on a second at a time, letting promises settle in between
 async function runFor(ms) {
@@ -50,35 +56,49 @@ async function runFor(ms) {
   await new Promise(setImmediate)
 }
 
+const stopTimers = (voice) => {
+  clearInterval(voice.sendInterval)
+  clearInterval(voice.cleanupInterval)
+}
+
 function discordVoice() {
-  const voice = Object.create(DiscordVoice.prototype)
-  Object.assign(voice, { client: { leaveVoiceChannel: () => undefined }, channelConfig: config, logger: fakeLogger(), recorder, _active: true, readyToDelete: false })
+  const client = { user: { id: 'bot' }, getChannel: () => ({ voiceMembers: [] }), voiceConnections: { find: () => undefined }, leaveVoiceChannel: () => undefined }
+  const voice = new DiscordVoice(client, config, fakeLogger())
+  voice.recorder = recorder
+  voice._active = true
   return voice
 }
 function fluxerVoice() {
-  const voice = Object.create(FluxerVoice.prototype)
-  Object.assign(voice, { channelConfig: config, logger: fakeLogger(), recorder, notifyAdmins: async () => undefined, _active: true, readyToDelete: false })
+  const voice = new FluxerVoice('official', config, {}, {}, () => 'bot', async () => undefined, fakeLogger())
+  voice.recorder = recorder
+  voice._active = true
   return voice
 }
 
-for (const [name, make, stop] of [
-  ['DiscordVoice', discordVoice, (voice) => {
-    voice._active = false
-    voice.stopSession('chan1', { stopPlaying: () => undefined })
-  }],
+const voices = [
+  [
+    'DiscordVoice',
+    discordVoice,
+    (voice) => {
+      voice._active = false
+      voice.stopSession('chan1', { stopPlaying: () => undefined })
+    }
+  ],
   ['FluxerVoice', fluxerVoice, (voice) => voice.stopRecording()]
-]) {
+]
+
+for (const [name, make, stop] of voices) {
   test(`${name}: a sent segment is deleted`, async () => {
     telegram(false)
     const voice = make()
     voice.startSendRecord()
     await runFor(60 * 1000)
-    clearInterval(voice.sendInterval)
+    stopTimers(voice)
     assert.equal(uploads, 1)
-    assert.deepEqual(removed, ['S'])
+    assert.ok(!fs.existsSync(file.audioFilePath))
   })
 
-  test(`${name}: a failed segment is retried 3 times 5 s apart, then kept, without an unhandled rejection`, async () => {
+  test(`${name}: a failed segment is retried 3 times 5 s apart, kept, and admins are told, without an unhandled rejection`, async () => {
     telegram(true)
     const voice = make()
     voice.startSendRecord()
@@ -87,19 +107,22 @@ for (const [name, make, stop] of [
     await runFor(5 * 1000)
     assert.equal(uploads, 2)
     await runFor(5 * 1000)
-    clearInterval(voice.sendInterval)
+    stopTimers(voice)
     assert.equal(uploads, 3)
-    assert.deepEqual(removed, [])
+    assert.ok(fs.existsSync(file.audioFilePath))
+    assert.deepEqual(adminMessages, ['Failed to send S.mp3 after 3 attempts'])
     assert.deepEqual(unhandled, [])
   })
 
-  test(`${name}: the end of a session is announced after the rest is sent`, async () => {
+  test(`${name}: the end of a session is announced after the rest is sent, and the last segment stays on disk`, async () => {
     telegram(false)
     const voice = make()
     stop(voice)
     await runFor(1000)
+    stopTimers(voice)
     assert.equal(uploads, 1)
     assert.ok(messages.includes('[chan1] The record session has ended.'))
+    assert.ok(fs.existsSync(file.audioFilePath))
     assert.equal(voice.readyToDelete, true)
   })
 
@@ -108,10 +131,13 @@ for (const [name, make, stop] of [
     const voice = make()
     stop(voice)
     await runFor(11 * 1000)
+    stopTimers(voice)
     assert.equal(uploads, 3)
     assert.ok(!messages.includes('[chan1] The record session has ended.'))
-    assert.deepEqual(removed, [])
+    assert.ok(fs.existsSync(file.audioFilePath))
     assert.equal(voice.readyToDelete, true)
     assert.deepEqual(unhandled, [])
+    // Discord only tells admins while recording; Fluxer also after the session ended
+    assert.deepEqual(adminMessages, name === 'FluxerVoice' ? ['Failed to send S.mp3 after 3 attempts'] : [])
   })
 }

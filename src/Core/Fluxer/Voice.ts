@@ -5,10 +5,8 @@ import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
-import { getApp } from '../../App/App'
 import type { FluxerChannel } from '../../Utils/Config'
 import { Recorder } from '../Discord/Recorder/Recorder'
-import type { IRecordFile } from '../Discord/Recorder/RecordSaver'
 import * as Destinations from '../Output/Destinations'
 import type { VoicePresenceTracker } from './Presence'
 import { LiveKitSession, type RemoteTrackInfo } from './Voice/LiveKitSession'
@@ -33,6 +31,7 @@ export class FluxerVoice extends EventEmitter {
   private selfId: () => string
   private notifyAdmins: (message: string) => Promise<void>
   private recorder: Recorder
+  private delivery: Destinations.Delivery
   private connection: FluxerVoiceConnection | undefined
   private session: LiveKitSession | undefined
   private endpoint = ''
@@ -68,6 +67,8 @@ export class FluxerVoice extends EventEmitter {
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
     const storageKey = `fluxer-${instanceId}-${channelConfig.id}`
     this.recorder = new Recorder({ ...channelConfig, storageKey })
+    // Also after the session ended (DiscordVoice skips it then): the rest of a recording should not fail quietly
+    this.delivery = new Destinations.Delivery(channelConfig, this.logger, (message) => this.sendAdminMessage(message))
     this.startStaleCleanup(`temp/${storageKey}`)
   }
 
@@ -262,7 +263,8 @@ export class FluxerVoice extends EventEmitter {
     this.logger.info('Sending rest of recording...')
     this.recorder
       .stop()
-      .then((file) => file && this.sendRecord(file))
+      // The last segment stays on disk after it is sent, as before
+      .then((file) => file && this.delivery.deliver(file, { keepFiles: true }))
       .then(() => this.sendMessage('The record session has ended.'))
       // Logged where it failed; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
       .catch(() => undefined)
@@ -275,7 +277,7 @@ export class FluxerVoice extends EventEmitter {
     this.sendInterval = setInterval(() => {
       this.recorder.saver
         .getFilePeriod()
-        .then((file) => file && this.sendRecord(file).then(() => this.recorder.saver.removeRecordFile(file)))
+        .then((file) => file && this.delivery.deliver(file))
         .catch(() => undefined)
     }, this.channelConfig.sendIntervalSecond * 1000)
   }
@@ -302,31 +304,11 @@ export class FluxerVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, getApp().discord?.client, `[${this.channelConfig.id}] ${message}`).catch((error) =>
-      this.logger.error(`Message "${message}" failed to send:`, error)
-    )
+    return this.delivery.sendMessage(message).catch((error) => this.logger.error(`Message "${message}" failed to send:`, error))
   }
 
   // Telegram admins and the instance's Fluxer admins; Discord admins only get Discord channels' messages, as before
   private sendAdminMessage(message: string) {
     return Promise.all([Destinations.sendAdminMessage(undefined, this.logger, message), this.notifyAdmins(message)])
-  }
-
-  private async sendRecord(file: IRecordFile) {
-    const maxRetries = 3
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await Destinations.sendRecord(this.channelConfig.fileDest, getApp().discord?.client, this.logger, this.channelConfig.id, file)
-        return // success
-      } catch (error) {
-        this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
-        if (attempt === maxRetries) {
-          // Also after the session ended (DiscordVoice skips it then): the rest of a recording should not fail quietly
-          this.sendAdminMessage(`Failed to send ${file.audioFileName} after ${maxRetries} attempts`)
-          throw error
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5000))
-      }
-    }
   }
 }

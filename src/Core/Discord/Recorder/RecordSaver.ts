@@ -1,4 +1,4 @@
-import { createWriteStream, unlinkSync as deleteFile, existsSync as exists, mkdirSync as mkDir, rmSync as rmDir, type WriteStream } from 'node:fs'
+import { createWriteStream, existsSync as exists, mkdirSync as mkDir, rmSync as rmDir, type WriteStream } from 'node:fs'
 import type { Readable } from 'node:stream'
 import { finished } from 'node:stream/promises'
 import dayjs from 'dayjs'
@@ -61,7 +61,7 @@ export class RecordSaver {
   private mixed?: Output
   private perUser: { [user: string]: Output } = {}
   private segment?: Segment
-  // Files written and not removed yet: a new file never takes the name of one of them
+  // Files still being written, which exists() may not see yet: a new file never takes the name of one of them
   private usedPaths = new Set<string>()
 
   constructor(channelConfig: RecordingChannel) {
@@ -117,7 +117,9 @@ export class RecordSaver {
     // pipe() lets go of a failed writer; keep reading so FFmpeg does not block on a full pipe
     writer.on('error', () => output.mp3.resume())
     const file: SegmentFile = { user, path, name, done: finished(writer) }
-    file.done.catch(() => undefined) // awaited in finish()
+    // Awaited in finish(); once written, exists() guards the name
+    const release = () => this.usedPaths.delete(path)
+    file.done.then(release, release)
     this.segment.files.push(file)
     output.writer = writer
     output.file = file
@@ -202,14 +204,6 @@ export class RecordSaver {
     this.segment = { start: end, files: [] }
     this.openFiles()
     return this.finish(closed, end)
-  }
-
-  public removeRecordFile(file: IRecordFile) {
-    for (const path of [file.audioFilePath, ...file.perUserFiles.map((userFile) => userFile.audioFilePath)]) {
-      this.logger.debug(`Removing record file ${path}`)
-      if (exists(path)) deleteFile(path)
-      this.usedPaths.delete(path)
-    }
   }
 
   public startSession() {

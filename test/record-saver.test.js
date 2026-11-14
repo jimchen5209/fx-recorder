@@ -95,11 +95,6 @@ test('rotation writes decodable mixed and per-user files under temp/<storageKey>
   // Nothing fed is lost across the cut or at the end
   const total = durationOf(first.audioFilePath) + durationOf(last.audioFilePath)
   assert.ok(total > 59.5 && total < 61, `mixed: ${total.toFixed(2)} s of 60 s`)
-
-  saver.removeRecordFile(first)
-  assert.ok(!fs.existsSync(first.audioFilePath))
-  assert.ok(!fs.existsSync(first.perUserFiles[0].audioFilePath))
-  assert.ok(fs.existsSync(last.audioFilePath), 'removing one segment leaves the other')
 })
 
 test('endSession resolves only when the last segment is fully written', { skip }, async (t) => {
@@ -128,7 +123,7 @@ test('a second endSession or a rotation without a session resolves to nothing', 
   assert.equal(await saver.getFilePeriod(), undefined)
 })
 
-test('two rotations in the same second do not overwrite or delete the other segment', { skip }, async (t) => {
+test('two rotations in the same second do not overwrite each other', { skip }, async (t) => {
   const { saver, feed, stop } = setup(t)
   feed(6)
   const [a, b] = await Promise.all([saver.getFilePeriod(), saver.getFilePeriod()])
@@ -136,9 +131,7 @@ test('two rotations in the same second do not overwrite or delete the other segm
   const paths = [a, b, c].flatMap((file) => [file.audioFilePath, ...file.perUserFiles.map((f) => f.audioFilePath)])
   assert.equal(new Set(paths).size, paths.length, `distinct files: ${paths.join(', ')}`)
   if (a.start === b.start) assert.equal(b.audioFileName, `${b.start}-2.mp3`)
-  saver.removeRecordFile(b)
-  assert.ok(fs.existsSync(a.audioFilePath) && fs.existsSync(c.audioFilePath))
-  assert.ok(!fs.existsSync(b.audioFilePath))
+  assert.ok(paths.every((path) => fs.existsSync(path)))
 })
 
 test('a file that cannot be written fails its segment instead of handing it over', { skip }, async (t) => {

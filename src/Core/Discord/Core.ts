@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
 import type { DiscordConfig } from '../../Utils/Config'
@@ -91,6 +92,15 @@ export class Discord {
 
   public start() {
     this.client.connect()
+  }
+
+  // A discord destination (Sink in Output/Destinations)
+  public async sendMessage(channelID: string, text: string) {
+    await this.client.createMessage(channelID, text)
+  }
+
+  public async sendFile(channelID: string, caption: string, file: { name: string; path: string }) {
+    await this.client.createMessage(channelID, { content: caption, attachments: [{ filename: file.name, file: readFileSync(file.path) }] })
   }
 
   public async disconnect(reconnect = false) {
