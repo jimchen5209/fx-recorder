@@ -20,9 +20,12 @@ export class DiscordVoice extends EventEmitter {
   private delivery: Destinations.Delivery
   private sendInterval: NodeJS.Timeout | undefined
   private cleanupInterval: NodeJS.Timeout | undefined
+  private rejoinTimer: NodeJS.Timeout | undefined
 
   private _active = false
   private readyToDelete = false
+  // Set on shutdown: nothing joins the channel again
+  private stopped = false
 
   private warningQueue = new MessageQueue(1000)
   private errorQueue = new MessageQueue(1000)
@@ -133,6 +136,7 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private startSendRecord() {
+    clearInterval(this.sendInterval)
     this.sendInterval = setInterval(() => {
       this.recorder.saver
         .getFilePeriod()
@@ -145,8 +149,8 @@ export class DiscordVoice extends EventEmitter {
   private stopSession(channelID: string, connection: VoiceConnection) {
     connection.stopPlaying()
 
+    // Only the session's timer; stale cleanup goes on while the channel is empty
     clearInterval(this.sendInterval)
-    clearInterval(this.cleanupInterval)
 
     this.logger.info('Sending rest of recording...')
     this.recorder
@@ -163,6 +167,11 @@ export class DiscordVoice extends EventEmitter {
   }
 
   public async stop(connection: VoiceConnection) {
+    this.stopped = true
+    this.autoLeaveOrJoinChannel.cancel()
+    this.tryReconnect.cancel()
+    clearTimeout(this.rejoinTimer)
+    clearInterval(this.cleanupInterval)
     this._active = false
     this.updateStatus()
 
@@ -190,8 +199,8 @@ export class DiscordVoice extends EventEmitter {
       if (this._active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
       getApp().discord?.disconnect(true)
     }
-    setTimeout(() => {
-      this.startAudioSession(channelID)
+    this.rejoinTimer = setTimeout(() => {
+      if (!this.stopped) this.startAudioSession(channelID)
     }, 5 * 1000)
   }, 500)
 
@@ -249,6 +258,7 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private autoLeaveOrJoinChannel = debounce(() => {
+    if (this.stopped) return
     const voiceChannel = this.client.getChannel(this.channelConfig.id) as VoiceChannel
     let noUser = true
 
