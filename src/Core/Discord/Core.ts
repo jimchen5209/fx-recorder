@@ -46,11 +46,13 @@ export class Discord {
       this.logger.error(`Error on shard ${id}: ${error.message}`, error)
     })
 
-    this.client.once('ready', async () => {
+    // Again after every reconnect: the presence is set anew; the channels are made the first time only
+    this.client.on('ready', async () => {
       this.logger.info(`Logged in as ${this.client.user.username} (${this.client.user.id})`)
 
       this.updateStatus()
 
+      if (Object.keys(this.audios).length > 0) return
       config.channels.forEach((channel) => {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
         this.audios[channel.id].on('status', () => this.updateStatus())
@@ -103,7 +105,13 @@ export class Discord {
     await this.client.createMessage(channelID, { content: caption, attachments: [{ filename: file.name, file: readFileSync(file.path) }] })
   }
 
-  public async disconnect(reconnect = false) {
+  // Drops the gateway connection and connects again; the handlers and recorded channels stay
+  public reconnect() {
+    this.logger.warn('Reconnecting...')
+    this.client.disconnect({ reconnect: true })
+  }
+
+  public async disconnect() {
     this.logger.info('Shutting down...')
 
     for (const connection of this.client.voiceConnections.values()) {
@@ -116,6 +124,6 @@ export class Discord {
 
     this.client.removeAllListeners()
 
-    this.client.disconnect({ reconnect })
+    this.client.disconnect({ reconnect: false })
   }
 }

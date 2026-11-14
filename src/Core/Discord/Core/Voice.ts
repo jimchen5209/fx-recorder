@@ -197,7 +197,7 @@ export class DiscordVoice extends EventEmitter {
     if (this.reconnectFailSafe.checkHitExceed()) {
       this.logger.error(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
       if (this._active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
-      getApp().discord?.disconnect(true)
+      getApp().discord?.reconnect()
     }
     this.rejoinTimer = setTimeout(() => {
       if (!this.stopped) this.startAudioSession(channelID)
