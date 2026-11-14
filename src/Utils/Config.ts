@@ -154,7 +154,7 @@ export class Config {
       const problems = this.validate()
       if (problems.length > 0) {
         for (const problem of problems) this.logger.fatal(`config.json: ${problem}`)
-        process.exit(1)
+        process.exit(78)
       }
 
       // save to make sure config is correct
@@ -171,7 +171,7 @@ export class Config {
       this.save()
 
       this.logger.warn('Empty config generated, go ahead and fill your config.')
-      process.exit(1)
+      process.exit(78)
     }
   }
 
@@ -179,7 +179,7 @@ export class Config {
     if (!version || version < this.configVersion) return true
     if (version > this.configVersion) {
       this.logger.fatal('This config version is newer than me! Consider upgrading to the latest version or reset your configuration.')
-      process.exit(1)
+      process.exit(78)
     }
     return false
   }
@@ -319,7 +319,7 @@ export class Config {
     this.save()
 
     this.logger.warn('Detected config version change and we have tried to backup and migrate into it! Consider checking your config file.')
-    process.exit(1)
+    process.exit(78)
   }
 
   /**
