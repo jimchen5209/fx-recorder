@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, renameSync, rmSync, statSync } from 'node:fs'
+import { mkdirSync, readdirSync, renameSync, rmSync, statfsSync, statSync } from 'node:fs'
 import { type ILogObj, Logger } from 'tslog'
 import { Discord } from '../Discord/Discord'
 import type { Fluxer } from '../Fluxer/Fluxer'
@@ -62,6 +62,41 @@ export function keepLeftovers(temp = 'temp', now = Date.now()) {
     files.push(...inside)
   }
   return { dir, files }
+}
+
+export interface DiskWatch {
+  path: string
+  minFreeBytes: number
+  everyMs: number
+}
+
+// Checks the disk with temp/ every 10 minutes. Below 1 GiB free it warns and calls notify once, and again only after
+// the space came back. Recording goes on: nothing unsent is deleted to make room. Returns the timer, for shutdown.
+export function watchDiskSpace(
+  logger: Logger<ILogObj>,
+  notify: (message: string) => unknown,
+  watch: DiskWatch = { path: 'temp', minFreeBytes: 1024 ** 3, everyMs: 10 * 60 * 1000 }
+) {
+  let low = false
+  return setInterval(() => {
+    let free: number
+    try {
+      const stats = statfsSync(watch.path)
+      free = stats.bavail * stats.bsize
+    } catch (error) {
+      logger.warn(`Could not check the free disk space for ${watch.path}: ${error instanceof Error ? error.message : error}`)
+      return
+    }
+    if (free >= watch.minFreeBytes) {
+      low = false
+      return
+    }
+    if (low) return
+    low = true
+    const message = `Only ${(free / 1024 ** 3).toFixed(2)} GiB of disk space left for recordings in ${watch.path}`
+    logger.warn(message)
+    notify(message)
+  }, watch.everyMs)
 }
 
 // Stops every platform and waits for their recordings to be sent, then Telegram. False when that took longer than

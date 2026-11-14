@@ -5,7 +5,8 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const { useTempCwd } = require('./helpers')
 
-const { getApp, stopApp, keepLeftovers } = require('../dist/App/App')
+const { getApp, stopApp, keepLeftovers, watchDiskSpace } = require('../dist/App/App')
+const { fakeLogger } = require('./helpers')
 
 test('importing App reads no config, and getApp() before createApp() throws', (t) => {
   const tmp = useTempCwd()
@@ -67,6 +68,40 @@ test('keepLeftovers: an earlier run’s recordings move to temp/kept/<time>/, em
   assert.deepEqual(fs.readdirSync('temp').sort(), ['kept'], 'channel folders moved or, when empty, removed')
   assert.ok(!fs.existsSync('temp/kept/old'), 'over 7 days')
   assert.ok(fs.existsSync('temp/kept/recent'))
+})
+
+// The real free space of the test machine's disk; minFreeBytes decides whether it counts as low
+test('watchDiskSpace: tells once while the disk stays low, again after it came back', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] })
+  const notified = []
+  const watch = { path: '.', minFreeBytes: Number.POSITIVE_INFINITY, everyMs: 1000 }
+  const timer = watchDiskSpace(fakeLogger(), (message) => notified.push(message), watch)
+  t.after(() => clearInterval(timer))
+  assert.equal(notified.length, 0, 'the first check is after everyMs')
+  t.mock.timers.tick(1000)
+  t.mock.timers.tick(1000)
+  assert.equal(notified.length, 1)
+  assert.match(notified[0], /GiB of disk space left for recordings in \./)
+  watch.minFreeBytes = 0
+  t.mock.timers.tick(1000)
+  watch.minFreeBytes = Number.POSITIVE_INFINITY
+  t.mock.timers.tick(1000)
+  assert.equal(notified.length, 2)
+})
+
+test('watchDiskSpace: enough space tells nobody; a path it cannot check is logged', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] })
+  const notified = []
+  const records = []
+  const enough = watchDiskSpace(fakeLogger(), (message) => notified.push(message), { path: '.', minFreeBytes: 0, everyMs: 1000 })
+  const missing = watchDiskSpace(fakeLogger(records), (message) => notified.push(message), { path: '/no/such/dir', minFreeBytes: 0, everyMs: 1000 })
+  t.after(() => {
+    clearInterval(enough)
+    clearInterval(missing)
+  })
+  t.mock.timers.tick(1000)
+  assert.deepEqual(notified, [])
+  assert.equal(records.filter(([level]) => level === 'warn').length, 1)
 })
 
 test('keepLeftovers: nothing left makes no kept folder, and a missing temp/ is made', (t) => {

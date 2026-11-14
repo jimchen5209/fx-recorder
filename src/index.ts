@@ -1,5 +1,5 @@
 import { Status } from 'status-client'
-import { createApp, keepLeftovers, stopApp } from './App/App'
+import { createApp, keepLeftovers, stopApp, watchDiskSpace } from './App/App'
 import { sendAdminMessage } from './Delivery/Delivery'
 
 let quitting = false
@@ -53,6 +53,8 @@ const debugMemoryInterval = setInterval(() => {
   })
 }, 30 * 1000)
 
+const diskInterval = watchDiskSpace(logger, (message) => sendAdminMessage(app.discord?.client, logger, message))
+
 // Graceful shutdown: up to a minute for the recordings to be sent; a second signal quits at once
 const stop = () => {
   console.log()
@@ -64,6 +66,7 @@ const stop = () => {
 
   logger.info('Shutting down...')
   clearInterval(debugMemoryInterval)
+  clearInterval(diskInterval)
   stopApp(app, 60 * 1000).then((drained) => {
     if (drained) logger.info('All services shut down gracefully. Exiting.')
     else logger.warn('Graceful shutdown timed out. Force quitting...')
