@@ -27,3 +27,7 @@ jobs:
 
     - name: Build
       run: pnpm build
+
+    # Offline tests against dist/; the FFmpeg ones skip when ffmpeg is not on the runner
+    - name: Test
+      run: pnpm test
