@@ -108,14 +108,25 @@ test('sendRecord: a fluxer failure (or a missing instance) does not hold back la
   )
 })
 
-// Fails for now: Telegram.sendAudio catches the SDK error, so sendRecord resolves and the caller deletes the file
-test('a failed Telegram upload rejects sendRecord', { todo: true }, async () => {
-  const TelegramModule = require('../dist/Core/Telegram/Core')
-  const telegram = Object.create(TelegramModule.Telegram.prototype)
+// The real Telegram class with a fake bot, so its error handling is what gets tested
+function realTelegram(sendAudio) {
+  const { Telegram } = require('../dist/Core/Telegram/Core')
+  const telegram = Object.create(Telegram.prototype)
   telegram.logger = fakeLogger()
-  telegram.bot = { sendAudio: async () => Promise.reject(new Error('telegram down')) }
-  instances.telegram = telegram
-  await assert.rejects(Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file))
+  telegram.bot = { sendAudio }
+  return telegram
+}
+
+test('a failed Telegram upload rejects sendRecord', async () => {
+  instances.telegram = realTelegram(async () => Promise.reject(new Error('telegram down')))
+  await assert.rejects(Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file), /telegram down/)
+})
+
+test('a Telegram upload passes the caption through', async () => {
+  const sent = []
+  instances.telegram = realTelegram(async (id, path, options) => sent.push([id, path, options]))
+  await Destinations.sendRecord([{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }], undefined, fakeLogger(), 'c1', file)
+  assert.deepEqual(sent, [['t1', 'temp/a.mp3', { caption }]])
 })
 
 test('sendMessage: telegram, discord, fluxer in order; a fluxer failure is logged, not thrown', async () => {

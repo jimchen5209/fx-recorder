@@ -20,6 +20,7 @@ export class Telegram {
     this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_parameters: { message_id: msg.message_id } }))
   }
 
+  // Throws when the upload fails, so the caller retries and keeps the file
   public async sendAudio(chatID: string, file: string, caption: string) {
     try {
       await this.bot.sendAudio(chatID, file, { caption })
@@ -28,9 +29,8 @@ export class Telegram {
       if (err instanceof Error) {
         this.logger.error(`File ${file} send failed:${err.message}`)
       }
+      throw err
     }
-
-    return file
   }
 
   public async sendMessage(chatID: string, text: string, useMarkdown: boolean = false) {

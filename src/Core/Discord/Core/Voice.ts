@@ -148,9 +148,10 @@ export class DiscordVoice extends EventEmitter {
   private startSendRecord() {
     this.sendInterval = setInterval(() => {
       const file = this.recorder.saver.getFilePeriod()
-      this.sendRecord(file).then(() => {
-        this.recorder.saver.removeRecordFile(file.start)
-      })
+      this.sendRecord(file)
+        .then(() => this.recorder.saver.removeRecordFile(file.start))
+        // Logged in sendRecord; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
+        .catch(() => undefined)
     }, this.channelConfig.sendIntervalSecond * 1000)
   }
 
@@ -162,10 +163,12 @@ export class DiscordVoice extends EventEmitter {
 
     this.logger.info('Sending rest of recording...')
     const file = this.recorder.stop()
-    this.sendRecord(file).then(async () => {
-      await this.sendMessage('The record session has ended.')
-      if (!this._active) this.readyToDelete = true
-    })
+    this.sendRecord(file)
+      .then(() => this.sendMessage('The record session has ended.'))
+      .catch(() => undefined)
+      .finally(() => {
+        if (!this._active) this.readyToDelete = true
+      })
 
     this.client.leaveVoiceChannel(channelID)
   }
