@@ -11,7 +11,7 @@ const { setTimeout: sleep } = require('node:timers/promises')
 const { fakeLogger, useTempCwd, hasFfmpeg, tone, channel } = require('./helpers')
 
 const skip = !hasFfmpeg && 'ffmpeg/ffprobe not installed'
-const { RecordSaver } = require('../dist/Core/Discord/Recorder/RecordSaver')
+const { RecordSaver } = require('../dist/Recording/RecordSaver')
 
 const durationOf = (file) => Number(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file]).stdout.toString()) || 0
 function peakOf(file) {
@@ -150,7 +150,7 @@ test('a new Recorder makes its folder and nothing else', { skip }, (t) => {
   t.after(() => tmp.cleanup())
   const children = () => process._getActiveHandles().filter((handle) => handle.constructor.name === 'ChildProcess').length
   const before = children()
-  const { Recorder } = require('../dist/Core/Discord/Recorder/Recorder')
+  const { Recorder } = require('../dist/Recording/Recorder')
   new Recorder(channel({ storageKey: 'k' }), fakeLogger(), false)
   assert.deepEqual(fs.readdirSync('.'), ['temp'])
   assert.deepEqual(fs.readdirSync('temp'), ['k'])

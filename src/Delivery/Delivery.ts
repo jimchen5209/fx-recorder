@@ -1,9 +1,9 @@
 import { existsSync, unlinkSync } from 'node:fs'
 import type { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
-import { getApp } from '../../App/App'
-import type { DiscordChannel, FileDestination } from '../../Utils/Config'
-import type { IRecordFile, IUserRecordFile } from '../Discord/Recorder/RecordSaver'
+import { getApp } from '../App/App'
+import type { IRecordFile, IUserRecordFile } from '../Recording/RecordSaver'
+import type { DiscordChannel, FileDestination } from '../Shared/Config'
 
 // A place messages and recordings can go: Telegram, Discord, or one Fluxer instance (through Fluxer.send)
 export interface Sink {

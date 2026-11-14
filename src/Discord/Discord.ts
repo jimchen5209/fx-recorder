@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
-import type { DiscordConfig } from '../../Utils/Config'
-import { DiscordVoice } from './Core/Voice'
+import type { DiscordConfig } from '../Shared/Config'
+import { DiscordVoice } from './VoiceConnection'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
@@ -96,7 +96,7 @@ export class Discord {
     this.client.connect()
   }
 
-  // A discord destination (Sink in Output/Destinations)
+  // A discord destination (Sink in Delivery/Delivery)
   public async sendMessage(channelID: string, text: string) {
     await this.client.createMessage(channelID, text)
   }

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const { fakeLogger, useTempCwd, channel } = require('./helpers')
 
-const { RecordingSession } = require('../dist/Core/Recording/RecordingSession')
+const { RecordingSession } = require('../dist/Recording/RecordingSession')
 
 const HOUR = 60 * 60 * 1000
 let tmp

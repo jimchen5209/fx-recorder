@@ -6,8 +6,8 @@ const fs = require('node:fs')
 const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 const app = stubApp()
-const { DiscordVoice } = require('../dist/Core/Discord/Core/Voice')
-const { FluxerVoice } = require('../dist/Core/Fluxer/Voice')
+const { DiscordVoice } = require('../dist/Discord/VoiceConnection')
+const { FluxerVoice } = require('../dist/Fluxer/VoiceConnection')
 
 const config = channel({ guildId: 'g1', sendIntervalSecond: 60, fileDest: [] })
 const HOUR = 60 * 60 * 1000

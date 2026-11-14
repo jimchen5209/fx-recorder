@@ -25,7 +25,7 @@ if (app.discord) {
 const fluxerInstances = app.config.fluxer.filter((instance) => instance.enabled)
 if (fluxerInstances.length > 0) {
   // Loaded only when used, so the Fluxer and LiveKit packages stay out otherwise
-  import('./Core/Fluxer/Core').then(
+  import('./Fluxer/Fluxer').then(
     ({ Fluxer }) => {
       for (const config of fluxerInstances) {
         const fluxer = new Fluxer(config)

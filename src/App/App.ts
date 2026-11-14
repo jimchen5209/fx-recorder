@@ -1,8 +1,8 @@
 import { type ILogObj, Logger } from 'tslog'
-import { Discord } from '../Core/Discord/Core'
-import type { Fluxer } from '../Core/Fluxer/Core'
-import { Telegram } from '../Core/Telegram/Core'
-import { Config, loggerOptions } from '../Utils/Config'
+import { Discord } from '../Discord/Discord'
+import type { Fluxer } from '../Fluxer/Fluxer'
+import { Config, loggerOptions } from '../Shared/Config'
+import { Telegram } from '../Telegram/Telegram'
 
 // What the whole app shares. index.ts makes it once with createApp(); importing this module does nothing.
 export interface App {

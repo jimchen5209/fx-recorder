@@ -4,12 +4,12 @@
 import { readFileSync } from 'node:fs'
 import { Client, Events, type Guild, Routes } from '@fluxerjs/core'
 import type { ILogObj, Logger } from 'tslog'
-import { getApp } from '../../App/App'
-import type { FluxerInstanceConfig } from '../../Utils/Config'
+import { getApp } from '../App/App'
+import type { FluxerInstanceConfig } from '../Shared/Config'
 import { discoverInstance, isTrustedEndpoint } from './Discovery'
 import { VoicePresenceTracker, type VoiceStateUpdate } from './Presence'
-import { FluxerVoice } from './Voice'
 import { FluxerVoiceManager } from './Voice/Manager'
+import { FluxerVoice } from './VoiceConnection'
 
 // The voice state fields read here, as the gateway sends them
 interface WireVoiceState {

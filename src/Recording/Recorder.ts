@@ -1,8 +1,8 @@
 import type { ILogObj, Logger } from 'tslog'
-import AbortStream from '../../../Libs/abort'
-import LicsonMixer from '../../../Libs/LicsonMixer/mixer'
-import type { RecordingChannel } from '../../Recording/Types'
+import AbortStream from '../Libs/abort'
+import LicsonMixer from '../Libs/LicsonMixer/mixer'
 import { RecordSaver } from './RecordSaver'
+import type { RecordingChannel } from './Types'
 
 export class Recorder {
   private channelConfig: RecordingChannel

@@ -21,10 +21,10 @@ class FakeSaver {
     return { start: 'x', perUserFiles: [] }
   }
 }
-stubModule('Core/Discord/Recorder/RecordSaver.js', { RecordSaver: FakeSaver })
+stubModule('Recording/RecordSaver.js', { RecordSaver: FakeSaver })
 const log = console.log
 console.log = () => undefined // the mixer logs every track
-const { Recorder } = require('../dist/Core/Discord/Recorder/Recorder')
+const { Recorder } = require('../dist/Recording/Recorder')
 test.after(() => {
   console.log = log
 })

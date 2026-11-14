@@ -5,7 +5,7 @@ const assert = require('node:assert/strict')
 const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 stubApp()
-const { Discord } = require('../dist/Core/Discord/Core')
+const { Discord } = require('../dist/Discord/Discord')
 
 const events = ['voiceChannelJoin', 'voiceChannelLeave', 'voiceChannelSwitch', 'warn', 'error', 'ready']
 

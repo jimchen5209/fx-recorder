@@ -1,4 +1,4 @@
-// Output/Destinations: Delivery to fake Telegram, Discord and Fluxer sinks. Captions, order, sendAll/perUser, retries,
+// Delivery to fake Telegram, Discord and Fluxer sinks. Captions, order, sendAll/perUser, retries,
 // deleting a segment once sent, failure paths, and admin messages. Timers are mocked.
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -6,7 +6,7 @@ const fs = require('node:fs')
 const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 const app = stubApp()
-const { Delivery, sendAdminMessage } = require('../dist/Core/Output/Destinations')
+const { Delivery, sendAdminMessage } = require('../dist/Delivery/Delivery')
 
 let calls
 // A sink that records what it is asked to send; fail(kind, id) decides which calls throw
@@ -169,7 +169,7 @@ test('deliver: a slow upload does not hold back the next segment, and each delet
 
 // The real Telegram class with a fake bot, so its error handling is what gets tested
 function realTelegram(sendAudio) {
-  const { Telegram } = require('../dist/Core/Telegram/Core')
+  const { Telegram } = require('../dist/Telegram/Telegram')
   const telegram = Object.create(Telegram.prototype)
   telegram.logger = fakeLogger()
   telegram.bot = { sendAudio }

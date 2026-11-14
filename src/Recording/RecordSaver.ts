@@ -6,9 +6,9 @@ import customParseFormat from 'dayjs/plugin/customParseFormat'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import type { ILogObj, Logger } from 'tslog'
-import AudioUtils from '../../../Libs/audio'
-import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
-import type { RecordingChannel } from '../../Recording/Types'
+import AudioUtils from '../Libs/audio'
+import type LicsonMixer from '../Libs/LicsonMixer/mixer'
+import type { RecordingChannel } from './Types'
 
 export interface IUserRecordFile {
   readonly user: string

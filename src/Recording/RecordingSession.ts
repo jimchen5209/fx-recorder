@@ -1,7 +1,7 @@
 import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import type { ILogObj, Logger } from 'tslog'
-import { Recorder } from '../Discord/Recorder/Recorder'
-import type { IRecordFile } from '../Discord/Recorder/RecordSaver'
+import { Recorder } from './Recorder'
+import type { IRecordFile } from './RecordSaver'
 import type { RecordingChannel } from './Types'
 
 const STALE_AGE_MS = 24 * 60 * 60 * 1000

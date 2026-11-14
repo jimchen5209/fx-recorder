@@ -4,9 +4,9 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const { fakeLogger, tone } = require('./helpers')
 
-const { VoicePresenceTracker } = require('../dist/Core/Fluxer/Presence')
-const { isTrustedEndpoint } = require('../dist/Core/Fluxer/Discovery')
-const { parseIdentity } = require('../dist/Core/Fluxer/Voice/LiveKitSession')
+const { VoicePresenceTracker } = require('../dist/Fluxer/Presence')
+const { isTrustedEndpoint } = require('../dist/Fluxer/Discovery')
+const { parseIdentity } = require('../dist/Fluxer/Voice/LiveKitSession')
 
 const g = 'g1'
 const state = (userId, connectionId, channelId, version) => ({ guildId: g, userId, connectionId, channelId, version })
@@ -72,7 +72,7 @@ try {
 const skipOpus = !OpusEncoder && '@discordjs/opus not installed'
 
 test('TrackReceiver: 20 ms and 10 ms Opus frames and the 3-byte silence frame decode to 48 kHz stereo s16le', { skip: skipOpus }, () => {
-  const { TrackReceiver } = require('../dist/Core/Fluxer/Voice/TrackReceiver')
+  const { TrackReceiver } = require('../dist/Fluxer/Voice/TrackReceiver')
   const encoder = new OpusEncoder(48000, 2)
   let onRtp
   const track = { ssrc: 1, onReceiveRtp: { subscribe: (fn) => (onRtp = fn) } }
@@ -96,7 +96,7 @@ test('TrackReceiver: 20 ms and 10 ms Opus frames and the 3-byte silence frame de
 })
 
 test('TrackReceiver: an undecodable packet is dropped and logged, not thrown', { skip: skipOpus }, () => {
-  const { TrackReceiver } = require('../dist/Core/Fluxer/Voice/TrackReceiver')
+  const { TrackReceiver } = require('../dist/Fluxer/Voice/TrackReceiver')
   let onRtp
   const records = []
   const stored = []

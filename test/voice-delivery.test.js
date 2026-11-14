@@ -7,8 +7,8 @@ const fs = require('node:fs')
 const { stubApp, fakeLogger, useTempCwd, channel } = require('./helpers')
 
 const app = stubApp()
-const { DiscordVoice } = require('../dist/Core/Discord/Core/Voice')
-const { FluxerVoice } = require('../dist/Core/Fluxer/Voice')
+const { DiscordVoice } = require('../dist/Discord/VoiceConnection')
+const { FluxerVoice } = require('../dist/Fluxer/VoiceConnection')
 
 const file = { start: 'S', end: 'E', tags: [], audioFilePath: 'temp/S.mp3', audioFileName: 'S.mp3', perUserFiles: [] }
 const config = channel({ guildId: 'g1', sendIntervalSecond: 60, fileDest: [{ type: 'telegram', id: 't1', sendAll: true, sendPerUser: false }] })
