@@ -158,6 +158,28 @@ test('a new Recorder makes its folder and nothing else', { skip }, (t) => {
   assert.equal(children(), before)
 })
 
+// The encoders this process started
+const encoders = () => process._getActiveHandles().filter((handle) => handle.constructor.name === 'ChildProcess' && handle.spawnfile === 'ffmpeg')
+
+// Ctrl+C in a terminal, or pm2 stop/restart, sends SIGINT to FFmpeg as well; it finishes the file and exits 255
+test('a session whose encoders got SIGINT still ends with complete files', { skip }, async (t) => {
+  const { feed, stop } = setup(t)
+  feed(10)
+  await sleep(1000)
+  for (const encoder of encoders()) encoder.kill('SIGINT')
+  const last = await stop()
+  assert.ok(durationOf(last.audioFilePath) > 5, `mixed: ${durationOf(last.audioFilePath)} s`)
+  assert.ok(durationOf(last.perUserFiles[0].audioFilePath) > 5)
+})
+
+test('a session whose encoder was killed outright fails', { skip }, async (t) => {
+  const { feed, stop } = setup(t)
+  feed(10)
+  await sleep(1000)
+  for (const encoder of encoders()) encoder.kill('SIGKILL')
+  await assert.rejects(stop(), /FFmpeg exited with SIGKILL/)
+})
+
 test('an encoder that cannot start fails the session end', { skip }, async (t) => {
   const tmp = useTempCwd()
   const path = process.env.PATH

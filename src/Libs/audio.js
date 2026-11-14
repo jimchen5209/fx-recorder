@@ -60,11 +60,13 @@ function generatePCMtoMP3Stream(stream, debug) {
     // Ends the input instead of killing FFmpeg, so it still flushes what it holds to stdout
     stream.on('close', () => outputStream.stdin.end())
 
-    // stdout.done: resolves when FFmpeg exits cleanly, rejects when it fails or cannot start
+    // stdout.done: resolves when FFmpeg exits cleanly, rejects when it fails or cannot start.
+    // 255 is FFmpeg's exit after SIGINT, which it handles by finishing the file: a terminal's Ctrl+C or pm2's
+    // stop/restart (treekill) sends SIGINT to FFmpeg too. Killed outright (SIGKILL) it is a failure.
     const done = new Promise((resolve, reject) => {
         outputStream.on('error', reject);
         outputStream.stdin.on('error', reject);
-        outputStream.on('close', (code, signal) => code === 0 ? resolve() : reject(new Error(`FFmpeg exited with ${signal ?? code}`)));
+        outputStream.on('close', (code, signal) => code === 0 || code === 255 ? resolve() : reject(new Error(`FFmpeg exited with ${signal ?? code}`)));
     });
     done.catch(() => undefined); // awaited by the caller when it needs to know
     outputStream.stdout.done = done;
