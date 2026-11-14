@@ -4,7 +4,8 @@ import { Recorder } from './Recorder'
 import type { IRecordFile } from './RecordSaver'
 import type { RecordingChannel } from './Types'
 
-const STALE_AGE_MS = 24 * 60 * 60 * 1000
+// A recording that could not be sent is kept this long, for sending by hand
+const STALE_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const CLEANUP_EVERY_MS = 60 * 60 * 1000
 
 export interface RecordingSessionOptions {
@@ -14,8 +15,8 @@ export interface RecordingSessionOptions {
   logger: Logger<ILogObj>
   // config.logging.debug
   debug: boolean
-  // Sends a finished segment; keepFiles for the last one of a session
-  deliver: (file: IRecordFile, options: { keepFiles: boolean }) => Promise<unknown>
+  // Sends a finished segment and deletes its files once every destination has it; rejects when it could not
+  deliver: (file: IRecordFile) => Promise<unknown>
   // A message to the channel's destinations
   announce: (message: string) => Promise<unknown>
 }
@@ -46,12 +47,12 @@ export class RecordingSession {
     this.running = true
     this.recorder.startStream()
     this.sendInterval = setInterval(() => {
-      this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.options.deliver(file, { keepFiles: false })))
+      this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.options.deliver(file)))
     }, this.channel.sendIntervalSecond * 1000)
     this.track(this.options.announce('Record session started'))
   }
 
-  // Sends the rest. The last segment's files stay on disk after it is sent, as before; a second stop sends no segment
+  // Sends the rest; a second stop sends no segment
   public stop() {
     this.running = false
     clearInterval(this.sendInterval)
@@ -59,13 +60,13 @@ export class RecordingSession {
     this.track(
       this.recorder
         .stop()
-        .then((file) => file && this.options.deliver(file, { keepFiles: true }))
+        .then((file) => file && this.options.deliver(file))
         .then(() => this.options.announce('The record session has ended.'))
     )
   }
 
   // Shutdown waits for it. Failures are logged where they happen; caught so they do not crash the bot, and a failed
-  // segment's files stay for stale cleanup
+  // segment's files stay for 7 days
   public track(work: Promise<unknown>) {
     const tracked: Promise<unknown> = work.catch(() => undefined).finally(() => this.pending.delete(tracked))
     this.pending.add(tracked)

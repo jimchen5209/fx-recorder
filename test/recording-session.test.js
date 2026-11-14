@@ -1,5 +1,5 @@
-// RecordingSession: the recording lifecycle both voice connections share. A segment every sendIntervalSecond (files
-// deleted once sent), the rest at the end (files kept), messages, stale cleanup until close, and close waiting for the
+// RecordingSession: the recording lifecycle both voice connections share. A segment every sendIntervalSecond and the
+// rest at the end, each handed to delivery, messages, stale cleanup (7 days) until close, and close waiting for the
 // work in flight. The Recorder is faked; timers are mocked.
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -9,6 +9,7 @@ const { fakeLogger, useTempCwd, channel } = require('./helpers')
 const { RecordingSession } = require('../dist/Recording/RecordingSession')
 
 const HOUR = 60 * 60 * 1000
+const DAY = 24 * HOUR
 let tmp
 test.beforeEach(() => {
   tmp = useTempCwd()
@@ -35,7 +36,7 @@ function setup({ deliver } = {}) {
     mainLogger: fakeLogger(),
     logger: fakeLogger(),
     debug: false,
-    deliver: deliver ?? (async (file, options) => calls.push(['deliver', file.start, options.keepFiles])),
+    deliver: deliver ?? (async (file) => calls.push(['deliver', file.start])),
     announce: async (message) => calls.push(['announce', message])
   })
   let stopped = false
@@ -48,7 +49,7 @@ function setup({ deliver } = {}) {
   return { session, calls }
 }
 
-test('a session: started, a segment a minute (files deleted), the rest at the end (files kept), with its messages', async () => {
+test('a session: started, a segment a minute, the rest at the end, with its messages', async () => {
   const { session, calls } = setup()
   session.start()
   await runFor(120 * 1000)
@@ -57,9 +58,9 @@ test('a session: started, a segment a minute (files deleted), the rest at the en
   assert.deepEqual(calls, [
     ['startStream'],
     ['announce', 'Record session started'],
-    ['deliver', 'seg1', false],
-    ['deliver', 'seg2', false],
-    ['deliver', 'rest', true],
+    ['deliver', 'seg1'],
+    ['deliver', 'seg2'],
+    ['deliver', 'rest'],
     ['announce', 'The record session has ended.']
   ])
 })
@@ -104,14 +105,16 @@ test('close waits for a segment still being sent, and a failed one does not reje
   assert.equal(closed, true)
 })
 
-test('stale cleanup runs while stopped, and ends with close', async () => {
+test('stale cleanup removes recordings older than 7 days, runs while stopped, and ends with close', async () => {
   const { session } = setup()
   fs.writeFileSync('temp/k/old.mp3', 'x')
   session.stop()
-  await runFor(25 * HOUR, HOUR)
+  await runFor(6 * DAY, HOUR)
+  assert.ok(fs.existsSync('temp/k/old.mp3'), 'kept for 7 days')
+  await runFor(2 * DAY, HOUR)
   assert.ok(!fs.existsSync('temp/k/old.mp3'))
   await session.close()
   fs.writeFileSync('temp/k/later.mp3', 'x')
-  await runFor(25 * HOUR, HOUR)
+  await runFor(8 * DAY, HOUR)
   assert.ok(fs.existsSync('temp/k/later.mp3'), 'no cleanup after close')
 })

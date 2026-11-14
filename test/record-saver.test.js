@@ -157,6 +157,15 @@ test('a new Recorder makes its folder and nothing else', { skip }, (t) => {
   assert.equal(children(), before)
 })
 
+test('a new RecordSaver keeps the files already in its folder', (t) => {
+  const tmp = useTempCwd()
+  t.after(() => tmp.cleanup())
+  fs.mkdirSync('temp/k')
+  fs.writeFileSync('temp/k/unsent.mp3', 'x')
+  new RecordSaver(channel({ storageKey: 'k' }), fakeLogger(), false)
+  assert.deepEqual(fs.readdirSync('temp/k'), ['unsent.mp3'])
+})
+
 // The encoders this process started
 const encoders = () => process._getActiveHandles().filter((handle) => handle.constructor.name === 'ChildProcess' && handle.spawnfile === 'ffmpeg')
 

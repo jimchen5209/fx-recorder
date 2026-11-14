@@ -97,10 +97,10 @@ export class Delivery {
     }
   }
 
-  // Sends a finished segment, trying 3 times 5 s apart, and deletes its files once sent unless keepFiles. A retry
+  // Sends a finished segment, trying 3 times 5 s apart, and deletes its files once every destination has them. A retry
   // sends only the uploads that failed, not the ones a destination already has. Rejects when every attempt failed; the
   // files stay then.
-  public async deliver(file: IRecordFile, { keepFiles = false } = {}) {
+  public async deliver(file: IRecordFile) {
     // `${destination index}:${path}` of every upload that went through
     const sent = new Set<string>()
     for (let attempt = 1; ; attempt++) {
@@ -116,7 +116,6 @@ export class Delivery {
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
       }
     }
-    if (keepFiles) return
     for (const path of [file.audioFilePath, ...file.perUserFiles.map((userFile) => userFile.audioFilePath)]) {
       this.logger.debug(`Removing record file ${path}`)
       if (existsSync(path)) unlinkSync(path)

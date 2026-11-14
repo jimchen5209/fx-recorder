@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync as exists, mkdirSync as mkDir, rmSync as rmDir, type WriteStream } from 'node:fs'
+import { createWriteStream, existsSync as exists, mkdirSync as mkDir, type WriteStream } from 'node:fs'
 import type { Readable } from 'node:stream'
 import { finished } from 'node:stream/promises'
 import dayjs from 'dayjs'
@@ -70,8 +70,8 @@ export class RecordSaver {
     this.logger = mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
     this.debug = debug
 
-    if (exists(`temp/${this.channelConfig.storageKey}`)) rmDir(`temp/${this.channelConfig.storageKey}`, { recursive: true })
-    mkDir(`temp/${this.channelConfig.storageKey}`)
+    // Whatever is in the folder stays: unsent recordings are not deleted (startup moves an earlier run's to temp/kept)
+    mkDir(`temp/${this.channelConfig.storageKey}`, { recursive: true })
 
     // setup dayjs
     dayjs.extend(utc)

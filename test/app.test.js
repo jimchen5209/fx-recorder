@@ -5,7 +5,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const { useTempCwd } = require('./helpers')
 
-const { getApp, stopApp } = require('../dist/App/App')
+const { getApp, stopApp, keepLeftovers } = require('../dist/App/App')
 
 test('importing App reads no config, and getApp() before createApp() throws', (t) => {
   const tmp = useTempCwd()
@@ -43,4 +43,36 @@ test('stopApp: false when a platform is still stopping at the deadline, and Tele
   t.mock.timers.tick(60 * 1000)
   assert.equal(await result, false)
   assert.equal(app.telegramStopped, true)
+})
+
+const DAY = 24 * 60 * 60 * 1000
+
+test('keepLeftovers: an earlier run’s recordings move to temp/kept/<time>/, empty folders go, kept folders over 7 days go', (t) => {
+  const tmp = useTempCwd()
+  t.after(() => tmp.cleanup())
+  fs.mkdirSync('temp/c1')
+  fs.writeFileSync('temp/c1/a.mp3', 'x')
+  fs.writeFileSync('temp/c1/u1-a.mp3', 'x')
+  fs.mkdirSync('temp/fluxer-official-c2')
+  fs.mkdirSync('temp/kept/old', { recursive: true })
+  fs.mkdirSync('temp/kept/recent')
+  const old = new Date(Date.now() - 8 * DAY)
+  fs.utimesSync('temp/kept/old', old, old)
+
+  const now = Date.parse('2026-11-14T13:00:00.000Z')
+  const { dir, files } = keepLeftovers('temp', now)
+  assert.equal(dir, 'temp/kept/2026-11-14T13-00-00-000Z')
+  assert.deepEqual(files.sort(), ['c1/a.mp3', 'c1/u1-a.mp3'])
+  assert.deepEqual(fs.readdirSync(`${dir}/c1`).sort(), ['a.mp3', 'u1-a.mp3'])
+  assert.deepEqual(fs.readdirSync('temp').sort(), ['kept'], 'channel folders moved or, when empty, removed')
+  assert.ok(!fs.existsSync('temp/kept/old'), 'over 7 days')
+  assert.ok(fs.existsSync('temp/kept/recent'))
+})
+
+test('keepLeftovers: nothing left makes no kept folder, and a missing temp/ is made', (t) => {
+  const tmp = useTempCwd()
+  t.after(() => tmp.cleanup())
+  fs.rmSync('temp', { recursive: true })
+  assert.deepEqual(keepLeftovers('temp').files, [])
+  assert.deepEqual(fs.readdirSync('temp/kept'), [])
 })

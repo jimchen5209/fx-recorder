@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Status } from 'status-client'
-import { createApp, stopApp } from './App/App'
+import { createApp, keepLeftovers, stopApp } from './App/App'
+import { sendAdminMessage } from './Delivery/Delivery'
 
 let quitting = false
 
@@ -11,9 +11,14 @@ if (app.config.logging.debug) app.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('fx-recorder')
 
-// Recordings left from the last run, cleared once before any platform starts recording
-if (existsSync('temp')) rmSync('temp', { recursive: true })
-mkdirSync('temp')
+// Recordings left by an earlier run are set aside before any platform starts recording, not sent again
+const leftovers = keepLeftovers()
+if (leftovers.files.length > 0) {
+  const message = `${leftovers.files.length} recording file(s) left by an earlier run were moved to ${leftovers.dir}, not sent`
+  logger.warn(`${message}: ${leftovers.files.join(', ')}`)
+  // Telegram admins only: Discord and Fluxer are not connected yet
+  sendAdminMessage(undefined, logger, message)
+}
 
 // Start the bot. Discord is off only when its token is empty and a Fluxer instance is enabled
 if (app.discord) {

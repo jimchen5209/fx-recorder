@@ -68,8 +68,8 @@ test('DiscordVoice: stale cleanup goes on after the channel empties (a pause)', 
   const voice = discordVoice(fakeDiscord())
   fs.writeFileSync('temp/chan1/old.mp3', 'x')
   voice.stopSession('chan1', connection)
-  // Older than a day by the time cleanup runs
-  await runFor(25 * HOUR, HOUR)
+  // Older than 7 days by the time cleanup runs
+  await runFor(8 * 24 * HOUR, HOUR)
   assert.ok(!fs.existsSync('temp/chan1/old.mp3'), 'stale file removed after the pause')
   await stopVoice(voice)
 })

@@ -85,12 +85,6 @@ test('deliver: destinations in config order, mixed before per-user, exact captio
   assert.deepEqual(files(), [])
 })
 
-test('deliver with keepFiles sends and leaves the files', async () => {
-  await delivery([dest('telegram', 't1')]).deliver(segment(), { keepFiles: true })
-  assert.equal(calls.length, 1)
-  assert.deepEqual(files(), ['a.mp3', 'u1-a.mp3'])
-})
-
 test('deliver: discord destinations are skipped when Discord is off', async () => {
   app.discord = undefined
   await delivery([dest('discord', 'd1', { sendPerUser: true })]).deliver(segment())

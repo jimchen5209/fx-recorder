@@ -70,7 +70,7 @@ export class FluxerVoice extends EventEmitter {
         mainLogger: app.mainLogger,
         logger: this.logger,
         debug: app.config.logging.debug,
-        deliver: (file, options) => this.delivery.deliver(file, options),
+        deliver: (file) => this.delivery.deliver(file),
         announce: (message) => this.sendMessage(message)
       }
     )

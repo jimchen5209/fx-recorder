@@ -114,7 +114,7 @@ for (const [name, make, stop] of voices) {
     assert.deepEqual(unhandled, [])
   })
 
-  test(`${name}: the end of a session is announced after the rest is sent, and the last segment stays on disk`, async () => {
+  test(`${name}: the end of a session is announced after the rest is sent, which is then deleted too`, async () => {
     telegram(false)
     const voice = make()
     stop(voice)
@@ -122,7 +122,7 @@ for (const [name, make, stop] of voices) {
     stopTimers(voice)
     assert.equal(uploads, 1)
     assert.ok(messages.includes('[chan1] The record session has ended.'))
-    assert.ok(fs.existsSync(file.audioFilePath))
+    assert.ok(!fs.existsSync(file.audioFilePath))
     assert.equal(voice.recording.pending.size, 0, 'nothing left for shutdown to wait for')
   })
 

@@ -1,3 +1,4 @@
+import { mkdirSync, readdirSync, renameSync, rmSync, statSync } from 'node:fs'
 import { type ILogObj, Logger } from 'tslog'
 import { Discord } from '../Discord/Discord'
 import type { Fluxer } from '../Fluxer/Fluxer'
@@ -32,6 +33,35 @@ export function createApp(): App {
 export function getApp(): App {
   if (!app) throw new Error('getApp() called before createApp()')
   return app
+}
+
+// Kept recordings are removed after this long, at startup (the same age stale cleanup uses)
+const KEEP_MS = 7 * 24 * 60 * 60 * 1000
+
+// Recordings an earlier run left in temp/ (not sent, or cut off) move to temp/kept/<time>/: not deleted at startup and
+// never sent again. Kept folders older than 7 days are removed. Returns the folder and the files moved there.
+export function keepLeftovers(temp = 'temp', now = Date.now()) {
+  const kept = `${temp}/kept`
+  mkdirSync(kept, { recursive: true })
+  for (const old of readdirSync(kept)) {
+    if (now - statSync(`${kept}/${old}`).mtimeMs > KEEP_MS) rmSync(`${kept}/${old}`, { recursive: true })
+  }
+  const dir = `${kept}/${new Date(now).toISOString().replace(/[:.]/g, '-')}`
+  const files: string[] = []
+  for (const entry of readdirSync(temp, { withFileTypes: true })) {
+    if (entry.name === 'kept') continue
+    const path = `${temp}/${entry.name}`
+    const inside = entry.isDirectory() ? readdirSync(path).map((name) => `${entry.name}/${name}`) : [entry.name]
+    // An empty channel folder has nothing to keep
+    if (inside.length === 0) {
+      rmSync(path, { recursive: true })
+      continue
+    }
+    mkdirSync(dir, { recursive: true })
+    renameSync(path, `${dir}/${entry.name}`)
+    files.push(...inside)
+  }
+  return { dir, files }
 }
 
 // Stops every platform and waits for their recordings to be sent, then Telegram. False when that took longer than
