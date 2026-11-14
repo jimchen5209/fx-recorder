@@ -81,7 +81,7 @@ const voices = [
     discordVoice,
     (voice) => {
       voice._active = false
-      voice.stopSession('chan1', { stopPlaying: () => undefined })
+      voice.stopSession('chan1', { stopPlaying: () => undefined, off: () => undefined, receive: () => ({ off: () => undefined }) })
     }
   ],
   ['FluxerVoice', fluxerVoice, (voice) => voice.stopRecording()]

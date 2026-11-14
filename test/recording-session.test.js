@@ -64,10 +64,12 @@ test('a session: started, a segment a minute (files deleted), the rest at the en
   ])
 })
 
-test('starting again replaces the segment timer; stopping twice sends the rest once', async () => {
+test('starting again while running does nothing; stopping twice sends the rest once', async () => {
   const { session, calls } = setup()
   session.start()
   session.start()
+  assert.equal(calls.filter(([kind]) => kind === 'startStream').length, 1, 'the mixers are not replaced')
+  assert.equal(calls.filter(([kind, message]) => kind === 'announce' && message === 'Record session started').length, 1)
   await runFor(60 * 1000)
   session.stop()
   session.stop()

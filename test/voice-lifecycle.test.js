@@ -47,7 +47,7 @@ function fakeDiscord(members = []) {
   }
   return client
 }
-const connection = { stopPlaying: () => undefined }
+const connection = { stopPlaying: () => undefined, off: () => undefined, receive: () => ({ off: () => undefined }) }
 const fakeRecorder = () => {
   const recorder = { periods: 0, startStream: () => undefined, saver: { getFilePeriod: async () => (recorder.periods++, undefined) }, stop: async () => undefined }
   return recorder
@@ -182,6 +182,55 @@ test('FluxerVoice: shutdown waits for the rest of the recording that the leave s
   telegram.release()
   await runFor(0)
   assert.equal(stopped.done, true)
+})
+
+// A voice connection Dysnomia would hand out: an emitter with one cached PCM receiver
+function fakeConnection() {
+  const { EventEmitter } = require('node:events')
+  const conn = new EventEmitter()
+  const pcm = new EventEmitter()
+  Object.assign(conn, { pcm, receive: () => pcm, play: () => undefined, stopPlaying: () => undefined })
+  return conn
+}
+
+test('DiscordVoice: member events while a join is running start no second join', async () => {
+  const conn = fakeConnection()
+  const client = fakeDiscord(['u1'])
+  // The join takes 3 s, as a slow voice server
+  client.joinVoiceChannel = () => {
+    client.joins++
+    return new Promise((resolve) => setTimeout(() => resolve(conn), 3000))
+  }
+  const voice = discordVoice(client)
+  await runFor(1000) // the constructor's check starts the join
+  voice.handleUserConnect()
+  await runFor(1000)
+  voice.handleUserConnect()
+  await runFor(3000)
+  assert.equal(client.joins, 1)
+  assert.equal(conn.pcm.listenerCount('data'), 1)
+  await stopVoice(voice)
+})
+
+test('DiscordVoice: starting twice on one connection records each packet once, and the receiver comes off with the session', async () => {
+  const conn = fakeConnection()
+  const voice = discordVoice(fakeDiscord())
+  const stored = []
+  let starts = 0
+  voice.recording.recorder = { startStream: () => starts++, storeBuffer: (data, user) => stored.push(user), stop: async () => undefined }
+  voice.startRecording(conn)
+  voice.startRecording(conn)
+  conn.pcm.emit('data', Buffer.alloc(3840), 'u1')
+  assert.deepEqual(stored, ['u1'])
+  assert.equal(starts, 1)
+  assert.equal(conn.listenerCount('userDisconnect'), 1)
+
+  voice.stopSession('chan1', conn)
+  assert.equal(conn.pcm.listenerCount('data'), 0)
+  assert.equal(conn.listenerCount('userDisconnect'), 0)
+  voice.startRecording(conn)
+  assert.equal(conn.pcm.listenerCount('data'), 1, 'a new session on the same connection gets one receiver')
+  await stopVoice(voice)
 })
 
 test('FluxerVoice: an update after shutdown does not join', async () => {

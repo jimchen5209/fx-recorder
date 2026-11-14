@@ -21,6 +21,10 @@ export class DiscordVoice extends EventEmitter {
   private _active = false
   // Set on shutdown: nothing joins the channel again
   private stopped = false
+  // A join is running: member events meanwhile must not start another one
+  private joining = false
+  // The connection being recorded; a second start on it would add a second receiver and record every packet twice
+  private recordingOn: VoiceConnection | undefined
 
   private warningQueue = new MessageQueue(1000)
   private errorQueue = new MessageQueue(1000)
@@ -64,15 +68,22 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private async startAudioSession(channelID: string) {
-    for (let retryCount = 1; retryCount <= 5; ++retryCount) {
-      const connection = await this.joinVoiceChannel(channelID)
-      if (connection !== undefined) {
-        this.logger.info('Connected, start recording...')
-        connection.play(new Silence(), { format: 'opusPackets' })
-        this.startRecording(connection)
-        return
+    // The connection is not listed until the join ends, so the check in autoLeaveOrJoinChannel cannot see it
+    if (this.joining) return
+    this.joining = true
+    try {
+      for (let retryCount = 1; retryCount <= 5; ++retryCount) {
+        const connection = await this.joinVoiceChannel(channelID)
+        if (connection !== undefined) {
+          this.logger.info('Connected, start recording...')
+          connection.play(new Silence(), { format: 'opusPackets' })
+          this.startRecording(connection)
+          return
+        }
+        this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
       }
-      this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
+    } finally {
+      this.joining = false
     }
     this._active = false
     this.logger.fatal('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
@@ -80,16 +91,20 @@ export class DiscordVoice extends EventEmitter {
     await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
   }
 
+  private onPcm = (data: Buffer, user: string) => {
+    if (!this._active) return
+    this.recording.recorder.storeBuffer(data, user)
+  }
+
+  private onUserDisconnect = (user: string) => this.handleUserDisconnect(user)
+
   private startRecording(connection: VoiceConnection) {
+    if (this.recordingOn === connection) return
+    this.recordingOn = connection
     this._active = true
-    connection.on('userDisconnect', (user) => {
-      this.handleUserDisconnect(user)
-    })
+    connection.on('userDisconnect', this.onUserDisconnect)
     this.recording.start()
-    connection.receive('pcm').on('data', (data, user) => {
-      if (!this._active) return
-      this.recording.recorder.storeBuffer(data, user)
-    })
+    connection.receive('pcm').on('data', this.onPcm)
 
     this.updateStatus()
   }
@@ -116,6 +131,10 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private stopSession(channelID: string, connection: VoiceConnection) {
+    // Off with the session, so a connection used again gets one receiver
+    connection.off('userDisconnect', this.onUserDisconnect)
+    connection.receive('pcm').off('data', this.onPcm)
+    if (this.recordingOn === connection) this.recordingOn = undefined
     connection.stopPlaying()
     this.recording.stop()
     this.client.leaveVoiceChannel(channelID)

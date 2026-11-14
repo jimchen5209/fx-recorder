@@ -30,6 +30,7 @@ export class RecordingSession {
   private cleanupInterval: NodeJS.Timeout | undefined
   // Segments being finished or sent, and messages on their way
   private pending = new Set<Promise<unknown>>()
+  private running = false
 
   constructor(channel: RecordingChannel, options: RecordingSessionOptions) {
     this.channel = channel
@@ -39,9 +40,11 @@ export class RecordingSession {
     this.cleanupInterval = setInterval(() => this.cleanStale(), CLEANUP_EVERY_MS)
   }
 
+  // Once until stop(): starting again would replace the mixers and leave the old ones recording on their own
   public start() {
+    if (this.running) return
+    this.running = true
     this.recorder.startStream()
-    clearInterval(this.sendInterval)
     this.sendInterval = setInterval(() => {
       this.track(this.recorder.saver.getFilePeriod().then((file) => file && this.options.deliver(file, { keepFiles: false })))
     }, this.channel.sendIntervalSecond * 1000)
@@ -50,6 +53,7 @@ export class RecordingSession {
 
   // Sends the rest. The last segment's files stay on disk after it is sent, as before; a second stop sends no segment
   public stop() {
+    this.running = false
     clearInterval(this.sendInterval)
     this.options.logger.info('Sending rest of recording...')
     this.track(
