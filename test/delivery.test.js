@@ -134,13 +134,35 @@ test('deliver: a failed or missing fluxer instance does not hold back later dest
   await assert.rejects(result, /fluxer:official down/)
 })
 
-// Resending is not fixed yet: the retry goes through every destination again
-test('deliver: a destination that succeeded is not sent again when another one is retried', { todo: true }, async () => {
-  app.discord = fakeSink('discord', () => true)
+test('deliver: a destination that succeeded is not sent again when another one is retried', async () => {
+  let discordFailures = 1
+  app.discord = fakeSink('discord', () => discordFailures-- > 0)
   const result = delivery([dest('telegram', 't1'), dest('discord', 'd1')]).deliver(segment())
-  result.catch(() => undefined)
-  await runFor(10 * 1000)
-  assert.equal(calls.filter((c) => c[0] === 'telegram').length, 1)
+  await runFor(5000)
+  await result
+  assert.deepEqual(
+    calls.map((c) => c[0]),
+    ['telegram', 'discord', 'discord']
+  )
+  assert.deepEqual(files(), [], 'deleted once every destination has it')
+})
+
+test('deliver: within one destination, a retry sends only the files that failed', async () => {
+  let failures = 1
+  // The upload just recorded is the one being tried
+  app.telegram = fakeSink('telegram', () => calls.at(-1)[3] === 'u1-a.mp3' && failures-- > 0)
+  const result = delivery([dest('telegram', 't1', { sendPerUser: true })]).deliver(segment())
+  await runFor(5000)
+  await result
+  assert.deepEqual(
+    calls.map((c) => c[3]),
+    ['a.mp3', 'u1-a.mp3', 'u1-a.mp3']
+  )
+})
+
+test('deliver: two destinations with the same id count as two', async () => {
+  await delivery([dest('telegram', 't1'), dest('telegram', 't1')]).deliver(segment())
+  assert.equal(calls.length, 2)
 })
 
 test('deliver: a slow upload does not hold back the next segment, and each deletes only its own files', async () => {

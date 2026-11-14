@@ -70,8 +70,7 @@ export async function sendAdminMessage(discord: Client | undefined, logger: Logg
   }
 }
 
-// Messages and recordings of one channel to its fileDest, in config order.
-// A destination that partly succeeded is sent again on retry (resending is not fixed yet).
+// Messages and recordings of one channel to its fileDest, in config order
 export class Delivery {
   private channelConfig: DiscordChannel
   private logger: Logger<ILogObj>
@@ -98,12 +97,15 @@ export class Delivery {
     }
   }
 
-  // Sends a finished segment, trying 3 times 5 s apart, and deletes its files once sent unless keepFiles.
-  // Rejects when every attempt failed; the files stay then.
+  // Sends a finished segment, trying 3 times 5 s apart, and deletes its files once sent unless keepFiles. A retry
+  // sends only the uploads that failed, not the ones a destination already has. Rejects when every attempt failed; the
+  // files stay then.
   public async deliver(file: IRecordFile, { keepFiles = false } = {}) {
+    // `${destination index}:${path}` of every upload that went through
+    const sent = new Set<string>()
     for (let attempt = 1; ; attempt++) {
       try {
-        await this.sendRecord(file)
+        await this.sendRecord(file, sent)
         break
       } catch (error) {
         this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${MAX_ATTEMPTS}):`, error)
@@ -121,12 +123,12 @@ export class Delivery {
     }
   }
 
-  // One attempt at every destination. Telegram and Discord failures stop the rest; a failed fluxer destination does not
-  // hold back the others: its error is thrown once they are done.
-  private async sendRecord(file: IRecordFile) {
+  // One attempt at every upload not in sent yet. Telegram and Discord failures stop the rest; a failed fluxer
+  // destination does not hold back the others: its error is thrown once they are done.
+  private async sendRecord(file: IRecordFile, sent: Set<string>) {
     const channelId = this.channelConfig.id
     let fluxerError: unknown
-    for (const dest of this.channelConfig.fileDest) {
+    for (const [index, dest] of this.channelConfig.fileDest.entries()) {
       const sink = sinkFor(dest)
       if (!sink) continue
       const files = [
@@ -137,8 +139,11 @@ export class Delivery {
       ]
       try {
         for (const { caption, ...upload } of files) {
+          const key = `${index}:${upload.path}`
+          if (sent.has(key)) continue
           this.logger.info(`Sending ${upload.name} of ${channelId} to ${describe(dest)}`)
           await sink.sendFile(dest.id, caption, upload)
+          sent.add(key)
         }
       } catch (error) {
         if (dest.type !== 'fluxer') throw error
