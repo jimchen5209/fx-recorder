@@ -1,3 +1,9 @@
+// LicsonMixer by Licson, vendored from https://github.com/licson/radiobot/blob/master/streaming/mixer.js (2022-12-29).
+// fx-recorder changes from that file, besides indentation:
+// - no radiobot config (deep-assign, the debug.useJavascriptMixer switch); mix.node loaded from Libs/LicsonMixer
+// - stop(): _stopLoop clears the timer, the loop stops rescheduling, the stream ends; started is set in _startLoop
+// - the source read in the loop, marked "fx-recorder change" below
+// Keep this list current when changing this file.
 'use strict';
 
 const { Stream } = require('stream');
@@ -151,7 +157,17 @@ class MixerStream extends Stream.Readable {
             this.sources.forEach((item) => {
                 var buff;
                 if (item.length < this.highWaterMark) {
-                    buff = item.stream.read(~~(this.sampleRate * this.sampleSize * this.channel / this.fps * 4));
+                    // fx-recorder change (originally a plain read(want)). Reads 0.4 s at a time, a cushion against late packets. read(n) returns null while fewer than n bytes wait, which
+                    // held a speaker's last moments back until they spoke again. So the rest is taken once nothing new comes: while
+                    // they talk (a full read went through), when their mixed audio is about to run out; for an utterance shorter than
+                    // the cushion, after 4 quiet frames (200 ms, longer than a late packet). read(0) on an ended stream still ends it.
+                    var want = ~~(this.sampleRate * this.sampleSize * this.channel / this.fps * 4);
+                    var waiting = item.stream.readableLength;
+                    item.idleFrames = waiting === item.lastWaiting ? (item.idleFrames || 0) + 1 : 0;
+                    item.lastWaiting = waiting;
+                    var rest = waiting < want && item.idleFrames > 0 && (item.talking ? item.length < this.segmentLength : item.idleFrames >= 4);
+                    buff = item.stream.read(rest ? waiting : want);
+                    if (buff) item.talking = !rest;
                     if (buff) {
                         item.addBuffer(buff);
                     }

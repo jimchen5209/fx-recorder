@@ -158,14 +158,30 @@ test('loop: stop ends the stream and pushes nothing more', async (t) => {
   assert.equal(frames.length, count)
 })
 
-// Found in U1: each loop reads 76800 bytes (0.4 s) at once, and a stream that is not ended returns null for a read
-// bigger than what it holds, so the last < 0.4 s of a speaker's audio waits in the source until they speak again
-test('loop: a short burst from a source that goes on comes out within a second', { todo: true }, async (t) => {
+// The loop reads 0.4 s at once, and a stream that is not ended returns null for a read bigger than what it holds, so
+// the last < 0.4 s of a speaker's audio used to wait in the source until they spoke again
+test('loop: an utterance shorter than the 0.4 s cushion comes out whole once the speaker stops', async (t) => {
   const { mixer, frames, tick } = running(t)
   const stream = new AbortStream(64 * 1000 * 8, 64 * 1000 * 4)
   mixer.addSource(stream, 'u1')
   const before = frames.length
   stream.write(tone(100, { amp: 20000 }))
-  await tick(1000)
-  assert.ok(frames.slice(before).some(loud))
+  await tick(100)
+  assert.equal(frames.slice(before).filter(loud).length, 0, 'not while a late packet may still come')
+  await tick(200)
+  assert.equal(frames.slice(before).filter(loud).length, 2, '100 ms: two frames')
+  assert.equal(mixer.count(), 1, 'the source stays for more')
+})
+
+test('loop: speech in 20 ms packets with pauses comes out whole, nothing left behind', async (t) => {
+  const { mixer, frames, tick } = running(t)
+  const stream = new AbortStream(64 * 1000 * 8, 64 * 1000 * 4)
+  mixer.addSource(stream, 'u1')
+  const before = frames.length
+  for (let i = 0; i < 15; i++) {
+    stream.write(tone(20, { amp: 20000 }))
+    if (i % 5 === 4) await tick(100)
+  }
+  await tick(500)
+  assert.equal(frames.slice(before).filter(loud).length, 6, '300 ms of packets: six frames')
 })
