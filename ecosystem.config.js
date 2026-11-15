@@ -11,7 +11,8 @@ module.exports = {
         // The bot exits with 78 when it needs you before it can run: config.json was just created, migrated, is invalid or is newer than this build (check it, then start the bot yourself). Restarting would only repeat that
         stop_exit_codes: [78],
         watch: false,
-        kill_timeout : 60000,
+        // A little longer than the bot's own 60 s for sending the last recordings, so pm2 does not kill it first
+        kill_timeout : 65000,
         max_memory_restart: '512M',
         cron_restart: '0 4 * * *',
         env_production: {
