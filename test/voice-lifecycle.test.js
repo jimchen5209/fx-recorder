@@ -233,6 +233,112 @@ test('DiscordVoice: starting twice on one connection records each packet once, a
   await stopVoice(voice)
 })
 
+// A Discord channel with `members` in it whose joins hand out one connection (failing `failures` times first);
+// messages and admin messages to Telegram are noted
+function discordChannel({ members = ['u1'], failures = 0 } = {}) {
+  const messages = []
+  const admin = []
+  app.telegram = { sendFile: async () => undefined, sendMessage: async (id, text) => (id === 'admin' ? admin : messages).push(text) }
+  app.config.telegram = { ...app.config.telegram, logErrorsToAdmin: true, admins: ['admin'] }
+  const conn = fakeConnection()
+  const client = fakeDiscord(members)
+  let joined = false
+  client.joinVoiceChannel = async () => {
+    client.joins++
+    if (failures-- > 0) throw new Error('no voice')
+    joined = true
+    return conn
+  }
+  client.voiceConnections = { find: () => (joined ? conn : undefined) }
+  client.leaveVoiceChannel = () => {
+    joined = false
+  }
+  const voice = new DiscordVoice(client, sending, fakeLogger())
+  const calls = []
+  voice.recording.recorder = {
+    startStream: () => calls.push('startStream'),
+    stop: async () => (calls.push('stop'), undefined),
+    endStream: (user) => calls.push(['endStream', user]),
+    storeBuffer: () => undefined,
+    saver: { getFilePeriod: async () => undefined }
+  }
+  return { voice, client, conn, calls, messages, admin, members, joined: () => joined }
+}
+
+test('DiscordVoice: a join failing 5 times gives up and says so; the next member event tries again', async () => {
+  const { voice, client, messages } = discordChannel({ failures: 10 })
+  await runFor(1000)
+  assert.equal(client.joins, 5)
+  assert.ok(messages.includes('[chan1] Connecting to voice channel failed after retrying 5 times. Channel recording aborted.'))
+  assert.ok(!voice.active)
+  voice.handleUserConnect()
+  await runFor(1000)
+  assert.equal(client.joins, 10)
+  await stopVoice(voice)
+})
+
+test('DiscordVoice: a lost voice connection while recording sends the rest and joins again 5 s later', async () => {
+  const { voice, client, conn, calls, messages, admin, joined } = discordChannel()
+  await runFor(1000)
+  assert.ok(voice.active)
+  assert.deepEqual(calls, ['startStream'])
+  conn.emit('disconnect', new Error('gone'))
+  await runFor(1000)
+  assert.deepEqual(calls, ['startStream', 'stop'])
+  assert.ok(!joined())
+  assert.ok(messages.includes('[chan1] There is an error with the voice connection.'))
+  assert.ok(admin.some((message) => /Error from voice connection chan1: gone/.test(message)))
+  await runFor(5000)
+  assert.equal(client.joins, 2)
+  assert.deepEqual(calls, ['startStream', 'stop', 'startStream'])
+  await stopVoice(voice)
+})
+
+test('DiscordVoice: the channel emptying pauses: the user’s file ends, the session ends, and the bot leaves', async () => {
+  const { voice, members, calls, messages, admin, joined } = discordChannel()
+  await runFor(1000)
+  members.length = 0
+  voice.handleUserDisconnect('u1')
+  await runFor(1000)
+  assert.deepEqual(calls, ['startStream', ['endStream', 'u1'], 'stop'])
+  assert.ok(!voice.active)
+  assert.ok(!joined())
+  assert.ok(messages.includes('[chan1] No user in the channel, pausing...'))
+  assert.ok(admin.includes('No user in chan1, recorder pausing...'))
+  await stopVoice(voice)
+})
+
+test('DiscordVoice: 5 voice errors within a second reconnect; errors and warnings reach admins in one message each', async () => {
+  const { voice, client, conn, calls, admin } = discordChannel()
+  await runFor(1000)
+  conn.emit('warn', 'shaky')
+  for (let i = 0; i < 5; i++) conn.emit('error', new Error(`e${i}`))
+  await runFor(1000)
+  assert.ok(admin.some((message) => /^1 warning from chan1 in 1 seconds:\n```\nshaky\n```$/.test(message)))
+  assert.ok(admin.some((message) => /^5 errors from chan1/.test(message)))
+  assert.ok(admin.includes('Error count exceeded 5. Reconnecting...'))
+  assert.deepEqual(calls, ['startStream', 'stop'])
+  await runFor(5000)
+  assert.equal(client.joins, 2)
+  await stopVoice(voice)
+})
+
+test('DiscordVoice: 5 reconnects less than a second apart reconnect the whole Discord client, once', async (t) => {
+  const { voice, conn } = discordChannel()
+  let reconnects = 0
+  app.discord = { reconnect: () => reconnects++ }
+  t.after(() => {
+    app.discord = undefined
+  })
+  await runFor(1000)
+  for (let i = 0; i < 5; i++) {
+    voice.tryReconnect('chan1', conn)
+    await runFor(600, 600)
+  }
+  assert.equal(reconnects, 1)
+  await stopVoice(voice)
+})
+
 test('FluxerVoice: an update after shutdown does not join', async () => {
   let joins = 0
   const manager = { join: () => joins++ }

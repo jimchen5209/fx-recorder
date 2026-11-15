@@ -104,6 +104,24 @@ test('watchDiskSpace: enough space tells nobody; a path it cannot check is logge
   assert.equal(records.filter(([level]) => level === 'warn').length, 1)
 })
 
+// createApp() can run once per process: no other test in this file calls it
+test('createApp: makes the logger, config, Telegram and Discord once; getApp returns it; a second call throws', (t) => {
+  const tmp = useTempCwd()
+  t.after(() => tmp.cleanup())
+  const channel = { id: 'c1', fileDest: [], timeZone: 'UTC', sendIntervalSecond: 60, ignoreUsers: [] }
+  fs.writeFileSync(
+    'config.json',
+    JSON.stringify({ configVersion: 2.3, discord: { token: 'd', channels: [channel] }, fluxer: [], telegram: { token: 't' }, logging: { debug: false } })
+  )
+  const { createApp } = require('../dist/App/App')
+  const app = createApp()
+  assert.equal(getApp(), app)
+  assert.equal(app.config.discord.token, 'd')
+  assert.ok(app.telegram && app.discord)
+  assert.deepEqual(app.fluxer, [])
+  assert.throws(() => createApp(), /called twice/)
+})
+
 test('keepLeftovers: nothing left makes no kept folder, and a missing temp/ is made', (t) => {
   const tmp = useTempCwd()
   t.after(() => tmp.cleanup())

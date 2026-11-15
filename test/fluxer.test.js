@@ -112,3 +112,41 @@ test('TrackReceiver: an undecodable packet is dropped and logged, not thrown', {
   assert.equal(stored.length, 0)
   assert.equal(records.filter(([level]) => level === 'warn').length, 1)
 })
+
+test('TrackReceiver: a real gap between packets is logged at debug', { skip: skipOpus }, () => {
+  const { TrackReceiver } = require('../dist/Fluxer/Voice/TrackReceiver')
+  const encoder = new OpusEncoder(48000, 2)
+  let onRtp
+  const records = []
+  new TrackReceiver(
+    { ssrc: 1, onReceiveRtp: { subscribe: (fn) => (onRtp = fn) } },
+    { trackSid: 'T', connectionId: 'c', userId: 'u', participantSid: 'P', identity: 'x', source: 'MICROPHONE', muted: false },
+    { storeBuffer: () => undefined },
+    () => true,
+    fakeLogger(records)
+  )
+  onRtp({ header: { timestamp: 0 }, payload: encoder.encode(tone(20)) })
+  onRtp({ header: { timestamp: 48 * 500 }, payload: encoder.encode(tone(20)) })
+  assert.deepEqual(
+    records.filter(([level]) => level === 'debug').map(([, message]) => message),
+    ['Track c:T of u: RTP gap of 500 ms']
+  )
+})
+
+// Found in U1 (seen live as "RTP gap of 89478475 ms"): a timestamp a little behind the last one wraps around to ~2^32/48 ms
+test('TrackReceiver: a timestamp slightly behind the last is not logged as a huge gap', { skip: skipOpus, todo: true }, () => {
+  const { TrackReceiver } = require('../dist/Fluxer/Voice/TrackReceiver')
+  const encoder = new OpusEncoder(48000, 2)
+  let onRtp
+  const records = []
+  new TrackReceiver(
+    { ssrc: 1, onReceiveRtp: { subscribe: (fn) => (onRtp = fn) } },
+    { trackSid: 'T', connectionId: 'c', userId: 'u', participantSid: 'P', identity: 'x', source: 'MICROPHONE', muted: false },
+    { storeBuffer: () => undefined },
+    () => true,
+    fakeLogger(records)
+  )
+  onRtp({ header: { timestamp: 9600 }, payload: encoder.encode(tone(20)) })
+  onRtp({ header: { timestamp: 8640 }, payload: encoder.encode(tone(20)) })
+  assert.deepEqual(records.filter(([level]) => level === 'debug'), [])
+})

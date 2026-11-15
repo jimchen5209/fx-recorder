@@ -1,5 +1,5 @@
-// PCM baseline of the mixdown (Libs/LicsonMixer), native and JS backends each, sample by sample.
-// _mixin is called directly: the mixer loop paces itself on Date.now and is not tested here.
+// PCM baseline of the mixdown (Libs/LicsonMixer), native and JS backends each, sample by sample (_mixin called
+// directly), and the real-time loop with mocked timers and Date: a frame every 50 ms, sources merged and removed.
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const Module = require('node:module')
@@ -89,4 +89,83 @@ test('native backend matches the JS backend within one step', { skip: !nativeLoa
   const run = (Mixer) => samples(Mixer.prototype._mixin.call(new Mixer(16, 2, 48000), buffers, buffers.map(source), 3840, 16, 2))
   const js = run(backends.js)
   run(backends.native).forEach((v, i) => assert.ok(Math.abs(v - js[i]) <= 1, `sample ${i}`))
+})
+
+const AbortStream = require(path.join(dist, 'Libs', 'abort.js'))
+const FRAME = 9600 // 50 ms of 48 kHz stereo s16le
+
+// A running JS-backend mixer; frames are what it pushed, each 50 ms of mocked time
+function running(t) {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] })
+  const log = console.log
+  console.log = () => undefined // the mixer logs every track
+  const mixer = new backends.js(16, 2, 48000)
+  const frames = []
+  mixer.on('data', (frame) => frames.push(frame))
+  t.after(() => {
+    mixer.stop()
+    console.log = log
+  })
+  const tick = async (ms) => {
+    for (let elapsed = 0; elapsed < ms; elapsed += 50) {
+      await new Promise(setImmediate)
+      t.mock.timers.tick(50)
+    }
+    await new Promise(setImmediate)
+  }
+  return { mixer, frames, tick }
+}
+const loud = (frame) => samples(frame).some((v) => Math.abs(v) > 1000)
+
+test('loop: with no source, one silent 50 ms frame every 50 ms', async (t) => {
+  const { frames, tick } = running(t)
+  await tick(500)
+  assert.ok(frames.length >= 10 && frames.length <= 12, `${frames.length} frames`)
+  assert.ok(frames.every((frame) => frame.length === FRAME && !loud(frame)))
+})
+
+test('loop: a source’s audio comes out in order, and the source goes once it ended and drained', async (t) => {
+  const { mixer, frames, tick } = running(t)
+  await tick(100)
+  const removed = []
+  mixer.on('remove_track', () => removed.push(1))
+  const stream = new AbortStream(64 * 1000 * 8, 64 * 1000 * 4)
+  mixer.addSource(stream, 'u1')
+  const before = frames.length
+  stream.write(tone(500, { amp: 20000 }))
+  stream.end()
+  await tick(1500)
+  const out = frames.slice(before)
+  const first = out.findIndex(loud)
+  assert.ok(first >= 0, 'the audio comes out')
+  assert.equal(out.filter(loud).length, 10, '500 ms of audio, ten frames')
+  assert.ok(out.slice(first, first + 10).every(loud), 'in one piece')
+  assert.equal(mixer.count(), 0)
+  assert.equal(removed.length, 1)
+})
+
+test('loop: stop ends the stream and pushes nothing more', async (t) => {
+  const { mixer, frames, tick } = running(t)
+  await tick(200)
+  let ended = false
+  mixer.on('end', () => {
+    ended = true
+  })
+  mixer.stop()
+  const count = frames.length
+  await tick(500)
+  assert.ok(ended)
+  assert.equal(frames.length, count)
+})
+
+// Found in U1: each loop reads 76800 bytes (0.4 s) at once, and a stream that is not ended returns null for a read
+// bigger than what it holds, so the last < 0.4 s of a speaker's audio waits in the source until they speak again
+test('loop: a short burst from a source that goes on comes out within a second', { todo: true }, async (t) => {
+  const { mixer, frames, tick } = running(t)
+  const stream = new AbortStream(64 * 1000 * 8, 64 * 1000 * 4)
+  mixer.addSource(stream, 'u1')
+  const before = frames.length
+  stream.write(tone(100, { amp: 20000 }))
+  await tick(1000)
+  assert.ok(frames.slice(before).some(loud))
 })
