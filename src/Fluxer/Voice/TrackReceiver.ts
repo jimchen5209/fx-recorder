@@ -1,7 +1,7 @@
 import { OpusEncoder } from '@discordjs/opus'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
-import type { Recorder } from '../../Discord/Recorder/Recorder'
+import type { Recorder } from '../../Recording/Recorder'
 import type { RemoteTrackInfo } from './LiveKitSession'
 
 // Logged at debug when the RTP timestamps of a track jump by more than this, for lining tracks up later

@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { Client } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../../Utils/Instances'
-import { DiscordVoice } from './Core/Voice'
+import type { DiscordConfig } from '../Shared/Config'
+import { DiscordVoice } from './VoiceConnection'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
@@ -10,12 +11,13 @@ export class Discord {
   private logger: Logger<ILogObj>
   public audios: { [key: string]: DiscordVoice } = {}
 
-  constructor() {
-    this.logger = instances.mainLogger.getSubLogger({ name: 'Discord' })
+  // Made in createApp(), before getApp() works
+  constructor(config: DiscordConfig, mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Discord' })
 
-    if (instances.config.discord.token === '') throw ERR_MISSING_TOKEN
+    if (config.token === '') throw ERR_MISSING_TOKEN
 
-    this.client = new Client(instances.config.discord.token, {
+    this.client = new Client(config.token, {
       restMode: true,
       gateway: { intents: ['guilds', 'guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
     })
@@ -44,12 +46,14 @@ export class Discord {
       this.logger.error(`Error on shard ${id}: ${error.message}`, error)
     })
 
-    this.client.once('ready', async () => {
+    // Again after every reconnect: the presence is set anew; the channels are made the first time only
+    this.client.on('ready', async () => {
       this.logger.info(`Logged in as ${this.client.user.username} (${this.client.user.id})`)
 
       this.updateStatus()
 
-      instances.config.discord.channels.forEach((channel) => {
+      if (Object.keys(this.audios).length > 0) return
+      config.channels.forEach((channel) => {
         this.audios[channel.id] = new DiscordVoice(this.client, channel, this.logger)
         this.audios[channel.id].on('status', () => this.updateStatus())
       })
@@ -92,19 +96,30 @@ export class Discord {
     this.client.connect()
   }
 
-  public async disconnect(reconnect = false) {
+  // A discord destination (Sink in Delivery/Delivery)
+  public async sendMessage(channelID: string, text: string) {
+    await this.client.createMessage(channelID, text)
+  }
+
+  public async sendFile(channelID: string, caption: string, file: { name: string; path: string }) {
+    await this.client.createMessage(channelID, { content: caption, attachments: [{ filename: file.name, file: readFileSync(file.path) }] })
+  }
+
+  // Drops the gateway connection and connects again; the handlers and recorded channels stay
+  public reconnect() {
+    this.logger.warn('Reconnecting...')
+    this.client.disconnect({ reconnect: true })
+  }
+
+  // Every channel, recording or paused, ends and sends what it still has; a discord destination still needs the client
+  public async disconnect() {
     this.logger.info('Shutting down...')
 
-    for (const connection of this.client.voiceConnections.values()) {
-      if (!connection.channelID) continue
-      if (!this.audios[connection.channelID]) continue
-
-      await this.audios[connection.channelID].stop(connection)
-      delete this.audios[connection.channelID]
-    }
+    await Promise.all(Object.values(this.audios).map((audio) => audio.stop()))
+    this.audios = {}
 
     this.client.removeAllListeners()
 
-    this.client.disconnect({ reconnect })
+    this.client.disconnect({ reconnect: false })
   }
 }

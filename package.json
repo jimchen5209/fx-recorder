@@ -12,7 +12,9 @@
     "lint:unsafe": "biome check --write --unsafe",
     "biome:ci": "biome ci",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty ---inlineSourceMap false"
+    "build:prod": "tsc --pretty ---inlineSourceMap false",
+    "test": "node --test --test-timeout=60000 test/*.test.js",
+    "test:coverage": "node --test --test-timeout=60000 --experimental-test-coverage --enable-source-maps --test-coverage-exclude='test/**' test/*.test.js"
   },
   "description": "",
   "dependencies": {

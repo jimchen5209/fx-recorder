@@ -1,15 +1,12 @@
 import { EventEmitter } from 'node:events'
-import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
 import type { MediaStreamTrack } from 'werift'
-import type { FluxerChannel } from '../../Utils/Config'
-import { instances } from '../../Utils/Instances'
-import { Recorder } from '../Discord/Recorder/Recorder'
-import type { IRecordFile } from '../Discord/Recorder/RecordSaver'
-import * as Destinations from '../Output/Destinations'
+import { getApp } from '../App/App'
+import * as Destinations from '../Delivery/Delivery'
+import { RecordingSession } from '../Recording/RecordingSession'
+import type { FluxerChannel } from '../Shared/Config'
 import type { VoicePresenceTracker } from './Presence'
 import { LiveKitSession, type RemoteTrackInfo } from './Voice/LiveKitSession'
 import type { FluxerVoiceConnection, FluxerVoiceManager, VoiceGrant } from './Voice/Manager'
@@ -18,8 +15,7 @@ import { TrackReceiver } from './Voice/TrackReceiver'
 // Backoff 1 s to 30 s, about a minute in total (as VoiceLog)
 const RECONNECT_ATTEMPTS = 6
 
-// One recorded Fluxer voice channel: joins and records while someone is in it. The recording lifecycle is copied from
-// DiscordVoice on purpose; restructure R3 merges both into one RecordingSession (plan §8).
+// One recorded Fluxer voice channel: joins and records while someone is in it; RecordingSession does the recording.
 // Fluxer shows the bot in the channel only once it is in the LiveKit room. A lost LiveKit session is reconnected while
 // the recording goes on; the recording ends with the gateway connection (left, kicked, moved, or reconnecting failed).
 /**
@@ -32,7 +28,8 @@ export class FluxerVoice extends EventEmitter {
   private tracker: VoicePresenceTracker
   private selfId: () => string
   private notifyAdmins: (message: string) => Promise<void>
-  private recorder: Recorder
+  private recording: RecordingSession
+  private delivery: Destinations.Delivery
   private connection: FluxerVoiceConnection | undefined
   private session: LiveKitSession | undefined
   private endpoint = ''
@@ -43,10 +40,7 @@ export class FluxerVoice extends EventEmitter {
   private reconnecting = false
   // The first session of a connection is being opened; a grant meanwhile must not open another
   private opening = false
-  private sendInterval: NodeJS.Timeout | undefined
-  private cleanupInterval: NodeJS.Timeout | undefined
   private _active = false
-  private readyToDelete = true
   // Set on shutdown: the bot's own leave is a change in the channel, which must not join again
   private stopped = false
 
@@ -66,9 +60,20 @@ export class FluxerVoice extends EventEmitter {
     this.tracker = tracker
     this.selfId = selfId
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
-    const storageKey = `fluxer-${instanceId}-${channelConfig.id}`
-    this.recorder = new Recorder({ ...channelConfig, storageKey })
-    this.startStaleCleanup(`temp/${storageKey}`)
+    // Also after the session ended (DiscordVoice skips it then): the rest of a recording should not fail quietly
+    this.delivery = new Destinations.Delivery(channelConfig, this.logger, (message) => this.sendAdminMessage(message))
+    const app = getApp()
+    this.recording = new RecordingSession(
+      // The folder name decides where its recordings go under temp/: keep it stable
+      { ...channelConfig, storageKey: `fluxer-${instanceId}-${channelConfig.id}` },
+      {
+        mainLogger: app.mainLogger,
+        logger: this.logger,
+        debug: app.config.logging.debug,
+        deliver: (file) => this.delivery.deliver(file),
+        announce: (message) => this.sendMessage(message)
+      }
+    )
   }
 
   public get guildId() {
@@ -102,24 +107,20 @@ export class FluxerVoice extends EventEmitter {
     }
   }, 500)
 
-  // Ends the recording, sends the rest, and waits up to 30 s for it, as DiscordVoice.stop
+  // Ends the recording if one is running, and resolves once every segment still being finished or sent is done, as
+  // DiscordVoice.stop. The leave below closes the connection at once, which starts sending the rest.
   public async stop() {
     this.stopped = true
     this.update.cancel()
-    clearInterval(this.cleanupInterval)
-    if (!this.connection) return
-    this.logger.info('Shutting down...')
-    if (this._active) {
-      this.sendMessage('Recorder shutting down.')
-      this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`)
+    if (this.connection) {
+      this.logger.info('Shutting down...')
+      if (this._active) {
+        this.recording.track(this.sendMessage('Recorder shutting down.'))
+        this.recording.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
+      }
+      this.connection.leave()
     }
-    this.connection.leave()
-    try {
-      await waitUntil(() => this.readyToDelete, { timeout: 30 * 1000 })
-    } catch (error) {
-      if (error instanceof TimeoutError) this.logger.error('Timed out waiting for 30 seconds.', error)
-      else throw error
-    }
+    await this.recording.close()
   }
 
   private join() {
@@ -174,7 +175,8 @@ export class FluxerVoice extends EventEmitter {
     })
     session.on('track', (track: MediaStreamTrack, info: RemoteTrackInfo | undefined) => this.onTrack(track, info))
     session.on('trackEnded', (info: RemoteTrackInfo) => {
-      if (info.userId && info.connectionId && info.source === 'MICROPHONE') this.recorder.endSource(`${info.userId}-${info.connectionId}`, `${info.connectionId}:${info.trackSid}`)
+      if (info.userId && info.connectionId && info.source === 'MICROPHONE')
+        this.recording.recorder.endSource(`${info.userId}-${info.connectionId}`, `${info.connectionId}:${info.trackSid}`)
     })
     session.once('lost', (fatal: boolean, reason: string) => {
       this.logger.warn(`LiveKit session lost: ${reason}`)
@@ -206,7 +208,7 @@ export class FluxerVoice extends EventEmitter {
     if (this.channelConfig.ignoreUsers.includes(info.userId)) return
     this.logger.info(`Receiving ${info.userId} (connection ${info.connectionId}, track ${info.trackSid})`)
     // Per-user files are per connection: <userId>-<connectionId>-<start>.mp3, so one person on two devices gets two files
-    new TrackReceiver(track, { ...info, userId: `${info.userId}-${info.connectionId}` }, this.recorder, () => this._active, this.logger)
+    new TrackReceiver(track, { ...info, userId: `${info.userId}-${info.connectionId}` }, this.recording.recorder, () => this._active, this.logger)
   }
 
   // immediate: reconnect without waiting first (a new voice server); fatal: removed by the server, so the recording ends
@@ -247,85 +249,23 @@ export class FluxerVoice extends EventEmitter {
   private startRecording() {
     if (this._active) return
     this._active = true
-    this.readyToDelete = false
-    this.recorder.startStream()
-    this.startSendRecord()
-    this.sendMessage('Record session started')
+    this.recording.start()
     this.emit('status')
   }
 
   private stopRecording() {
     if (!this._active) return
     this._active = false
-    clearInterval(this.sendInterval)
     this.emit('status')
-    this.logger.info('Sending rest of recording...')
-    const file = this.recorder.stop()
-    this.sendRecord(file)
-      .then(() => this.sendMessage('The record session has ended.'))
-      // Logged in sendRecord; caught so a failed upload does not crash the bot, and the file stays for stale cleanup
-      .catch(() => undefined)
-      .finally(() => {
-        if (!this._active) this.readyToDelete = true
-      })
-  }
-
-  private startSendRecord() {
-    this.sendInterval = setInterval(() => {
-      const file = this.recorder.saver.getFilePeriod()
-      this.sendRecord(file)
-        .then(() => this.recorder.saver.removeRecordFile(file.start))
-        .catch(() => undefined)
-    }, this.channelConfig.sendIntervalSecond * 1000)
-  }
-
-  private startStaleCleanup(dir: string) {
-    const maxAge = 24 * 60 * 60 * 1000 // 24 hours
-    this.cleanupInterval = setInterval(
-      () => {
-        try {
-          for (const f of readdirSync(dir)) {
-            if (!f.endsWith('.mp3')) continue
-            const p = `${dir}/${f}`
-            if (Date.now() - statSync(p).mtimeMs > maxAge) {
-              unlinkSync(p)
-              this.logger.warn(`Cleaned up stale recording: ${f}`)
-            }
-          }
-        } catch {
-          // temp dir may not exist yet
-        }
-      },
-      60 * 60 * 1000
-    )
+    this.recording.stop()
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, instances.discord?.client, `[${this.channelConfig.id}] ${message}`).catch((error) =>
-      this.logger.error(`Message "${message}" failed to send:`, error)
-    )
+    return this.delivery.sendMessage(message).catch((error) => this.logger.error(`Message "${message}" failed to send:`, error))
   }
 
   // Telegram admins and the instance's Fluxer admins; Discord admins only get Discord channels' messages, as before
   private sendAdminMessage(message: string) {
     return Promise.all([Destinations.sendAdminMessage(undefined, this.logger, message), this.notifyAdmins(message)])
-  }
-
-  private async sendRecord(file: IRecordFile) {
-    const maxRetries = 3
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await Destinations.sendRecord(this.channelConfig.fileDest, instances.discord?.client, this.logger, this.channelConfig.id, file)
-        return // success
-      } catch (error) {
-        this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
-        if (attempt === maxRetries) {
-          // Also after the session ended (DiscordVoice skips it then): the rest of a recording should not fail quietly
-          this.sendAdminMessage(`Failed to send ${file.audioFileName} after ${maxRetries} attempts`)
-          throw error
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5000))
-      }
-    }
   }
 }

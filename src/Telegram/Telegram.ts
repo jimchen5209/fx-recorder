@@ -1,7 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api'
 import type { ILogObj, Logger } from 'tslog'
-
-import { instances } from '../../Utils/Instances'
+import type { TelegramConfig } from '../Shared/Config'
 
 const ERR_MISSING_TOKEN = Error('Telegram bot api token not found!')
 
@@ -9,28 +8,29 @@ export class Telegram {
   private bot: TelegramBot
   private logger: Logger<ILogObj>
 
-  constructor() {
-    this.logger = instances.mainLogger.getSubLogger({ name: 'Telegram' })
+  // Made in createApp(), before getApp() works
+  constructor(config: TelegramConfig, mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Telegram' })
 
-    if (instances.config.telegram.token === '') throw ERR_MISSING_TOKEN
+    if (config.token === '') throw ERR_MISSING_TOKEN
 
-    this.bot = new TelegramBot(instances.config.telegram.token, { baseApiUrl: instances.config.telegram.baseApiUrl })
+    this.bot = new TelegramBot(config.token, { baseApiUrl: config.baseApiUrl })
 
     // biome-ignore lint/style/useNamingConvention: Package Specific Format
     this.bot.onText(/\/ping(?:@\w+)?/, (msg) => this.bot.sendMessage(msg.chat.id, 'pong', { reply_parameters: { message_id: msg.message_id } }))
   }
 
-  public async sendAudio(chatID: string, file: string, caption: string) {
+  // Sent as audio. Throws when the upload fails, so the caller retries and keeps the file
+  public async sendFile(chatID: string, caption: string, file: { path: string }) {
     try {
-      await this.bot.sendAudio(chatID, file, { caption })
-      this.logger.info(`File sent to ${chatID}: ${file}`)
+      await this.bot.sendAudio(chatID, file.path, { caption })
+      this.logger.info(`File sent to ${chatID}: ${file.path}`)
     } catch (err) {
       if (err instanceof Error) {
-        this.logger.error(`File ${file} send failed:${err.message}`)
+        this.logger.error(`File ${file.path} send failed:${err.message}`)
       }
+      throw err
     }
-
-    return file
   }
 
   public async sendMessage(chatID: string, text: string, useMarkdown: boolean = false) {

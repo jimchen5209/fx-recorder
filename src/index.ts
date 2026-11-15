@@ -1,39 +1,40 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { Status } from 'status-client'
-import { Discord } from './Core/Discord/Core'
-import { Telegram } from './Core/Telegram/Core'
-import { instances } from './Utils/Instances'
+import { createApp, keepLeftovers, stopApp, watchDiskSpace } from './App/App'
+import { sendAdminMessage } from './Delivery/Delivery'
 
 let quitting = false
 
-const logger = instances.mainLogger
+const app = createApp()
+const logger = app.mainLogger
 logger.info('Starting...')
-if (instances.config.logging.debug) instances.mainLogger.settings.minLevel = 0 // Silly
+if (app.config.logging.debug) app.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('fx-recorder')
 
-// Recordings left from the last run, cleared once before any platform starts recording
-if (existsSync('temp')) rmSync('temp', { recursive: true })
-mkdirSync('temp')
+// Recordings left by an earlier run are set aside before any platform starts recording, not sent again
+const leftovers = keepLeftovers()
+if (leftovers.files.length > 0) {
+  const message = `${leftovers.files.length} recording file(s) left by an earlier run were moved to ${leftovers.dir}, not sent`
+  logger.warn(`${message}: ${leftovers.files.join(', ')}`)
+  // Telegram admins only: Discord and Fluxer are not connected yet
+  sendAdminMessage(undefined, logger, message)
+}
 
-// Initialize the bot
-instances.telegram = new Telegram()
-// Off only when its token is empty and a Fluxer instance is enabled
-if (instances.config.discordEnabled) {
-  instances.discord = new Discord()
-  instances.discord.start()
+// Start the bot. Discord is off only when its token is empty and a Fluxer instance is enabled
+if (app.discord) {
+  app.discord.start()
 } else {
   logger.info('Discord is off: no discord.token')
 }
 
-const fluxerInstances = instances.config.fluxer.filter((instance) => instance.enabled)
+const fluxerInstances = app.config.fluxer.filter((instance) => instance.enabled)
 if (fluxerInstances.length > 0) {
   // Loaded only when used, so the Fluxer and LiveKit packages stay out otherwise
-  import('./Core/Fluxer/Core').then(
+  import('./Fluxer/Fluxer').then(
     ({ Fluxer }) => {
       for (const config of fluxerInstances) {
         const fluxer = new Fluxer(config)
-        instances.fluxer.push(fluxer)
+        app.fluxer.push(fluxer)
         fluxer.start().catch((error) => logger.error(`Fluxer instance ${config.id} failed to start:`, error))
       }
     },
@@ -52,20 +53,25 @@ const debugMemoryInterval = setInterval(() => {
   })
 }, 30 * 1000)
 
-// Graceful shutdown
+const diskInterval = watchDiskSpace(logger, (message) => sendAdminMessage(app.discord?.client, logger, message))
+
+// Graceful shutdown: up to a minute for the recordings to be sent; a second signal quits at once
 const stop = () => {
   console.log()
   if (quitting) {
     logger.warn('Force quitting...')
     process.exit(1)
   }
+  quitting = true
 
   logger.info('Shutting down...')
-  instances.discord?.disconnect()
-  for (const fluxer of instances.fluxer) fluxer.disconnect()
-  instances.telegram?.disconnect()
   clearInterval(debugMemoryInterval)
-  quitting = true
+  clearInterval(diskInterval)
+  stopApp(app, 60 * 1000).then((drained) => {
+    if (drained) logger.info('All services shut down gracefully. Exiting.')
+    else logger.warn('Graceful shutdown timed out. Force quitting...')
+    process.exit(drained ? 0 : 1)
+  })
 }
 
 process.on('SIGINT', () => stop())

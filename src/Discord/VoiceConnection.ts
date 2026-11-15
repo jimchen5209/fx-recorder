@@ -1,28 +1,30 @@
 import { EventEmitter } from 'node:events'
-import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from '@projectdysnomia/dysnomia'
-import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
 import type { ILogObj, Logger } from 'tslog'
-import type { DiscordChannel } from '../../../Utils/Config'
-import { FailSafe } from '../../../Utils/FailSafe'
-import { instances } from '../../../Utils/Instances'
-import { MessageQueue } from '../../../Utils/MessageQueue'
-import * as Destinations from '../../Output/Destinations'
-import { Recorder } from '../Recorder/Recorder'
-import type { IRecordFile } from '../Recorder/RecordSaver'
+import { getApp } from '../App/App'
+import * as Destinations from '../Delivery/Delivery'
+import { RecordingSession } from '../Recording/RecordingSession'
+import type { DiscordChannel } from '../Shared/Config'
+import { FailSafe } from '../Shared/FailSafe'
+import { MessageQueue } from '../Shared/MessageQueue'
 import { Silence } from './Silence'
 
 export class DiscordVoice extends EventEmitter {
   private client: Client
   private channelConfig: DiscordChannel
   private logger: Logger<ILogObj>
-  private recorder: Recorder
-  private sendInterval: NodeJS.Timeout | undefined
-  private cleanupInterval: NodeJS.Timeout | undefined
+  private recording: RecordingSession
+  private delivery: Destinations.Delivery
+  private rejoinTimer: NodeJS.Timeout | undefined
 
   private _active = false
-  private readyToDelete = false
+  // Set on shutdown: nothing joins the channel again
+  private stopped = false
+  // A join is running: member events meanwhile must not start another one
+  private joining = false
+  // The connection being recorded; a second start on it would add a second receiver and record every packet twice
+  private recordingOn: VoiceConnection | undefined
 
   private warningQueue = new MessageQueue(1000)
   private errorQueue = new MessageQueue(1000)
@@ -35,7 +37,21 @@ export class DiscordVoice extends EventEmitter {
     this.client = client
     this.channelConfig = channelConfig
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
-    this.recorder = new Recorder({ ...channelConfig, storageKey: channelConfig.id })
+    // Admins hear of a recording that could not be sent only while recording
+    this.delivery = new Destinations.Delivery(channelConfig, this.logger, (message) => {
+      if (this._active) this.sendAdminMessage(message)
+    })
+    const app = getApp()
+    this.recording = new RecordingSession(
+      { ...channelConfig, storageKey: channelConfig.id },
+      {
+        mainLogger: app.mainLogger,
+        logger: this.logger,
+        debug: app.config.logging.debug,
+        deliver: (file) => this.delivery.deliver(file),
+        announce: (message) => this.sendMessage(message)
+      }
+    )
 
     this.warningQueue.on('process', (messages, queueTime) => {
       const combinedMessage = `${messages.length} warning${messages.length > 1 ? 's' : ''} from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
@@ -49,41 +65,25 @@ export class DiscordVoice extends EventEmitter {
     })
 
     this.autoLeaveOrJoinChannel()
-    this.startStaleCleanup()
-  }
-
-  private startStaleCleanup() {
-    const maxAge = 24 * 60 * 60 * 1000 // 24 hours
-    this.cleanupInterval = setInterval(
-      () => {
-        try {
-          const dir = `temp/${this.channelConfig.id}`
-          for (const f of readdirSync(dir)) {
-            if (!f.endsWith('.mp3')) continue
-            const p = `${dir}/${f}`
-            if (Date.now() - statSync(p).mtimeMs > maxAge) {
-              unlinkSync(p)
-              this.logger.warn(`Cleaned up stale recording: ${f}`)
-            }
-          }
-        } catch {
-          // temp dir may not exist yet
-        }
-      },
-      60 * 60 * 1000
-    )
   }
 
   private async startAudioSession(channelID: string) {
-    for (let retryCount = 1; retryCount <= 5; ++retryCount) {
-      const connection = await this.joinVoiceChannel(channelID)
-      if (connection !== undefined) {
-        this.logger.info('Connected, start recording...')
-        connection.play(new Silence(), { format: 'opusPackets' })
-        this.startRecording(connection)
-        return
+    // The connection is not listed until the join ends, so the check in autoLeaveOrJoinChannel cannot see it
+    if (this.joining) return
+    this.joining = true
+    try {
+      for (let retryCount = 1; retryCount <= 5; ++retryCount) {
+        const connection = await this.joinVoiceChannel(channelID)
+        if (connection !== undefined) {
+          this.logger.info('Connected, start recording...')
+          connection.play(new Silence(), { format: 'opusPackets' })
+          this.startRecording(connection)
+          return
+        }
+        this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
       }
-      this.logger.error(`Connecting to voice channel failed. Retrying (${retryCount} / 5)...`)
+    } finally {
+      this.joining = false
     }
     this._active = false
     this.logger.fatal('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
@@ -91,19 +91,21 @@ export class DiscordVoice extends EventEmitter {
     await this.sendMessage('Connecting to voice channel failed after retrying 5 times. Channel recording aborted.')
   }
 
-  private startRecording(connection: VoiceConnection) {
-    this._active = true
-    connection.on('userDisconnect', (user) => {
-      this.handleUserDisconnect(user)
-    })
-    this.recorder.startStream()
-    connection.receive('pcm').on('data', (data, user) => {
-      if (!this._active) return
-      this.recorder.storeBuffer(data, user)
-    })
-    this.startSendRecord()
+  private onPcm = (data: Buffer, user: string) => {
+    if (!this._active) return
+    this.recording.recorder.storeBuffer(data, user)
+  }
 
-    this.sendMessage('Record session started')
+  private onUserDisconnect = (user: string) => this.handleUserDisconnect(user)
+
+  private startRecording(connection: VoiceConnection) {
+    if (this.recordingOn === connection) return
+    this.recordingOn = connection
+    this._active = true
+    connection.on('userDisconnect', this.onUserDisconnect)
+    this.recording.start()
+    connection.receive('pcm').on('data', this.onPcm)
+
     this.updateStatus()
   }
 
@@ -121,74 +123,44 @@ export class DiscordVoice extends EventEmitter {
   }
 
   private sendMessage(message: string) {
-    return Destinations.sendMessage(this.channelConfig.fileDest, this.client, `[${this.channelConfig.id}] ${message}`)
+    return this.delivery.sendMessage(message)
   }
 
   private sendAdminMessage(message: string) {
     return Destinations.sendAdminMessage(this.client, this.logger, message)
   }
 
-  private async sendRecord(file: IRecordFile) {
-    const maxRetries = 3
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await Destinations.sendRecord(this.channelConfig.fileDest, this.client, this.logger, this.channelConfig.id, file)
-        return // success
-      } catch (error) {
-        this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
-        if (attempt === maxRetries) {
-          if (this._active) this.sendAdminMessage(`Failed to send ${file.audioFileName} after ${maxRetries} attempts`)
-          throw error
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5000))
-      }
-    }
-  }
-
-  private startSendRecord() {
-    this.sendInterval = setInterval(() => {
-      const file = this.recorder.saver.getFilePeriod()
-      this.sendRecord(file).then(() => {
-        this.recorder.saver.removeRecordFile(file.start)
-      })
-    }, this.channelConfig.sendIntervalSecond * 1000)
-  }
-
   private stopSession(channelID: string, connection: VoiceConnection) {
+    // Off with the session, so a connection used again gets one receiver
+    connection.off('userDisconnect', this.onUserDisconnect)
+    connection.receive('pcm').off('data', this.onPcm)
+    if (this.recordingOn === connection) this.recordingOn = undefined
     connection.stopPlaying()
-
-    clearInterval(this.sendInterval)
-    clearInterval(this.cleanupInterval)
-
-    this.logger.info('Sending rest of recording...')
-    const file = this.recorder.stop()
-    this.sendRecord(file).then(async () => {
-      await this.sendMessage('The record session has ended.')
-      if (!this._active) this.readyToDelete = true
-    })
-
+    this.recording.stop()
     this.client.leaveVoiceChannel(channelID)
   }
 
-  public async stop(connection: VoiceConnection) {
-    this._active = false
-    this.updateStatus()
+  // Ends the recording if one is running, and resolves once every segment still being finished or sent is done, also
+  // for a channel that is paused. Calling it again sends nothing twice. The caller sets the deadline.
+  public async stop() {
+    this.stopped = true
+    this.autoLeaveOrJoinChannel.cancel()
+    this.tryReconnect.cancel()
+    clearTimeout(this.rejoinTimer)
 
-    this.logger.info('Shutting down...')
-    this.sendMessage('Recorder shutting down.')
-    this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`)
+    const connection = this.client.voiceConnections.find((connection) => connection.channelID === this.channelConfig.id)
+    if (connection) {
+      this._active = false
+      this.updateStatus()
 
-    this.stopSession(this.channelConfig.id, connection)
+      this.logger.info('Shutting down...')
+      this.recording.track(this.sendMessage('Recorder shutting down.'))
+      this.recording.track(this.sendAdminMessage(`Recorder ${this.channelConfig.id} shutting down.`))
 
-    try {
-      await waitUntil(() => this.readyToDelete, { timeout: 30 * 1000 })
-    } catch (error) {
-      if (error instanceof TimeoutError) {
-        this.logger.error('Timed out waiting for 30 seconds.', error)
-      } else {
-        throw error
-      }
+      this.stopSession(this.channelConfig.id, connection)
     }
+
+    await this.recording.close()
   }
 
   private tryReconnect = debounce((channelID: string, connection: VoiceConnection) => {
@@ -196,10 +168,10 @@ export class DiscordVoice extends EventEmitter {
     if (this.reconnectFailSafe.checkHitExceed()) {
       this.logger.error(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
       if (this._active) this.sendAdminMessage(`Reconnect count exceeded ${this.reconnectFailSafe.maxTimes}. Trying to reconnect bot...`)
-      instances.discord?.disconnect(true)
+      getApp().discord?.reconnect()
     }
-    setTimeout(() => {
-      this.startAudioSession(channelID)
+    this.rejoinTimer = setTimeout(() => {
+      if (!this.stopped) this.startAudioSession(channelID)
     }, 5 * 1000)
   }, 500)
 
@@ -221,7 +193,7 @@ export class DiscordVoice extends EventEmitter {
           this.tryReconnect(channelID, connection)
         }
       })
-      if (instances.config.logging.debug) {
+      if (getApp().config.logging.debug) {
         connection.on('debug', (message) => this.logger.debug(message))
       }
       connection.on('ready', () => {
@@ -252,11 +224,12 @@ export class DiscordVoice extends EventEmitter {
   }
 
   public handleUserDisconnect(userID: string) {
-    this.recorder.endStream(userID)
+    this.recording.recorder.endStream(userID)
     this.autoLeaveOrJoinChannel()
   }
 
   private autoLeaveOrJoinChannel = debounce(() => {
+    if (this.stopped) return
     const voiceChannel = this.client.getChannel(this.channelConfig.id) as VoiceChannel
     let noUser = true
 
