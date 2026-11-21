@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import { readdirSync, readFileSync as readFile, statSync, unlinkSync } from 'node:fs'
+import { readdirSync, statSync, unlinkSync } from 'node:fs'
 import { type Client, DiscordRESTError, type VoiceChannel, type VoiceConnection } from '@projectdysnomia/dysnomia'
 import { TimeoutError, waitUntil } from 'async-wait-until'
 import { debounce } from 'lodash'
@@ -8,6 +8,7 @@ import type { DiscordChannel } from '../../../Utils/Config'
 import { FailSafe } from '../../../Utils/FailSafe'
 import { instances } from '../../../Utils/Instances'
 import { MessageQueue } from '../../../Utils/MessageQueue'
+import * as Destinations from '../../Output/Destinations'
 import { Recorder } from '../Recorder/Recorder'
 import type { IRecordFile } from '../Recorder/RecordSaver'
 import { Silence } from './Silence'
@@ -34,7 +35,7 @@ export class DiscordVoice extends EventEmitter {
     this.client = client
     this.channelConfig = channelConfig
     this.logger = logger.getSubLogger({ name: 'Voice', prefix: [`[${channelConfig.id}]`] })
-    this.recorder = new Recorder(channelConfig)
+    this.recorder = new Recorder({ ...channelConfig, storageKey: channelConfig.id })
 
     this.warningQueue.on('process', (messages, queueTime) => {
       const combinedMessage = `${messages.length} warning${messages.length > 1 ? 's' : ''} from ${this.channelConfig.id} in ${queueTime / 1000} seconds:\n\`\`\`\n${messages.slice(-10).join('\n')}\n\`\`\``
@@ -119,83 +120,19 @@ export class DiscordVoice extends EventEmitter {
     this.emit('status')
   }
 
-  private async sendMessage(message: string) {
-    for (const element of this.channelConfig.fileDest) {
-      if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
-        await instances.telegram.sendMessage(element.id, message)
-      }
-      if (element.type === 'discord' && element.id !== '') {
-        await this.client.createMessage(element.id, message)
-      }
-    }
+  private sendMessage(message: string) {
+    return Destinations.sendMessage(this.channelConfig.fileDest, this.client, `[${this.channelConfig.id}] ${message}`)
   }
 
-  private async sendAdminMessage(message: string) {
-    if (instances.config.discord.logErrorsToAdmin) {
-      for (const admin of instances.config.discord.admins) {
-        try {
-          const dmChannel = await this.client.getDMChannel(admin)
-          await this.client.createMessage(dmChannel.id, message)
-        } catch (error) {
-          if (error instanceof Error) {
-            this.logger.error(`Message "${message}" send to discord admin ${admin} failed: ${error.message}`, error)
-          }
-        }
-      }
-    }
-    if (instances.config.telegram.logErrorsToAdmin && instances.telegram) {
-      for (const admin of instances.config.telegram.admins) {
-        try {
-          await instances.telegram.sendMessage(admin, message, true)
-        } catch (error) {
-          if (error instanceof Error) {
-            this.logger.error(`Message "${message}" send to telegram admin ${admin} failed: ${error.message}`, error)
-          }
-        }
-      }
-    }
+  private sendAdminMessage(message: string) {
+    return Destinations.sendAdminMessage(this.client, this.logger, message)
   }
 
   private async sendRecord(file: IRecordFile) {
     const maxRetries = 3
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        for (const element of this.channelConfig.fileDest) {
-          if (element.type === 'telegram' && element.id !== '' && instances.telegram) {
-            if (element.sendAll) {
-              this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-              const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-              await instances.telegram.sendAudio(element.id, file.audioFilePath, caption)
-            }
-            if (element.sendPerUser) {
-              for (const userFile of file.perUserFiles) {
-                this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to telegram ${element.id}`)
-                const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-                await instances.telegram.sendAudio(element.id, userFile.audioFilePath, caption)
-              }
-            }
-          }
-          if (element.type === 'discord' && element.id !== '') {
-            if (element.sendAll) {
-              this.logger.info(`Sending ${file.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-              const caption = `Start:${file.start}\nEnd:${file.end}\n\n${file.tags.join(' ')}`
-              await this.client.createMessage(element.id, {
-                content: caption,
-                attachments: [{ filename: file.audioFileName, file: readFile(file.audioFilePath) }]
-              })
-            }
-            if (element.sendPerUser) {
-              for (const userFile of file.perUserFiles) {
-                this.logger.info(`Sending ${userFile.audioFileName} of ${this.channelConfig.id} to discord ${element.id}`)
-                const caption = `Start:${file.start}\nEnd:${file.end}\nUser:${userFile.user}\n\n${[...file.tags, userFile.tag].join(' ')}`
-                await this.client.createMessage(element.id, {
-                  content: caption,
-                  attachments: [{ filename: userFile.audioFileName, file: readFile(userFile.audioFilePath) }]
-                })
-              }
-            }
-          }
-        }
+        await Destinations.sendRecord(this.channelConfig.fileDest, this.client, this.logger, this.channelConfig.id, file)
         return // success
       } catch (error) {
         this.logger.error(`Error sending ${file.audioFileName} (attempt ${attempt}/${maxRetries}):`, error)
