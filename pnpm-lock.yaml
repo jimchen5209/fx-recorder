@@ -186,7 +186,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: 0.2.4
-        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))
+        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.11.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
@@ -229,8 +229,8 @@ importers:
         version: 7.0.2
     optionalDependencies:
       '@discordjs/opus':
-        specifier: 0.10.0
-        version: 0.10.0(encoding@0.1.13)
+        specifier: 0.11.0
+        version: 0.11.0(encoding@0.1.13)
       bufferutil:
         specifier: ^4.1.0
         version: 4.1.0
@@ -319,9 +319,9 @@ packages:
     resolution: {integrity: sha512-YJOVVZ545x24mHzANfYoy0BJX5PDyeZlpiJjDkUBM/V/Ao7TFX9lcUvCN4nr0tbr5ubeaXxtEBILUrHtTphVeQ==}
     hasBin: true
 
-  '@discordjs/opus@0.10.0':
-    resolution: {integrity: sha512-HHEnSNrSPmFEyndRdQBJN2YE6egyXS9JUnJWyP6jficK0Y+qKMEZXyYTgmzpjrxXP1exM/hKaNP7BRBUEWkU5w==}
-    engines: {node: '>=12.0.0'}
+  '@discordjs/opus@0.11.0':
+    resolution: {integrity: sha512-f7w9QxyheGD6rwVuS68EAeF8S+5WhodQd9mol39RxmFmOj0jStSD/RvFGfF3KJIxb/4RZwCV6a0SOGrbXKKXdw==}
+    engines: {node: '>=22'}
 
   '@emnapi/core@1.11.3':
     resolution: {integrity: sha512-zLpS5asjEb7lq8jYLq37N6XKaE41DIexlY1rF/z4/tIl3wo13Sqm28fRyfIsKZD+NZ8mM5RoKkpW/rBcuoSZSg==}
@@ -954,11 +954,6 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.7.3:
-    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   semver@7.8.5:
     resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
     engines: {node: '>=10'}
@@ -991,10 +986,6 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
-
-  tar@7.5.16:
-    resolution: {integrity: sha512-56adEpPMouktRlBLXiaYFFzZ/3+JXa8P9n7WbR+ibIjtviN55mEaOkiysCnPnWm+7kkui1Dn8J9l+g6zV8731w==}
-    engines: {node: '>=18'}
 
   tar@7.5.19:
     resolution: {integrity: sha512-4LeEWl96twnS2Q7Bz4MGqgazLqO+hJN63GZxXoIqh1T3VweYD997gbU1ItNsQafqqXTXd5WFyFdReLtwvRBNiw==}
@@ -1125,14 +1116,14 @@ snapshots:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.7.3
-      tar: 7.5.16
+      semver: 7.8.5
+      tar: 7.5.19
     transitivePeerDependencies:
       - encoding
       - supports-color
     optional: true
 
-  '@discordjs/opus@0.10.0(encoding@0.1.13)':
+  '@discordjs/opus@0.11.0(encoding@0.1.13)':
     dependencies:
       '@discordjs/node-pre-gyp': 0.4.5(encoding@0.1.13)
       node-addon-api: 8.9.2
@@ -1168,11 +1159,11 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))':
+  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.11.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))':
     dependencies:
       ws: 8.21.0(bufferutil@4.1.0)
     optionalDependencies:
-      '@discordjs/opus': 0.10.0(encoding@0.1.13)
+      '@discordjs/opus': 0.11.0(encoding@0.1.13)
       '@snazzah/davey': 0.1.12(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
       '@stablelib/xchacha20poly1305': 1.0.1
       erlpack: 0.1.4
@@ -1734,9 +1725,6 @@ snapshots:
   semver@6.3.1:
     optional: true
 
-  semver@7.7.3:
-    optional: true
-
   semver@7.8.5: {}
 
   set-blocking@2.0.0:
@@ -1784,15 +1772,6 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
-    optional: true
-
-  tar@7.5.16:
-    dependencies:
-      '@isaacs/fs-minipass': 4.0.1
-      chownr: 3.0.0
-      minipass: 7.1.3
-      minizlib: 3.1.0
-      yallist: 5.0.0
     optional: true
 
   tar@7.5.19:
