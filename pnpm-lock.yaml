@@ -186,7 +186,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: 0.2.4
-        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))
+        version: 0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.2.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
@@ -233,7 +233,7 @@ importers:
         version: 0.10.0(encoding@0.1.13)
       bufferutil:
         specifier: ^4.1.0
-        version: 4.1.0
+        version: 4.2.0
       erlpack:
         specifier: ^0.1.4
         version: 0.1.4
@@ -735,8 +735,8 @@ packages:
     resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
     engines: {node: 18 || 20 || >=22}
 
-  bufferutil@4.1.0:
-    resolution: {integrity: sha512-ZMANVnAixE6AWWnPzlW2KpUrxhm9woycYvPOo67jWHyFowASTEd9s+QN1EIMsSDtwhIxN4sWE1jotpuDUIgyIw==}
+  bufferutil@4.2.0:
+    resolution: {integrity: sha512-gyy58jET9kst2IGyBKb96a4Y2bPGTHXGyCd0/1eqIV3hr1Sz3VxtA8n7bXh8fLIuE2K6Z0Upax5a5Msx+HU1IQ==}
     engines: {node: '>=6.14.2'}
 
   chownr@3.0.0:
@@ -1168,9 +1168,9 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.1.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))':
+  '@projectdysnomia/dysnomia@0.2.4(patch_hash=6352d8c2945d8257c3e87d8000a2f398d0b2ffdc1f4a958efc0e1c8ac19588a2)(@discordjs/opus@0.10.0(encoding@0.1.13))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(bufferutil@4.2.0)(erlpack@0.1.4)(sodium-native@5.2.0(bare-events@2.9.1))':
     dependencies:
-      ws: 8.21.0(bufferutil@4.1.0)
+      ws: 8.21.0(bufferutil@4.2.0)
     optionalDependencies:
       '@discordjs/opus': 0.10.0(encoding@0.1.13)
       '@snazzah/davey': 0.1.12(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
@@ -1502,7 +1502,7 @@ snapshots:
       balanced-match: 4.0.4
     optional: true
 
-  bufferutil@4.1.0:
+  bufferutil@4.2.0:
     dependencies:
       node-gyp-build: 4.8.4
     optional: true
@@ -1885,8 +1885,8 @@ snapshots:
   wrappy@1.0.2:
     optional: true
 
-  ws@8.21.0(bufferutil@4.1.0):
+  ws@8.21.0(bufferutil@4.2.0):
     optionalDependencies:
-      bufferutil: 4.1.0
+      bufferutil: 4.2.0
 
   yallist@5.0.0: {}
