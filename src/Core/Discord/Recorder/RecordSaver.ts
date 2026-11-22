@@ -7,8 +7,8 @@ import type { ILogObj, Logger } from 'tslog'
 import AudioUtils from '../../../Libs/audio'
 import type LicsonMixer from '../../../Libs/LicsonMixer/mixer'
 import type { Readable } from '../../../Libs/LicsonMixer/mixer'
-import type { DiscordChannel } from '../../../Utils/Config'
 import { instances } from '../../../Utils/Instances'
+import type { RecordingChannel } from '../../Recording/Types'
 
 export interface IUserRecordFile {
   user: string
@@ -27,7 +27,7 @@ export interface IRecordFile {
 }
 
 export class RecordSaver {
-  private channelConfig: DiscordChannel
+  private channelConfig: RecordingChannel
   private recvMixer?: LicsonMixer
   private userMixers?: { [key: string]: LicsonMixer }
 
@@ -40,12 +40,12 @@ export class RecordSaver {
   private writeStream?: WriteStream
   private perUserWriteStream: { [key: string]: WriteStream } = {}
 
-  constructor(channelConfig: DiscordChannel) {
+  constructor(channelConfig: RecordingChannel) {
     this.channelConfig = channelConfig
     this.logger = instances.mainLogger.getSubLogger({ name: 'RecordSaver', prefix: [`[${channelConfig.id}]`] })
 
-    if (exists(`temp/${this.channelConfig.id}`)) rmDir(`temp/${this.channelConfig.id}`, { recursive: true })
-    mkDir(`temp/${this.channelConfig.id}`)
+    if (exists(`temp/${this.channelConfig.storageKey}`)) rmDir(`temp/${this.channelConfig.storageKey}`, { recursive: true })
+    mkDir(`temp/${this.channelConfig.storageKey}`)
 
     // setup dayjs
     dayjs.extend(utc)
@@ -70,14 +70,14 @@ export class RecordSaver {
 
   private endStream(user: string | undefined = undefined) {
     if (!user) {
-      this.logger.debug(`End recording stream from ${this.mp3Start} to temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
+      this.logger.debug(`End recording stream from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${this.mp3Start}.mp3`)
       this.mp3Stream?.unpipe()
       this.writeStream?.end()
 
       if (this.userMixers) {
         for (const element of Object.keys(this.userMixers)) {
           if (!this.userMixers[element]) continue
-          this.logger.debug(`End recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
+          this.logger.debug(`End recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${element}-${this.mp3Start}.mp3`)
           if (this.perUserMp3Stream[element]) this.perUserMp3Stream[element].unpipe()
           if (this.perUserWriteStream[element]) this.perUserWriteStream[element].end()
           delete this.perUserWriteStream[element]
@@ -87,7 +87,7 @@ export class RecordSaver {
       this.finalMp3Start = this.mp3Start
       this.mp3Start = ''
     } else {
-      this.logger.debug(`End recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
+      this.logger.debug(`End recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${user}-${this.mp3Start}.mp3`)
       if (this.perUserMp3Stream[user]) this.perUserMp3Stream[user].unpipe()
       if (this.perUserWriteStream[user]) this.perUserWriteStream[user].end()
       delete this.perUserWriteStream[user]
@@ -97,22 +97,22 @@ export class RecordSaver {
   private startStream(user: string | undefined = undefined) {
     if (!user) {
       this.mp3Start = dayjs.utc().tz(this.channelConfig.timeZone).format('YYYY-MM-DD HH-mm-ss')
-      this.logger.debug(`Start recording stream from ${this.mp3Start} to temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
-      this.writeStream = createWriteStream(`temp/${this.channelConfig.id}/${this.mp3Start}.mp3`)
+      this.logger.debug(`Start recording stream from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${this.mp3Start}.mp3`)
+      this.writeStream = createWriteStream(`temp/${this.channelConfig.storageKey}/${this.mp3Start}.mp3`)
       this.mp3Stream?.pipe(this.writeStream)
 
       if (!this.userMixers) return
       for (const element of Object.keys(this.userMixers)) {
         if (!this.userMixers[element] || !this.perUserMp3Stream[element]) continue
         if (this.userMixers[element].getSources(user).length === 0) continue
-        this.logger.debug(`Start recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
-        this.perUserWriteStream[element] = createWriteStream(`temp/${this.channelConfig.id}/${element}-${this.mp3Start}.mp3`)
+        this.logger.debug(`Start recording stream for ${element} from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${element}-${this.mp3Start}.mp3`)
+        this.perUserWriteStream[element] = createWriteStream(`temp/${this.channelConfig.storageKey}/${element}-${this.mp3Start}.mp3`)
         this.perUserMp3Stream[element].pipe(this.perUserWriteStream[element])
       }
     } else {
       if (!this.perUserMp3Stream[user]) return
-      this.logger.debug(`Start recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
-      this.perUserWriteStream[user] = createWriteStream(`temp/${this.channelConfig.id}/${user}-${this.mp3Start}.mp3`)
+      this.logger.debug(`Start recording stream for ${user} from ${this.mp3Start} to temp/${this.channelConfig.storageKey}/${user}-${this.mp3Start}.mp3`)
+      this.perUserWriteStream[user] = createWriteStream(`temp/${this.channelConfig.storageKey}/${user}-${this.mp3Start}.mp3`)
       this.perUserMp3Stream[user].pipe(this.perUserWriteStream[user])
     }
   }
@@ -131,21 +131,21 @@ export class RecordSaver {
     const mp3End = dayjs.utc().tz(this.channelConfig.timeZone).format('YYYY-MM-DD HH-mm-ss')
     const time = dayjs.tz(mp3StartToSend, 'YYYY-MM-DD HH-mm-ss', this.channelConfig.timeZone)
 
-    this.logger.debug(`Record file from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`)
+    this.logger.debug(`Record file from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.storageKey}/${mp3StartToSend}.mp3`)
     return {
       start: mp3StartToSend,
       end: mp3End,
       tags: [`#Date${time.format('YYYYMMDD')}`, `#Time${time.format('HHmm')}`, `#Year${time.format('YYYY')}`],
-      audioFilePath: `temp/${this.channelConfig.id}/${mp3StartToSend}.mp3`,
+      audioFilePath: `temp/${this.channelConfig.storageKey}/${mp3StartToSend}.mp3`,
       audioFileName: `${mp3StartToSend}.mp3`,
       perUserFiles: this.userMixers
         ? Object.keys(this.userMixers)
-            .filter((user) => exists(`temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`))
+            .filter((user) => exists(`temp/${this.channelConfig.storageKey}/${user}-${mp3StartToSend}.mp3`))
             .map((user) => {
-              this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`)
+              this.logger.debug(`Record file for ${user} from ${mp3StartToSend} to ${mp3End}: temp/${this.channelConfig.storageKey}/${user}-${mp3StartToSend}.mp3`)
               return {
                 user,
-                audioFilePath: `temp/${this.channelConfig.id}/${user}-${mp3StartToSend}.mp3`,
+                audioFilePath: `temp/${this.channelConfig.storageKey}/${user}-${mp3StartToSend}.mp3`,
                 audioFileName: `${user}-${mp3StartToSend}.mp3`,
                 tag: `#User${user}`
               }
@@ -161,14 +161,14 @@ export class RecordSaver {
   }
 
   public removeRecordFile = (mp3Start: string) => {
-    this.logger.debug(`Removing record file temp/${this.channelConfig.id}/${mp3Start}.mp3`)
-    deleteFile(`temp/${this.channelConfig.id}/${mp3Start}.mp3`)
+    this.logger.debug(`Removing record file temp/${this.channelConfig.storageKey}/${mp3Start}.mp3`)
+    deleteFile(`temp/${this.channelConfig.storageKey}/${mp3Start}.mp3`)
 
     if (!this.userMixers) return
     for (const user of Object.keys(this.userMixers)) {
-      if (exists(`temp/${this.channelConfig.id}/${user}-${mp3Start}.mp3`)) {
-        this.logger.debug(`Removing record file temp/${this.channelConfig.id}/${user}-${mp3Start}.mp3`)
-        deleteFile(`temp/${this.channelConfig.id}/${user}-${mp3Start}.mp3`)
+      if (exists(`temp/${this.channelConfig.storageKey}/${user}-${mp3Start}.mp3`)) {
+        this.logger.debug(`Removing record file temp/${this.channelConfig.storageKey}/${user}-${mp3Start}.mp3`)
+        deleteFile(`temp/${this.channelConfig.storageKey}/${user}-${mp3Start}.mp3`)
       }
     }
   }
