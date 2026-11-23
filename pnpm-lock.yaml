@@ -197,8 +197,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       node-telegram-bot-api:
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 2.4.0
+        version: 2.4.0
       opusscript:
         specifier: ^0.1.1
         version: 0.1.1
@@ -891,9 +891,9 @@ packages:
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     hasBin: true
 
-  node-telegram-bot-api@1.2.0:
-    resolution: {integrity: sha512-M6S61LZn1FQMQnZSdFlc4oV+mwDGlPTbLzq/GUaSH4ew40wGTaKPtAaLp5oOhl/C3k0ylGqMIppJsVulwTCePg==}
-    engines: {node: '>=18'}
+  node-telegram-bot-api@2.4.0:
+    resolution: {integrity: sha512-rv05BJBCbTg57mG+PSwvrbRmBBWVPWXv4dmwEU9Lgm6aFdufnBBBVs1t3yOhqYWTExE9Kq9ixlVgjOPdmgsdow==}
+    engines: {node: '>=18.2.0'}
 
   nopt@10.0.1:
     resolution: {integrity: sha512-df3sBr/6ax9hSGuC3CspvLlbnX8cP5L5nZwXF8cGN8l0zSWR6BvzmQ6jPUKjvo6+/xdpkNvEcucBNUdBeeV13g==}
@@ -1671,7 +1671,7 @@ snapshots:
       undici: 8.6.0
       which: 7.0.0
 
-  node-telegram-bot-api@1.2.0: {}
+  node-telegram-bot-api@2.4.0: {}
 
   nopt@10.0.1:
     dependencies:
