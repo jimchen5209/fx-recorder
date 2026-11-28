@@ -34,7 +34,7 @@
     "typescript": "^7.0.2"
   },
   "optionalDependencies": {
-    "@discordjs/opus": "0.10.0",
+    "@discordjs/opus": "0.11.0",
     "bufferutil": "^4.1.0",
     "erlpack": "^0.1.4",
     "node-addon-api": "^8.9.2",
